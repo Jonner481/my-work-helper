@@ -162,7 +162,7 @@
     sidebar.id = 'reviewNotesSidebar';
     sidebar.innerHTML = `
         <div id="sidebarContent">
-            <h2>Notes</h2>
+            <h2>Try Notes</h2>
             <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="Search...">
                 <button id="searchBtn">Search</button>
@@ -619,4 +619,5 @@ document.getElementById('copyBtnGenerate').addEventListener('click', () => {
         initSearch();           // Initialize search functionality
         initCopyButtons();      // Initialize copy buttons
         initResizeBehavior();   // Initialize resize behavior
+
     })();
