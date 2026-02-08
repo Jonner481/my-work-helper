@@ -32,7 +32,7 @@
                 display: flex;
                 flex-direction: row;
                 transition: left 0.3s ease-in-out;
-                z-index: 10000;
+                z-index: 99999999999;
                 font-family: sans-serif;
             }
             #reviewNotesSidebar.active { 
@@ -162,7 +162,7 @@
     sidebar.id = 'reviewNotesSidebar';
     sidebar.innerHTML = `
         <div id="sidebarContent">
-            <h2>Try Notes</h2>
+            <h2>Notes</h2>
             <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="Search...">
                 <button id="searchBtn">Search</button>
@@ -621,3 +621,4 @@ document.getElementById('copyBtnGenerate').addEventListener('click', () => {
         initResizeBehavior();   // Initialize resize behavior
 
     })();
+
