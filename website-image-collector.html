@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website Image Collector - With Image Details & Source Pages</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .app {
+    display: flex;
+    height: 100vh;
+    gap: 0;
+  }
+
+  .sidebar {
+    width: 500px;
+    background: rgba(255, 255, 255, 0.98);
+    overflow-y: auto;
+    padding: 20px;
+    box-shadow: 5px 0 20px rgba(0,0,0,0.1);
+    z-index: 10;
+  }
+
+  .gallery-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .sidebar::-webkit-scrollbar, .gallery-area::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+  }
+
+  .sidebar-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .sidebar-header h1 {
+    font-size: 24px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .sidebar-header p {
+    color: #666;
+    font-size: 13px;
+  }
+
+  .instructions {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    border-left: 4px solid #667eea;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+
+  .instructions h3 {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  .instructions ol {
+    margin-left: 20px;
+    font-size: 12px;
+    color: #555;
+  }
+
+  .instructions li {
+    margin: 5px 0;
+  }
+
+  .crawler-toggle-section {
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 2px solid #667eea;
+  }
+
+  .toggle-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .toggle-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .toggle-desc {
+    font-size: 11px;
+    color: #666;
+    margin-top: 5px;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 26px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 26px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: #28a745;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(26px);
+  }
+
+  .code-block {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    margin: 10px 0;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .copy-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .copy-btn:hover {
+    background: #218838;
+  }
+
+  .note-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #856404;
+  }
+
+  .input-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 120px;
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    resize: vertical;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    text-align: center;
+  }
+
+  .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+  .btn-success { background: #28a745; color: white; }
+  .btn-danger { background: #dc3545; color: white; }
+  .btn-warning { background: #ffc107; color: #333; }
+  .btn-info { background: #17a2b8; color: white; }
+  .btn-secondary { background: #6c757d; color: white; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat-label {
+    color: #666;
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  .badge-page { background: #17a2b8; color: white; }
+  .badge-duplicate { background: #ffc107; color: #333; }
+
+  .page-list, .duplicate-list {
+    max-height: 150px;
+    overflow-y: auto;
+  }
+
+  .page-item, .duplicate-item {
+    padding: 6px;
+    border-bottom: 1px solid #e0e0e0;
+    font-family: monospace;
+    font-size: 10px;
+    word-break: break-all;
+  }
+
+  .page-item a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .gallery-header {
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .gallery-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+  }
+
+  .search-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .filter-input {
+    padding: 8px 30px 8px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 12px;
+    width: 200px;
+  }
+
+  .clear-search {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #999;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .clear-search:hover {
+    background: #e0e0e0;
+    color: #333;
+  }
+
+  .image-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 15px;
+  }
+
+  .image-card {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+  }
+
+  .image-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+
+  .image-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    cursor: pointer;
+  }
+
+  .image-info {
+    padding: 10px;
+    background: white;
+  }
+
+  .image-filename {
+    font-size: 10px;
+    font-weight: 600;
+    color: #333;
+    word-break: break-all;
+    margin-bottom: 8px;
+  }
+
+  .css-label {
+    display: inline-block;
+    background: linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 9px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .img-label {
+    display: inline-block;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 9px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .image-pages-count {
+    font-size: 10px;
+    color: #667eea;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .image-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    margin-top: 8px;
+    cursor: pointer;
+    padding-top: 5px;
+    border-top: 1px solid #eee;
+  }
+
+  .image-checkbox input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .image-buttons {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .image-card:hover .image-buttons {
+    opacity: 1;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .icon-btn:hover {
+    transform: scale(1.1);
+  }
+
+  .btn-view { background: rgba(102, 126, 234, 0.95); color: white; }
+  .btn-copy { background: rgba(40, 167, 69, 0.95); color: white; }
+  .btn-delete { background: rgba(220, 53, 69, 0.95); color: white; }
+  .btn-details { background: rgba(255, 193, 7, 0.95); color: #333; }
+
+  .image-card.selected {
+    box-shadow: 0 0 0 3px #28a745;
+  }
+
+  .filter-stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-badge.all { background: #6c757d; color: white; }
+  .filter-badge.img { background: #28a745; color: white; }
+  .filter-badge.css { background: #6f42c1; color: white; }
+  .filter-badge.sort { background: #17a2b8; color: white; }
+  .filter-badge:hover { opacity: 0.8; }
+
+  /* Details Popup */
+  .details-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10001;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .details-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 650px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 25px;
+    animation: zoomIn 0.3s ease;
+    position: relative;
+  }
+
+  /* X button for details popup - INSIDE the popup at top-right corner */
+  .details-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #dc3545;
+    color: white;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    z-index: 10;
+  }
+
+  .details-close:hover {
+    transform: rotate(90deg) scale(1.1);
+    background: #c82333;
+  }
+
+  .details-content h3 {
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+    padding-right: 40px;
+  }
+
+  .details-image {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .details-image img {
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .details-info {
+    margin-bottom: 15px;
+  }
+
+  .details-label {
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 5px;
+    font-size: 12px;
+  }
+
+  .details-value {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    word-break: break-all;
+    font-family: monospace;
+    font-size: 12px;
+  }
+
+  .details-value a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .details-value a:hover {
+    text-decoration: underline;
+  }
+
+  .pages-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .page-item-detail {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    font-family: monospace;
+    font-size: 11px;
+  }
+
+  .page-item-detail a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .page-item-detail a:hover {
+    text-decoration: underline;
+  }
+
+  @keyframes zoomIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .popup-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+  }
+
+  .popup-content img {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 10px;
+  }
+
+  .popup-close {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #dc3545;
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .popup-close:hover {
+    transform: rotate(90deg) scale(1.1);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    z-index: 10002;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .loading {
+    text-align: center;
+    padding: 50px;
+    color: #999;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 350px; }
+    .image-container { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  }
+
+  @media (max-width: 700px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; max-height: 45vh; }
+    .gallery-area { max-height: 55vh; }
+    .details-close { top: 10px; right: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>📸 Website Image Collector</h1>
+      <p>Extract and view all images from every page of any website</p>
+    </div>
+
+    <div class="instructions">
+      <h3>📋 How to Use:</h3>
+      <ol>
+        <li>Go to the sitemap page: <code>https://example.com/sitemap</code></li>
+        <li>Press <kbd>F12</kbd> to open Developer Console</li>
+        <li>Copy the code below (click <strong>"Copy Code"</strong>)</li>
+        <li>Paste into console and press <kbd>Enter</kbd></li>
+        <li>The crawler will auto-detect: sitemap pages, blog pages, individual articles, and pagination</li>
+        <li>Copy ALL console output and paste below</li>
+        <li>Click <strong>"Parse Output"</strong> to see gallery</li>
+      </ol>
+    </div>
+
+    <div class="crawler-toggle-section">
+      <div class="toggle-header">
+        <div class="toggle-title">🎨 Extract CSS Background Images</div>
+        <label class="switch">
+          <input type="checkbox" id="includeCssToggle" checked onchange="updateCrawlerCode()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-desc">
+        ✅ <strong>ON</strong> = Extracts &lt;img&gt; tags + CSS backgrounds (slower, more images)<br>
+        🔘 <strong>OFF</strong> = Only &lt;img&gt; tags (faster)
+      </div>
+    </div>
+
+    <div class="code-block" id="crawlerCode"></div>
+    <button class="copy-btn" onclick="copyCrawlerCode()">📋 Copy Code to Clipboard</button>
+
+    <div class="note-box">
+      💡 <strong>Quick Guide:</strong><br>
+      • 📍 <strong>Go to sitemap page</strong> (e.g., https://example.com/sitemap)<br>
+      • 📋 <strong>Copy code above</strong> → Paste in console (F12) → Press Enter<br>
+      • 📄 <strong>Copy output</strong> → Paste below → Click "Parse Output"<br>
+      • 🔍 Click the <strong>ℹ️ button</strong> on any image to see its source page<br>
+      • 🎨 Toggle <strong>CSS ON/OFF</strong> to include background images<br>
+      <br>
+      <strong>🔥 Nice ka One, astiga ey! 😁😊</strong>
+    </div>
+
+    <div class="input-section">
+      <textarea id="consoleOutput" placeholder="Paste your console output here..."></textarea>
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="parseConsoleOutput()">🔍 Parse Output</button>
+        <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+      </div>
+    </div>
+
+    <div class="stats" id="stats" style="display: none;">
+      <div class="stat-card"><div class="stat-number" id="pagesCount">0</div><div class="stat-label">📄 Pages Detected</div></div>
+      <div class="stat-card"><div class="stat-number" id="totalImages">0</div><div class="stat-label">🖼️ Total Images</div></div>
+      <div class="stat-card"><div class="stat-number" id="uniqueCount">0</div><div class="stat-label">✨ Unique Images</div></div>
+      <div class="stat-card"><div class="stat-number" id="duplicateCount">0</div><div class="stat-label">⚠️ Duplicates</div></div>
+      <div class="stat-card"><div class="stat-number" id="selectedCount">0</div><div class="stat-label">✅ Selected</div></div>
+      <div class="stat-card"><div class="stat-number" id="cssImageCount">0</div><div class="stat-label">🎨 CSS Images</div></div>
+    </div>
+
+    <div class="section" id="pagesSection" style="display: none;">
+      <div class="section-title"><span>📄 Detected Pages</span><span class="badge badge-page" id="pagesBadge">0</span></div>
+      <div class="page-list" id="pageList"></div>
+    </div>
+
+    <div class="section" id="duplicatesSection" style="display: none;">
+      <div class="section-title"><span>⚠️ Duplicate Images</span><span class="badge badge-duplicate" id="duplicatesBadge">0</span></div>
+      <div class="duplicate-list" id="duplicateList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🎮 Gallery Controls</div>
+      <div class="button-group">
+        <button class="btn btn-success" onclick="selectAllImages()">✓ Select All</button>
+        <button class="btn btn-warning" onclick="deselectAllImages()">☐ Deselect All</button>
+        <button class="btn btn-info" onclick="copySelectedImages()">📋 Copy Selected</button>
+        <button class="btn btn-danger" onclick="deleteSelectedImages()">🗑️ Delete Selected</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="gallery-area">
+    <div class="gallery-header">
+      <div class="gallery-title">🖼️ Image Gallery <span style="font-size: 12px;">(🎨 = CSS Background | 🖼️ = IMG Tag)</span></div>
+      <div class="search-wrapper">
+        <input type="text" id="filterInput" class="filter-input" placeholder="🔍 Filter images..." onkeyup="filterImages()">
+        <button class="clear-search" onclick="clearSearch()" title="Clear search">✕</button>
+      </div>
+    </div>
+    
+    <div class="filter-stats">
+      <span class="filter-badge all" onclick="filterByType('all')">📊 All</span>
+      <span class="filter-badge img" onclick="filterByType('img')">🖼️ IMG Tags</span>
+      <span class="filter-badge css" onclick="filterByType('css')">🎨 CSS Backgrounds</span>
+      <span class="filter-badge sort" onclick="toggleSortOrder()" id="sortBtn">📁 Sort: Numbers Last</span>
+    </div>
+    
+    <div class="image-container" id="imageContainer">
+      <div class="loading"><div class="spinner"></div><div>Run crawler, paste output, click "Parse Output"</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Popup -->
+<div id="popup" class="popup">
+  <div class="popup-content">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+    <img src="" id="popupImage">
+  </div>
+</div>
+
+<!-- Details Popup -->
+<div id="detailsPopup" class="details-popup">
+  <div class="details-content">
+    <button class="details-close" onclick="closeDetailsPopup()">✕</button>
+    <h3>📸 Image Details</h3>
+    <div class="details-image">
+      <img src="" id="detailsImage">
+    </div>
+    <div class="details-info">
+      <div class="details-label">🔗 Image URL:</div>
+      <div class="details-value" id="detailsUrl"></div>
+    </div>
+    <div class="details-info">
+      <div class="details-label">🏷️ Image Type:</div>
+      <div class="details-value" id="detailsType"></div>
+    </div>
+    <div class="details-info">
+      <div class="details-label">📄 Found on Pages (<span id="pagesCountSpan">0</span> pages):</div>
+      <div class="details-value pages-list" id="detailsPages"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let detectedPages = [];
+let allImages = [];
+let uniqueImages = new Set();
+let duplicateImages = new Set();
+let selectedImages = new Set();
+let currentImageList = [];
+let cssImagesSet = new Set();
+let imgTagSet = new Set();
+let imageSourceMap = new Map(); // Store array of source pages for each image
+let currentFilter = 'all';
+let sortOrder = 'default';
+
+// Code WITH CSS (includes background images)
+const crawlerCodeWithCSS = `(async () => {
+  console.log('🔍 Scanning current page for sitemap links...');
+  const currentOrigin = window.location.origin;
+  
+  const sitemapSelectors = [
+    '.sitemap li a', '.sitemap-page li a', '#sitemap li a',
+    '.page-sitemap li a', '.post-sitemap li a', 'ul.sitemap a',
+    '.page_item a', '.page-item a', '.pagenav a',
+    '.menu-item a', '.nav-menu a', '.main-navigation a',
+    '.entry-content li a', '.content ul li a', '.page-content li a',
+    '.wp-block-page-list a', '.wp-block-sitemap-page a',
+    'a[href*="/page/"]', 'a[href*="/p/"]'
+  ];
+  
+  let sitemapLinks = [];
+  for (const selector of sitemapSelectors) {
+    const links = Array.from(document.querySelectorAll(selector)).map(a => a.href);
+    const internalLinks = links.filter(link => 
+      link.startsWith(currentOrigin) && 
+      !link.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i) &&
+      !link.includes('#') &&
+      !link.includes('/wp-content/') &&
+      !link.includes('/wp-includes/')
+    );
+    if (internalLinks.length > 0) {
+      sitemapLinks = internalLinks;
+      console.log(\`   ✅ Found \${internalLinks.length} links using selector: "\${selector}"\`);
+      break;
+    }
+  }
+  
+  if (sitemapLinks.length === 0) {
+    console.log('   ⚠️ No sitemap links found. Using all internal links...');
+    const allLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
+    sitemapLinks = [...new Set(allLinks.filter(link => 
+      link.startsWith(currentOrigin) && 
+      !link.match(/\\.(jpg|jpeg|png|gif|webp|css|js)$/i) &&
+      !link.includes('#') &&
+      !link.includes('/wp-content/')
+    ))];
+    console.log(\`   ✅ Found \${sitemapLinks.length} internal links as fallback\`);
+  }
+
+  console.log('🔍 Auto-detecting blog page...');
+  const blogUrls = new Set();
+  const articleUrls = new Set();
+  const blogKeywords = ['blog', 'news', 'articles', 'posts', 'category', 'home-care-blog'];
+  const allPageLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
+  
+  for (const link of allPageLinks) {
+    if (!link.startsWith(currentOrigin)) continue;
+    const lowerLink = link.toLowerCase();
+    for (const keyword of blogKeywords) {
+      if (lowerLink.includes(keyword) && !lowerLink.match(/\\/page\\/\\d+/) && !lowerLink.match(/\\.(jpg|png|gif|webp)$/)) {
+        blogUrls.add(link);
+        console.log(\`   ✅ Found blog page: \${link}\`);
+        break;
+      }
+    }
+  }
+  
+  if (blogUrls.size === 0) {
+    const commonPaths = ['/blog', '/news', '/articles', '/home-care-blog'];
+    for (const path of commonPaths) {
+      const testUrl = currentOrigin + path;
+      try {
+        const testRes = await fetch(testUrl, { method: 'HEAD' });
+        if (testRes.ok) {
+          blogUrls.add(testUrl);
+          console.log(\`   ✅ Found blog page via path: \${testUrl}\`);
+        }
+      } catch(e) {}
+    }
+  }
+
+  console.log('🔍 Finding individual articles...');
+  for (const blogUrl of blogUrls) {
+    try {
+      const response = await fetch(blogUrl);
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      
+      const articleSelectors = ['article a', '.post a', '.blog-post a', '.entry-title a', 'h2 a', 'h3 a', '.read-more a', '.more-link'];
+      articleSelectors.forEach(selector => {
+        doc.querySelectorAll(selector).forEach(el => {
+          let href = el.href;
+          if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !href.match(/\\/category\\//)) {
+            if (!articleUrls.has(href)) {
+              articleUrls.add(href);
+              console.log(\`      📝 Found article: \${href.split('/').pop()}\`);
+            }
+          }
+        });
+      });
+      
+      const paginationSelectors = ['.pagination a', '.pages a', '.nav-links a', '.prev.page-numbers', '.next.page-numbers', 'a.page-numbers', '.older-posts a', '.newer-posts a'];
+      const paginationUrls = new Set();
+      paginationSelectors.forEach(selector => {
+        doc.querySelectorAll(selector).forEach(el => {
+          let href = el.href;
+          if (href && href.startsWith(currentOrigin) && href.match(/\\/page\\/\\d+/)) {
+            paginationUrls.add(href);
+            console.log(\`   📄 Found pagination: \${href}\`);
+          }
+        });
+      });
+      
+      for (let pageNum = 2; pageNum <= 10; pageNum++) {
+        const pageUrl = blogUrl.replace(/\\/$/, '') + '/page/' + pageNum;
+        try {
+          const pageRes = await fetch(pageUrl, { method: 'HEAD' });
+          if (pageRes.ok) {
+            paginationUrls.add(pageUrl);
+            console.log(\`   📄 Found pagination: \${pageUrl}\`);
+          } else break;
+        } catch(e) { break; }
+      }
+      
+      for (const pageUrl of paginationUrls) {
+        try {
+          const pageRes = await fetch(pageUrl);
+          const pageHtml = await pageRes.text();
+          const pageDoc = new DOMParser().parseFromString(pageHtml, 'text/html');
+          articleSelectors.forEach(selector => {
+            pageDoc.querySelectorAll(selector).forEach(el => {
+              let href = el.href;
+              if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !articleUrls.has(href)) {
+                articleUrls.add(href);
+                console.log(\`      📝 Found article from pagination: \${href.split('/').pop()}\`);
+              }
+            });
+          });
+        } catch(e) {}
+      }
+    } catch(e) {
+      console.log(\`   ⚠️ Could not fetch blog page: \${blogUrl}\`);
+    }
+  }
+
+  let allPagesToCrawl = [...sitemapLinks, ...blogUrls, ...articleUrls];
+  allPagesToCrawl = [...new Set(allPagesToCrawl)];
+  allPagesToCrawl = allPagesToCrawl.filter(url => !url.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i));
+  
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(\`📊 CRAWL SUMMARY:\`);
+  console.log(\`   📄 Sitemap pages: \${sitemapLinks.length}\`);
+  console.log(\`   📝 Blog pages: \${blogUrls.size}\`);
+  console.log(\`   📖 Individual articles: \${articleUrls.size}\`);
+  console.log(\`   📚 TOTAL pages to crawl: \${allPagesToCrawl.length}\`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  if (allPagesToCrawl.length === 0) {
+    console.log('❌ No pages found to crawl.');
+    return;
+  }
+
+  let allImages = [];
+  let totalPages = allPagesToCrawl.length;
+  
+  console.log('▶️ Starting image extraction (INCLUDING CSS backgrounds)...');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  function extractCSSBackgroundImages(doc, baseUrl) {
+    const images = [];
+    const elements = doc.querySelectorAll('*');
+    elements.forEach(el => {
+      const inlineStyle = el.getAttribute('style');
+      if (inlineStyle) {
+        const bgMatches = inlineStyle.match(/background(?:-image)?:\\s*url\\(['"]?([^'")]+)['"]?\\)/gi);
+        if (bgMatches) {
+          bgMatches.forEach(match => {
+            const urlMatch = match.match(/url\\(['"]?([^'")]+)['"]?\\)/i);
+            if (urlMatch && urlMatch[1]) {
+              try {
+                const absoluteUrl = new URL(urlMatch[1], baseUrl).href;
+                images.push(absoluteUrl);
+              } catch(e) {}
+            }
+          });
+        }
+      }
+      try {
+        const computedStyle = window.getComputedStyle(el);
+        const bgImage = computedStyle.backgroundImage;
+        if (bgImage && bgImage !== 'none') {
+          const urlMatch = bgImage.match(/url\\(['"]?([^'")]+)['"]?\\)/i);
+          if (urlMatch && urlMatch[1]) {
+            try {
+              const absoluteUrl = new URL(urlMatch[1], baseUrl).href;
+              images.push(absoluteUrl);
+            } catch(e) {}
+          }
+        }
+      } catch(e) {}
+    });
+    return images;
+  }
+
+  for (let i = 0; i < allPagesToCrawl.length; i++) {
+    const url = allPagesToCrawl[i];
+    const current = i + 1;
+    const shortName = url.split('/').slice(-2).join('/') || url;
+    
+    console.log(\`📄 [\${current}/\${totalPages}] Crawling: \${shortName}\`);
+    
+    try {
+      const res = await fetch(url);
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      const imgImages = Array.from(doc.querySelectorAll('img'))
+        .map(img => {
+          const src = img.getAttribute('src');
+          if (!src) return null;
+          try {
+            return new URL(src, url).href;
+          } catch(e) { return null; }
+        })
+        .filter(Boolean);
+
+      const cssImages = extractCSSBackgroundImages(doc, url);
+
+      console.log(\`   🖼️ IMG tags: \${imgImages.length} images\`);
+      console.log(\`   🎨 CSS backgrounds: \${cssImages.length} images\`);
+      
+      imgImages.forEach(img => console.log('🖼️ [IMG] ' + img + ' [SOURCE] ' + url));
+      cssImages.forEach(img => console.log('🎨 [CSS] ' + img + ' [SOURCE] ' + url));
+
+      allImages.push(...imgImages, ...cssImages);
+      
+      let percent = Math.round((current / totalPages) * 100);
+      let barLength = Math.floor(percent / 5);
+      console.log(\`   ✅ Page \${current} complete! Found \${imgImages.length + cssImages.length} images\`);
+      console.log(\`   █\`.repeat(barLength) + '░'.repeat(20 - barLength) + \` \${percent}%\`);
+      console.log('');
+
+    } catch (e) {
+      console.warn(\`   ⚠️ Failed: \${shortName} - \${e.message}\`);
+      console.log('');
+    }
+    
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  const uniqueImages = [...new Set(allImages)];
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🎉 CRAWL COMPLETE! 🎉');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📊 FINAL SUMMARY:');
+  console.log(\`   📄 Pages scanned: \${totalPages}\`);
+  console.log(\`   🖼️ Total images found: \${allImages.length}\`);
+  console.log(\`   ✨ Unique images: \${uniqueImages.length}\`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📋 UNIQUE IMAGE URLs (with source pages):');
+  uniqueImages.forEach(img => console.log(img));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  try {
+    await navigator.clipboard.writeText(uniqueImages.join('\\n'));
+    console.log('📋 All unique image URLs copied to clipboard!');
+  } catch(e) {}
+})();`;
+
+// Code WITHOUT CSS (only img tags)
+const crawlerCodeWithoutCSS = `(async () => {
+  console.log('🔍 Scanning current page for sitemap links...');
+  const currentOrigin = window.location.origin;
+  
+  const sitemapSelectors = [
+    '.sitemap li a', '.sitemap-page li a', '#sitemap li a',
+    '.page-sitemap li a', '.post-sitemap li a', 'ul.sitemap a',
+    '.page_item a', '.page-item a', '.pagenav a',
+    '.menu-item a', '.nav-menu a', '.main-navigation a',
+    '.entry-content li a', '.content ul li a', '.page-content li a',
+    '.wp-block-page-list a', '.wp-block-sitemap-page a',
+    'a[href*="/page/"]', 'a[href*="/p/"]'
+  ];
+  
+  let sitemapLinks = [];
+  for (const selector of sitemapSelectors) {
+    const links = Array.from(document.querySelectorAll(selector)).map(a => a.href);
+    const internalLinks = links.filter(link => 
+      link.startsWith(currentOrigin) && 
+      !link.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i) &&
+      !link.includes('#') &&
+      !link.includes('/wp-content/') &&
+      !link.includes('/wp-includes/')
+    );
+    if (internalLinks.length > 0) {
+      sitemapLinks = internalLinks;
+      console.log(\`   ✅ Found \${internalLinks.length} links using selector: "\${selector}"\`);
+      break;
+    }
+  }
+  
+  if (sitemapLinks.length === 0) {
+    console.log('   ⚠️ No sitemap links found. Using all internal links...');
+    const allLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
+    sitemapLinks = [...new Set(allLinks.filter(link => 
+      link.startsWith(currentOrigin) && 
+      !link.match(/\\.(jpg|jpeg|png|gif|webp|css|js)$/i) &&
+      !link.includes('#') &&
+      !link.includes('/wp-content/')
+    ))];
+    console.log(\`   ✅ Found \${sitemapLinks.length} internal links as fallback\`);
+  }
+
+  console.log('🔍 Auto-detecting blog page...');
+  const blogUrls = new Set();
+  const articleUrls = new Set();
+  const blogKeywords = ['blog', 'news', 'articles', 'posts', 'category', 'home-care-blog'];
+  const allPageLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
+  
+  for (const link of allPageLinks) {
+    if (!link.startsWith(currentOrigin)) continue;
+    const lowerLink = link.toLowerCase();
+    for (const keyword of blogKeywords) {
+      if (lowerLink.includes(keyword) && !lowerLink.match(/\\/page\\/\\d+/) && !lowerLink.match(/\\.(jpg|png|gif|webp)$/)) {
+        blogUrls.add(link);
+        console.log(\`   ✅ Found blog page: \${link}\`);
+        break;
+      }
+    }
+  }
+  
+  if (blogUrls.size === 0) {
+    const commonPaths = ['/blog', '/news', '/articles', '/home-care-blog'];
+    for (const path of commonPaths) {
+      const testUrl = currentOrigin + path;
+      try {
+        const testRes = await fetch(testUrl, { method: 'HEAD' });
+        if (testRes.ok) {
+          blogUrls.add(testUrl);
+          console.log(\`   ✅ Found blog page via path: \${testUrl}\`);
+        }
+      } catch(e) {}
+    }
+  }
+
+  console.log('🔍 Finding individual articles...');
+  for (const blogUrl of blogUrls) {
+    try {
+      const response = await fetch(blogUrl);
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      
+      const articleSelectors = ['article a', '.post a', '.blog-post a', '.entry-title a', 'h2 a', 'h3 a', '.read-more a', '.more-link'];
+      articleSelectors.forEach(selector => {
+        doc.querySelectorAll(selector).forEach(el => {
+          let href = el.href;
+          if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !href.match(/\\/category\\//)) {
+            if (!articleUrls.has(href)) {
+              articleUrls.add(href);
+              console.log(\`      📝 Found article: \${href.split('/').pop()}\`);
+            }
+          }
+        });
+      });
+      
+      const paginationSelectors = ['.pagination a', '.pages a', '.nav-links a', '.prev.page-numbers', '.next.page-numbers', 'a.page-numbers', '.older-posts a', '.newer-posts a'];
+      const paginationUrls = new Set();
+      paginationSelectors.forEach(selector => {
+        doc.querySelectorAll(selector).forEach(el => {
+          let href = el.href;
+          if (href && href.startsWith(currentOrigin) && href.match(/\\/page\\/\\d+/)) {
+            paginationUrls.add(href);
+            console.log(\`   📄 Found pagination: \${href}\`);
+          }
+        });
+      });
+      
+      for (let pageNum = 2; pageNum <= 10; pageNum++) {
+        const pageUrl = blogUrl.replace(/\\/$/, '') + '/page/' + pageNum;
+        try {
+          const pageRes = await fetch(pageUrl, { method: 'HEAD' });
+          if (pageRes.ok) {
+            paginationUrls.add(pageUrl);
+            console.log(\`   📄 Found pagination: \${pageUrl}\`);
+          } else break;
+        } catch(e) { break; }
+      }
+      
+      for (const pageUrl of paginationUrls) {
+        try {
+          const pageRes = await fetch(pageUrl);
+          const pageHtml = await pageRes.text();
+          const pageDoc = new DOMParser().parseFromString(pageHtml, 'text/html');
+          articleSelectors.forEach(selector => {
+            pageDoc.querySelectorAll(selector).forEach(el => {
+              let href = el.href;
+              if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !articleUrls.has(href)) {
+                articleUrls.add(href);
+                console.log(\`      📝 Found article from pagination: \${href.split('/').pop()}\`);
+              }
+            });
+          });
+        } catch(e) {}
+      }
+    } catch(e) {
+      console.log(\`   ⚠️ Could not fetch blog page: \${blogUrl}\`);
+    }
+  }
+
+  let allPagesToCrawl = [...sitemapLinks, ...blogUrls, ...articleUrls];
+  allPagesToCrawl = [...new Set(allPagesToCrawl)];
+  allPagesToCrawl = allPagesToCrawl.filter(url => !url.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i));
+  
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(\`📊 CRAWL SUMMARY:\`);
+  console.log(\`   📄 Sitemap pages: \${sitemapLinks.length}\`);
+  console.log(\`   📝 Blog pages: \${blogUrls.size}\`);
+  console.log(\`   📖 Individual articles: \${articleUrls.size}\`);
+  console.log(\`   📚 TOTAL pages to crawl: \${allPagesToCrawl.length}\`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  if (allPagesToCrawl.length === 0) {
+    console.log('❌ No pages found to crawl.');
+    return;
+  }
+
+  let allImages = [];
+  let totalPages = allPagesToCrawl.length;
+  
+  console.log('▶️ Starting image extraction (ONLY IMG tags)...');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+  for (let i = 0; i < allPagesToCrawl.length; i++) {
+    const url = allPagesToCrawl[i];
+    const current = i + 1;
+    const shortName = url.split('/').slice(-2).join('/') || url;
+    
+    console.log(\`📄 [\${current}/\${totalPages}] Crawling: \${shortName}\`);
+    
+    try {
+      const res = await fetch(url);
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      const imgImages = Array.from(doc.querySelectorAll('img'))
+        .map(img => {
+          const src = img.getAttribute('src');
+          if (!src) return null;
+          try {
+            return new URL(src, url).href;
+          } catch(e) { return null; }
+        })
+        .filter(Boolean);
+
+      console.log(\`   🖼️ IMG tags: \${imgImages.length} images\`);
+      
+      imgImages.forEach(img => console.log('🖼️ [IMG] ' + img + ' [SOURCE] ' + url));
+
+      allImages.push(...imgImages);
+      
+      let percent = Math.round((current / totalPages) * 100);
+      let barLength = Math.floor(percent / 5);
+      console.log(\`   ✅ Page \${current} complete! Found \${imgImages.length} images\`);
+      console.log(\`   █\`.repeat(barLength) + '░'.repeat(20 - barLength) + \` \${percent}%\`);
+      console.log('');
+
+    } catch (e) {
+      console.warn(\`   ⚠️ Failed: \${shortName} - \${e.message}\`);
+      console.log('');
+    }
+    
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  const uniqueImages = [...new Set(allImages)];
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🎉 CRAWL COMPLETE! 🎉');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📊 FINAL SUMMARY:');
+  console.log(\`   📄 Pages scanned: \${totalPages}\`);
+  console.log(\`   🖼️ Total images found: \${allImages.length}\`);
+  console.log(\`   ✨ Unique images: \${uniqueImages.length}\`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📋 UNIQUE IMAGE URLs (with source pages):');
+  uniqueImages.forEach(img => console.log(img));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  try {
+    await navigator.clipboard.writeText(uniqueImages.join('\\n'));
+    console.log('📋 All unique image URLs copied to clipboard!');
+  } catch(e) {}
+})();`;
+
+function updateCrawlerCode() {
+  const includeCss = document.getElementById('includeCssToggle').checked;
+  const codeBlock = document.getElementById('crawlerCode');
+  codeBlock.textContent = includeCss ? crawlerCodeWithCSS : crawlerCodeWithoutCSS;
+}
+
+function copyCrawlerCode() {
+  const code = document.getElementById('crawlerCode').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('✅ Crawler code copied! Paste it in console on the sitemap page.'));
+}
+
+function clearSearch() {
+  document.getElementById('filterInput').value = '';
+  filterImages();
+}
+
+function toggleSortOrder() {
+  sortOrder = sortOrder === 'default' ? 'numbersLast' : 'default';
+  document.getElementById('sortBtn').innerHTML = sortOrder === 'default' ? '📁 Sort: Numbers Last' : '📁 Sort: Default';
+  showToast(sortOrder === 'default' ? '📁 Default order' : '📁 Numbers moved to bottom');
+  displayImages();
+}
+
+function extractNumber(filename) {
+  const match = filename.match(/(\d+)/);
+  return match ? parseInt(match[0]) : null;
+}
+
+function sortImages(images) {
+  if (sortOrder === 'numbersLast') {
+    return [...images].sort((a, b) => {
+      const nameA = a.split('/').pop().split('?')[0].toLowerCase();
+      const nameB = b.split('/').pop().split('?')[0].toLowerCase();
+      const numA = extractNumber(nameA);
+      const numB = extractNumber(nameB);
+      if (numA !== null && numB !== null) return numA - numB;
+      if (numA !== null) return 1;
+      if (numB !== null) return -1;
+      return nameA.localeCompare(nameB);
+    });
+  }
+  return [...images];
+}
+
+function parseConsoleOutput() {
+  const text = document.getElementById('consoleOutput').value;
+  const lines = text.split(/\r?\n/);
+  
+  detectedPages = [];
+  allImages = [];
+  uniqueImages.clear();
+  duplicateImages.clear();
+  selectedImages.clear();
+  cssImagesSet.clear();
+  imgTagSet.clear();
+  imageSourceMap.clear();
+  
+  const pagePattern = /📄\s*\[\d+\/\d+\]\s*Crawling:\s*([^\s]+)/i;
+  const imagePattern = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|bmp|svg|ico))/i;
+  
+  let currentSource = '';
+  
+  for (const line of lines) {
+    // Skip summary lines
+    if (line.includes('Total unique images') || 
+        line.includes('✅ All images from sitemap') ||
+        line.includes('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') ||
+        line.includes('🎉 CRAWL COMPLETE') ||
+        line.includes('📊 FINAL SUMMARY') ||
+        line.includes('▶️ Starting image extraction') ||
+        (line.includes('Pages scanned') && !line.includes('http')) ||
+        (line.includes('Total images found') && !line.includes('http')) ||
+        (line.includes('Unique images') && !line.includes('http'))) {
+      continue;
+    }
+    
+    // Get page URL from crawling line
+    const pageMatch = line.match(pagePattern);
+    if (pageMatch) {
+      currentSource = pageMatch[1];
+      if (!detectedPages.includes(currentSource)) {
+        detectedPages.push(currentSource);
+      }
+    }
+    
+    // Also try to get source from [SOURCE] tag
+    if (line.includes('[SOURCE]')) {
+      const sourceMatch = line.match(/\[SOURCE\]\s*(https?:\/\/[^\s]+)/i);
+      if (sourceMatch) {
+        currentSource = sourceMatch[1];
+      }
+    }
+    
+    // Extract image URL
+    const imageMatch = line.match(imagePattern);
+    if (imageMatch) {
+      const imageUrl = imageMatch[1];
+      allImages.push(imageUrl);
+      
+      // Store source page
+      if (!imageSourceMap.has(imageUrl)) {
+        imageSourceMap.set(imageUrl, []);
+      }
+      const sources = imageSourceMap.get(imageUrl);
+      if (currentSource && !sources.includes(currentSource)) {
+        sources.push(currentSource);
+      }
+      
+      // CRITICAL FIX: Check if this is a CSS image
+      // Look for 🎨 emoji OR [CSS] tag
+      if (line.includes('🎨') || line.includes('[CSS]')) {
+        cssImagesSet.add(imageUrl);
+        console.log(`✅ CSS detected: ${imageUrl}`); // Debug
+      } else {
+        imgTagSet.add(imageUrl);
+      }
+    }
+  }
+  
+  // Remove duplicates for unique images
+  const tempSet = new Set();
+  for (const img of allImages) {
+    if (tempSet.has(img)) {
+      duplicateImages.add(img);
+    } else {
+      tempSet.add(img);
+      uniqueImages.add(img);
+    }
+  }
+  
+  updateStats();
+  displayDetectedPages();
+  displayDuplicates();
+  displayImages();
+  
+  const cssCount = cssImagesSet.size;
+  const imgCount = imgTagSet.size;
+  console.log(`📊 Parser results: ${imgCount} IMG images, ${cssCount} CSS images`);
+  showToast(`✅ Found ${detectedPages.length} pages, ${uniqueImages.size} unique images (${imgCount} IMG, ${cssCount} CSS)`);
+}
+
+function updateStats() {
+  document.getElementById('stats').style.display = 'grid';
+  document.getElementById('pagesCount').textContent = detectedPages.length;
+  document.getElementById('totalImages').textContent = allImages.length;
+  document.getElementById('uniqueCount').textContent = uniqueImages.size;
+  document.getElementById('duplicateCount').textContent = duplicateImages.size;
+  document.getElementById('selectedCount').textContent = selectedImages.size;
+  document.getElementById('cssImageCount').textContent = cssImagesSet.size;
+  document.getElementById('pagesBadge').textContent = detectedPages.length;
+  document.getElementById('duplicatesBadge').textContent = duplicateImages.size;
+}
+
+function displayDetectedPages() {
+  const section = document.getElementById('pagesSection');
+  const container = document.getElementById('pageList');
+  if (detectedPages.length > 0) {
+    section.style.display = 'block';
+    container.innerHTML = detectedPages.map(url => `<div class="page-item"><a href="${url}" target="_blank">${url}</a></div>`).join('');
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+function displayDuplicates() {
+  const section = document.getElementById('duplicatesSection');
+  const container = document.getElementById('duplicateList');
+  if (duplicateImages.size > 0) {
+    section.style.display = 'block';
+    container.innerHTML = Array.from(duplicateImages).map(url => `<div class="duplicate-item">${url}</div>`).join('');
+  } else section.style.display = 'none';
+}
+
+function filterByType(type) {
+  currentFilter = type;
+  displayImages();
+}
+
+function showImageDetails(url) {
+  const sources = imageSourceMap.get(url) || ['Unknown source'];
+  const isCss = cssImagesSet.has(url);
+  const typeLabel = isCss ? '🎨 CSS Background Image' : '🖼️ IMG Tag';
+  
+  document.getElementById('detailsImage').src = url;
+  document.getElementById('detailsUrl').innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+  document.getElementById('detailsType').innerHTML = typeLabel;
+  document.getElementById('pagesCountSpan').textContent = sources.length;
+  
+  // Display all pages where this image was found
+  const pagesContainer = document.getElementById('detailsPages');
+  pagesContainer.innerHTML = sources.map(source => `
+    <div class="page-item-detail">
+      <a href="${source}" target="_blank">${source}</a>
+    </div>
+  `).join('');
+  
+  document.getElementById('detailsPopup').style.display = 'flex';
+}
+
+function closeDetailsPopup() {
+  document.getElementById('detailsPopup').style.display = 'none';
+}
+
+function displayImages() {
+  const container = document.getElementById('imageContainer');
+  container.innerHTML = '';
+  
+  if (uniqueImages.size === 0) {
+    container.innerHTML = '<div class="loading">✨ No images to display.</div>';
+    return;
+  }
+  
+  let filteredByType = Array.from(uniqueImages);
+  if (currentFilter === 'img') {
+    filteredByType = filteredByType.filter(url => imgTagSet.has(url));
+  } else if (currentFilter === 'css') {
+    filteredByType = filteredByType.filter(url => cssImagesSet.has(url));
+  }
+  
+  currentImageList = sortImages(filteredByType);
+  
+  const searchTerm = document.getElementById('filterInput').value.toLowerCase();
+  let displayedImages = currentImageList;
+  if (searchTerm) {
+    displayedImages = currentImageList.filter(url => 
+      url.toLowerCase().includes(searchTerm) || 
+      url.split('/').pop().toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  for (const url of displayedImages) {
+    const isCssImage = cssImagesSet.has(url);
+    const sources = imageSourceMap.get(url) || [];
+    const pagesCount = sources.length;
+    
+    const card = document.createElement('div');
+    card.className = 'image-card';
+    card.setAttribute('data-type', isCssImage ? 'css' : 'img');
+    if (selectedImages.has(url)) card.classList.add('selected');
+    
+    const img = document.createElement('img');
+    img.src = url;
+    img.loading = 'lazy';
+    img.onerror = () => { img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect width="200" height="150" fill="%23ddd"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" fill="%23999"%3EFailed%3C/text%3E%3C/svg%3E'; };
+    img.onclick = (e) => { e.stopPropagation(); openPopup(url); };
+    
+    const fileName = url.split('/').pop().split('?')[0];
+    const info = document.createElement('div');
+    info.className = 'image-info';
+    info.innerHTML = `
+      <div class="image-filename">${fileName.substring(0, 35)}${fileName.length > 35 ? '...' : ''}</div>
+      <div class="${isCssImage ? 'css-label' : 'img-label'}">
+        ${isCssImage ? '🎨 CSS BACKGROUND' : '🖼️ IMG TAG'}
+      </div>
+      <div class="image-pages-count">
+        📄 Found on ${pagesCount} page${pagesCount !== 1 ? 's' : ''}
+      </div>
+      <label class="image-checkbox">
+        <input type="checkbox" class="checkbox" ${selectedImages.has(url) ? 'checked' : ''}>
+        <span>Select this image</span>
+      </label>
+    `;
+    
+    const btnDiv = document.createElement('div');
+    btnDiv.className = 'image-buttons';
+    
+    const viewBtn = document.createElement('button'); viewBtn.className = 'icon-btn btn-view'; viewBtn.innerHTML = '👁️'; viewBtn.title = 'View full size'; viewBtn.onclick = (e) => { e.stopPropagation(); openPopup(url); };
+    
+    const detailsBtn = document.createElement('button'); detailsBtn.className = 'icon-btn btn-details'; detailsBtn.innerHTML = 'ℹ️'; detailsBtn.title = 'Image details & source pages'; detailsBtn.onclick = (e) => { e.stopPropagation(); showImageDetails(url); };
+    
+    const copyBtn = document.createElement('button'); copyBtn.className = 'icon-btn btn-copy'; copyBtn.innerHTML = '📋'; copyBtn.title = 'Copy image URL'; copyBtn.onclick = (e) => { e.stopPropagation(); copyImageUrl(url); };
+    
+    const delBtn = document.createElement('button'); delBtn.className = 'icon-btn btn-delete'; delBtn.innerHTML = '🗑️'; delBtn.title = 'Delete image'; delBtn.onclick = (e) => { e.stopPropagation(); deleteImage(url); };
+    
+    btnDiv.appendChild(viewBtn);
+    btnDiv.appendChild(detailsBtn);
+    btnDiv.appendChild(copyBtn);
+    btnDiv.appendChild(delBtn);
+    
+    card.appendChild(img);
+    card.appendChild(info);
+    card.appendChild(btnDiv);
+    
+    const chk = info.querySelector('.checkbox');
+    chk.onchange = (e) => {
+      e.stopPropagation();
+      if (chk.checked) { selectedImages.add(url); card.classList.add('selected'); }
+      else { selectedImages.delete(url); card.classList.remove('selected'); }
+      document.getElementById('selectedCount').textContent = selectedImages.size;
+    };
+    card.onclick = (e) => { if (e.target === card || e.target === img) openPopup(url); };
+    container.appendChild(card);
+  }
+}
+
+function copyImageUrl(url) {
+  navigator.clipboard.writeText(url).then(() => showToast('✅ URL copied!'));
+}
+
+function deleteImage(url) {
+  if (confirm('Remove this image?')) {
+    uniqueImages.delete(url);
+    selectedImages.delete(url);
+    displayImages();
+    updateStats();
+  }
+}
+
+function selectAllImages() { 
+  const searchTerm = document.getElementById('filterInput').value.toLowerCase();
+  let imagesToSelect = currentImageList;
+  if (searchTerm) {
+    imagesToSelect = currentImageList.filter(url => 
+      url.toLowerCase().includes(searchTerm) || 
+      url.split('/').pop().toLowerCase().includes(searchTerm)
+    );
+  }
+  imagesToSelect.forEach(u => selectedImages.add(u)); 
+  displayImages(); 
+  updateStats(); 
+}
+
+function deselectAllImages() { selectedImages.clear(); displayImages(); updateStats(); }
+function deleteSelectedImages() {
+  if (selectedImages.size === 0) { showToast('No images selected', 'error'); return; }
+  if (confirm(`Delete ${selectedImages.size} image(s)?`)) {
+    for (const url of selectedImages) uniqueImages.delete(url);
+    selectedImages.clear();
+    displayImages();
+    updateStats();
+  }
+}
+function copySelectedImages() {
+  if (selectedImages.size === 0) { showToast('No images selected', 'error'); return; }
+  navigator.clipboard.writeText(Array.from(selectedImages).join('\n')).then(() => showToast(`✅ Copied ${selectedImages.size} URLs!`));
+}
+function filterImages() { displayImages(); }
+function openPopup(url) { document.getElementById('popupImage').src = url; document.getElementById('popup').style.display = 'flex'; }
+function closePopup() { document.getElementById('popup').style.display = 'none'; }
+function clearAll() {
+  if (confirm('Clear all?')) {
+    detectedPages = []; allImages = []; uniqueImages.clear(); duplicateImages.clear(); selectedImages.clear(); cssImagesSet.clear(); imgTagSet.clear(); imageSourceMap.clear();
+    document.getElementById('consoleOutput').value = '';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById('pagesSection').style.display = 'none';
+    document.getElementById('duplicatesSection').style.display = 'none';
+    document.getElementById('imageContainer').innerHTML = '<div class="loading">✨ No data.<br>Run crawler, paste output, click "Parse Output"</div>';
+  }
+}
+function showToast(msg, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.background = type === 'error' ? '#dc3545' : '#28a745';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Initialize
+document.getElementById('includeCssToggle').checked = true;
+updateCrawlerCode();
+</script>
+</body>
+</html>
