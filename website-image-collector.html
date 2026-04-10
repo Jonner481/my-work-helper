@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Website Image Collector - With Image Details & Source Pages</title>
+<title>Website Image Collector - Working Filters</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
   * {
@@ -306,8 +306,35 @@
   }
 
   .badge-page { background: #17a2b8; color: white; }
+
   .badge-duplicate { background: #ffc107; color: #333; }
 
+  .filter-badge.active {
+    opacity: 1 !important;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
+    transform: scale(1.05);
+  }
+  
+  .filter-badge.all.active { 
+    background: #6c757d; 
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #6c757d; 
+  }
+  
+  .filter-badge.img.active { 
+    background: #28a745; 
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #28a745; 
+  }
+  
+  .filter-badge.css.active { 
+    background: #6f42c1; 
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #6f42c1; 
+  }
+  
+  .filter-badge.sort.active { 
+    background: #17a2b8; 
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #17a2b8; 
+  }
+  
   .page-list, .duplicate-list {
     max-height: 150px;
     overflow-y: auto;
@@ -559,7 +586,6 @@
     position: relative;
   }
 
-  /* X button for details popup - INSIDE the popup at top-right corner */
   .details-close {
     position: absolute;
     top: 15px;
@@ -751,7 +777,6 @@
     .app { flex-direction: column; }
     .sidebar { width: 100%; max-height: 45vh; }
     .gallery-area { max-height: 55vh; }
-    .details-close { top: 10px; right: 10px; }
   }
 </style>
 </head>
@@ -817,7 +842,7 @@
       <div class="stat-card"><div class="stat-number" id="pagesCount">0</div><div class="stat-label">📄 Pages Detected</div></div>
       <div class="stat-card"><div class="stat-number" id="totalImages">0</div><div class="stat-label">🖼️ Total Images</div></div>
       <div class="stat-card"><div class="stat-number" id="uniqueCount">0</div><div class="stat-label">✨ Unique Images</div></div>
-      <div class="stat-card"><div class="stat-number" id="duplicateCount">0</div><div class="stat-label">⚠️ Duplicates</div></div>
+      <div class="stat-card"><div class="stat-number" id="duplicateCount">0</div><div class="stat-label">⚠️ Duplicates Removed</div></div>
       <div class="stat-card"><div class="stat-number" id="selectedCount">0</div><div class="stat-label">✅ Selected</div></div>
       <div class="stat-card"><div class="stat-number" id="cssImageCount">0</div><div class="stat-label">🎨 CSS Images</div></div>
     </div>
@@ -828,7 +853,7 @@
     </div>
 
     <div class="section" id="duplicatesSection" style="display: none;">
-      <div class="section-title"><span>⚠️ Duplicate Images</span><span class="badge badge-duplicate" id="duplicatesBadge">0</span></div>
+      <div class="section-title"><span>⚠️ Duplicate Images Removed</span><span class="badge badge-duplicate" id="duplicatesBadge">0</span></div>
       <div class="duplicate-list" id="duplicateList"></div>
     </div>
 
@@ -905,7 +930,7 @@ let selectedImages = new Set();
 let currentImageList = [];
 let cssImagesSet = new Set();
 let imgTagSet = new Set();
-let imageSourceMap = new Map(); // Store array of source pages for each image
+let imageSourceMap = new Map();
 let currentFilter = 'all';
 let sortOrder = 'default';
 
@@ -1505,11 +1530,9 @@ function parseConsoleOutput() {
         sources.push(currentSource);
       }
       
-      // CRITICAL FIX: Check if this is a CSS image
-      // Look for 🎨 emoji OR [CSS] tag
+      // Check if this is a CSS image - look for 🎨 emoji or [CSS] tag
       if (line.includes('🎨') || line.includes('[CSS]')) {
         cssImagesSet.add(imageUrl);
-        console.log(`✅ CSS detected: ${imageUrl}`); // Debug
       } else {
         imgTagSet.add(imageUrl);
       }
@@ -1532,10 +1555,7 @@ function parseConsoleOutput() {
   displayDuplicates();
   displayImages();
   
-  const cssCount = cssImagesSet.size;
-  const imgCount = imgTagSet.size;
-  console.log(`📊 Parser results: ${imgCount} IMG images, ${cssCount} CSS images`);
-  showToast(`✅ Found ${detectedPages.length} pages, ${uniqueImages.size} unique images (${imgCount} IMG, ${cssCount} CSS)`);
+  showToast(`✅ Found ${detectedPages.length} pages, ${uniqueImages.size} unique images (${imgTagSet.size} IMG, ${cssImagesSet.size} CSS)`);
 }
 
 function updateStats() {
@@ -1570,8 +1590,19 @@ function displayDuplicates() {
   } else section.style.display = 'none';
 }
 
+// FIXED: Filter function that properly separates IMG and CSS
 function filterByType(type) {
   currentFilter = type;
+  console.log(`Filter changed to: ${type}`);
+  
+  // Update button styling
+  document.querySelectorAll('.filter-badge').forEach(btn => {
+    btn.style.opacity = '0.6';
+  });
+  if (type === 'all') document.querySelector('.filter-badge.all').style.opacity = '1';
+  if (type === 'img') document.querySelector('.filter-badge.img').style.opacity = '1';
+  if (type === 'css') document.querySelector('.filter-badge.css').style.opacity = '1';
+  
   displayImages();
 }
 
@@ -1585,7 +1616,6 @@ function showImageDetails(url) {
   document.getElementById('detailsType').innerHTML = typeLabel;
   document.getElementById('pagesCountSpan').textContent = sources.length;
   
-  // Display all pages where this image was found
   const pagesContainer = document.getElementById('detailsPages');
   pagesContainer.innerHTML = sources.map(source => `
     <div class="page-item-detail">
@@ -1600,6 +1630,7 @@ function closeDetailsPopup() {
   document.getElementById('detailsPopup').style.display = 'none';
 }
 
+// FIXED: Display function that properly filters by type
 function displayImages() {
   const container = document.getElementById('imageContainer');
   container.innerHTML = '';
@@ -1609,15 +1640,29 @@ function displayImages() {
     return;
   }
   
-  let filteredByType = Array.from(uniqueImages);
-  if (currentFilter === 'img') {
-    filteredByType = filteredByType.filter(url => imgTagSet.has(url));
-  } else if (currentFilter === 'css') {
-    filteredByType = filteredByType.filter(url => cssImagesSet.has(url));
+  // Apply type filter
+  let filteredByType = [];
+  
+  if (currentFilter === 'all') {
+    // Show ALL unique images
+    filteredByType = Array.from(uniqueImages);
+    console.log(`📊 Showing ALL: ${filteredByType.length} images`);
+  } 
+  else if (currentFilter === 'img') {
+    // Show ONLY images that are from IMG tags (NOT in cssImagesSet)
+    filteredByType = Array.from(uniqueImages).filter(url => !cssImagesSet.has(url));
+    console.log(`📊 Showing IMG only: ${filteredByType.length} images (CSS excluded: ${cssImagesSet.size})`);
+  } 
+  else if (currentFilter === 'css') {
+    // Show ONLY images that are CSS backgrounds
+    filteredByType = Array.from(uniqueImages).filter(url => cssImagesSet.has(url));
+    console.log(`📊 Showing CSS only: ${filteredByType.length} images`);
   }
   
+  // Apply sorting
   currentImageList = sortImages(filteredByType);
   
+  // Apply search filter
   const searchTerm = document.getElementById('filterInput').value.toLowerCase();
   let displayedImages = currentImageList;
   if (searchTerm) {
@@ -1627,6 +1672,7 @@ function displayImages() {
     );
   }
   
+  // Render images
   for (const url of displayedImages) {
     const isCssImage = cssImagesSet.has(url);
     const sources = imageSourceMap.get(url) || [];
@@ -1664,11 +1710,8 @@ function displayImages() {
     btnDiv.className = 'image-buttons';
     
     const viewBtn = document.createElement('button'); viewBtn.className = 'icon-btn btn-view'; viewBtn.innerHTML = '👁️'; viewBtn.title = 'View full size'; viewBtn.onclick = (e) => { e.stopPropagation(); openPopup(url); };
-    
     const detailsBtn = document.createElement('button'); detailsBtn.className = 'icon-btn btn-details'; detailsBtn.innerHTML = 'ℹ️'; detailsBtn.title = 'Image details & source pages'; detailsBtn.onclick = (e) => { e.stopPropagation(); showImageDetails(url); };
-    
     const copyBtn = document.createElement('button'); copyBtn.className = 'icon-btn btn-copy'; copyBtn.innerHTML = '📋'; copyBtn.title = 'Copy image URL'; copyBtn.onclick = (e) => { e.stopPropagation(); copyImageUrl(url); };
-    
     const delBtn = document.createElement('button'); delBtn.className = 'icon-btn btn-delete'; delBtn.innerHTML = '🗑️'; delBtn.title = 'Delete image'; delBtn.onclick = (e) => { e.stopPropagation(); deleteImage(url); };
     
     btnDiv.appendChild(viewBtn);
