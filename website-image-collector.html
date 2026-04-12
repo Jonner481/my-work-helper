@@ -1,1806 +1,640 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Website Image Collector - Working Filters</title>
-<link rel="icon" type="image/png" href="favicon.png">
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    height: 100vh;
-    overflow: hidden;
-  }
-
-  .app {
-    display: flex;
-    height: 100vh;
-    gap: 0;
-  }
-
-  .sidebar {
-    width: 500px;
-    background: rgba(255, 255, 255, 0.98);
-    overflow-y: auto;
-    padding: 20px;
-    box-shadow: 5px 0 20px rgba(0,0,0,0.1);
-    z-index: 10;
-  }
-
-  .gallery-area {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-  }
-
-  .sidebar::-webkit-scrollbar, .gallery-area::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .sidebar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-  }
-
-  .sidebar::-webkit-scrollbar-thumb {
-    background: #667eea;
-    border-radius: 10px;
-  }
-
-  .sidebar-header {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #e0e0e0;
-  }
-
-  .sidebar-header h1 {
-    font-size: 24px;
-    margin-bottom: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .sidebar-header p {
-    color: #666;
-    font-size: 13px;
-  }
-
-  .instructions {
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-    border-left: 4px solid #667eea;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-  }
-
-  .instructions h3 {
-    font-size: 14px;
-    margin-bottom: 10px;
-    color: #333;
-  }
-
-  .instructions ol {
-    margin-left: 20px;
-    font-size: 12px;
-    color: #555;
-  }
-
-  .instructions li {
-    margin: 5px 0;
-  }
-
-  .crawler-toggle-section {
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
-    border: 2px solid #667eea;
-  }
-
-  .toggle-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-
-  .toggle-title {
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .toggle-desc {
-    font-size: 11px;
-    color: #666;
-    margin-top: 5px;
-  }
-
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 52px;
-    height: 26px;
-  }
-
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: 0.3s;
-    border-radius: 26px;
-  }
-
-  .slider:before {
-    position: absolute;
-    content: "";
-    height: 20px;
-    width: 20px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: 0.3s;
-    border-radius: 50%;
-  }
-
-  input:checked + .slider {
-    background-color: #28a745;
-  }
-
-  input:checked + .slider:before {
-    transform: translateX(26px);
-  }
-
-  .code-block {
-    background: #1e1e1e;
-    color: #d4d4d4;
-    padding: 12px;
-    border-radius: 8px;
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    margin: 10px 0;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-
-  .copy-btn {
-    background: #28a745;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    margin-top: 8px;
-    width: 100%;
-  }
-
-  .copy-btn:hover {
-    background: #218838;
-  }
-
-  .note-box {
-    background: #fff3cd;
-    border-left: 4px solid #ffc107;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    color: #856404;
-  }
-
-  .input-section {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 20px;
-  }
-
-  textarea {
-    width: 100%;
-    height: 120px;
-    padding: 12px;
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    resize: vertical;
-  }
-
-  .button-group {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    flex: 1;
-    text-align: center;
-  }
-
-  .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-  .btn-success { background: #28a745; color: white; }
-  .btn-danger { background: #dc3545; color: white; }
-  .btn-warning { background: #ffc107; color: #333; }
-  .btn-info { background: #17a2b8; color: white; }
-  .btn-secondary { background: #6c757d; color: white; }
-
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  .stat-card {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 10px;
-    text-align: center;
-  }
-
-  .stat-number {
-    font-size: 24px;
-    font-weight: bold;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .stat-label {
-    color: #666;
-    font-size: 11px;
-    margin-top: 4px;
-  }
-
-  .section {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 15px;
-  }
-
-  .section-title {
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .badge {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: bold;
-  }
-
-  .badge-page { background: #17a2b8; color: white; }
-
-  .badge-duplicate { background: #ffc107; color: #333; }
-
-  .filter-badge.active {
-    opacity: 1 !important;
-    box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
-    transform: scale(1.05);
-  }
-  
-  .filter-badge.all.active { 
-    background: #6c757d; 
-    box-shadow: 0 0 0 2px white, 0 0 0 4px #6c757d; 
-  }
-  
-  .filter-badge.img.active { 
-    background: #28a745; 
-    box-shadow: 0 0 0 2px white, 0 0 0 4px #28a745; 
-  }
-  
-  .filter-badge.css.active { 
-    background: #6f42c1; 
-    box-shadow: 0 0 0 2px white, 0 0 0 4px #6f42c1; 
-  }
-  
-  .filter-badge.sort.active { 
-    background: #17a2b8; 
-    box-shadow: 0 0 0 2px white, 0 0 0 4px #17a2b8; 
-  }
-  
-  .page-list, .duplicate-list {
-    max-height: 150px;
-    overflow-y: auto;
-  }
-
-  .page-item, .duplicate-item {
-    padding: 6px;
-    border-bottom: 1px solid #e0e0e0;
-    font-family: monospace;
-    font-size: 10px;
-    word-break: break-all;
-  }
-
-  .page-item a {
-    color: #667eea;
-    text-decoration: none;
-  }
-
-  .gallery-header {
-    background: rgba(255,255,255,0.95);
-    border-radius: 12px;
-    padding: 12px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  .gallery-title {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .search-wrapper {
-    position: relative;
-    display: inline-block;
-  }
-
-  .filter-input {
-    padding: 8px 30px 8px 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    font-size: 12px;
-    width: 200px;
-  }
-
-  .clear-search {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    color: #999;
-    padding: 0;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-  }
-
-  .clear-search:hover {
-    background: #e0e0e0;
-    color: #333;
-  }
-
-  .image-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 15px;
-  }
-
-  .image-card {
-    position: relative;
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: all 0.3s;
-  }
-
-  .image-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  }
-
-  .image-card img {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-    cursor: pointer;
-  }
-
-  .image-info {
-    padding: 10px;
-    background: white;
-  }
-
-  .image-filename {
-    font-size: 10px;
-    font-weight: 600;
-    color: #333;
-    word-break: break-all;
-    margin-bottom: 8px;
-  }
-
-  .css-label {
-    display: inline-block;
-    background: linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%);
-    color: white;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 9px;
-    font-weight: bold;
-    margin-bottom: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-
-  .img-label {
-    display: inline-block;
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 9px;
-    font-weight: bold;
-    margin-bottom: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-
-  .image-pages-count {
-    font-size: 10px;
-    color: #667eea;
-    margin-top: 5px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .image-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    margin-top: 8px;
-    cursor: pointer;
-    padding-top: 5px;
-    border-top: 1px solid #eee;
-  }
-
-  .image-checkbox input {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-  }
-
-  .image-buttons {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    gap: 6px;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .image-card:hover .image-buttons {
-    opacity: 1;
-  }
-
-  .icon-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-  }
-
-  .icon-btn:hover {
-    transform: scale(1.1);
-  }
-
-  .btn-view { background: rgba(102, 126, 234, 0.95); color: white; }
-  .btn-copy { background: rgba(40, 167, 69, 0.95); color: white; }
-  .btn-delete { background: rgba(220, 53, 69, 0.95); color: white; }
-  .btn-details { background: rgba(255, 193, 7, 0.95); color: #333; }
-
-  .image-card.selected {
-    box-shadow: 0 0 0 3px #28a745;
-  }
-
-  .filter-stats {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-    font-size: 11px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .filter-badge {
-    padding: 4px 10px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .filter-badge.all { background: #6c757d; color: white; }
-  .filter-badge.img { background: #28a745; color: white; }
-  .filter-badge.css { background: #6f42c1; color: white; }
-  .filter-badge.sort { background: #17a2b8; color: white; }
-  .filter-badge:hover { opacity: 0.8; }
-
-  /* Details Popup */
-  .details-popup {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 10001;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .details-content {
-    background: white;
-    border-radius: 16px;
-    max-width: 650px;
-    width: 90%;
-    max-height: 85vh;
-    overflow-y: auto;
-    padding: 25px;
-    animation: zoomIn 0.3s ease;
-    position: relative;
-  }
-
-  .details-close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #dc3545;
-    color: white;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    z-index: 10;
-  }
-
-  .details-close:hover {
-    transform: rotate(90deg) scale(1.1);
-    background: #c82333;
-  }
-
-  .details-content h3 {
-    margin-bottom: 15px;
-    color: #333;
-    border-bottom: 2px solid #667eea;
-    padding-bottom: 10px;
-    padding-right: 40px;
-  }
-
-  .details-image {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  .details-image img {
-    max-width: 100%;
-    max-height: 200px;
-    object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-
-  .details-info {
-    margin-bottom: 15px;
-  }
-
-  .details-label {
-    font-weight: bold;
-    color: #667eea;
-    margin-bottom: 5px;
-    font-size: 12px;
-  }
-
-  .details-value {
-    background: #f8f9fa;
-    padding: 10px;
-    border-radius: 8px;
-    word-break: break-all;
-    font-family: monospace;
-    font-size: 12px;
-  }
-
-  .details-value a {
-    color: #667eea;
-    text-decoration: none;
-  }
-
-  .details-value a:hover {
-    text-decoration: underline;
-  }
-
-  .pages-list {
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  .page-item-detail {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-    font-family: monospace;
-    font-size: 11px;
-  }
-
-  .page-item-detail a {
-    color: #667eea;
-    text-decoration: none;
-  }
-
-  .page-item-detail a:hover {
-    text-decoration: underline;
-  }
-
-  @keyframes zoomIn {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-
-  .popup {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 10000;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .popup-content {
-    position: relative;
-    max-width: 90%;
-    max-height: 90%;
-  }
-
-  .popup-content img {
-    max-width: 100%;
-    max-height: 85vh;
-    object-fit: contain;
-    border-radius: 10px;
-  }
-
-  .popup-close {
-    position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #dc3545;
-    color: white;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-  }
-
-  .popup-close:hover {
-    transform: rotate(90deg) scale(1.1);
-  }
-
-  .toast {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #28a745;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    z-index: 10002;
-    animation: slideIn 0.3s ease;
-  }
-
-  @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-
-  .loading {
-    text-align: center;
-    padding: 50px;
-    color: #999;
-  }
-
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #667eea;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 15px;
-  }
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  @media (max-width: 900px) {
-    .sidebar { width: 350px; }
-    .image-container { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-  }
-
-  @media (max-width: 700px) {
-    .app { flex-direction: column; }
-    .sidebar { width: 100%; max-height: 45vh; }
-    .gallery-area { max-height: 55vh; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Collector Pro - Correct Statistics</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app { display: flex; height: 100vh; gap: 0; }
+        .sidebar {
+            width: 580px;
+            background: rgba(255, 255, 255, 0.98);
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .gallery-area { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
+        .sticky-controls {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .sidebar::-webkit-scrollbar, .gallery-area::-webkit-scrollbar { width: 8px; }
+        .sidebar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #667eea; border-radius: 10px; }
+        .sidebar-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e0e0e0; }
+        .sidebar-header h1 { font-size: 24px; margin-bottom: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .sidebar-header p { color: #666; font-size: 13px; }
+        .instructions { background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-left: 4px solid #667eea; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .instructions h3 { font-size: 14px; margin-bottom: 10px; color: #333; }
+        .instructions ol { margin-left: 20px; font-size: 12px; color: #555; }
+        .instructions li { margin: 5px 0; }
+        .crawler-toggle-section { background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 2px solid #667eea; }
+        .toggle-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .toggle-title { font-size: 14px; font-weight: bold; color: #333; }
+        .toggle-desc { font-size: 11px; color: #666; margin-top: 5px; }
+        .switch { position: relative; display: inline-block; width: 52px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: 0.3s; border-radius: 26px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #28a745; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .code-block { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 10px; margin: 10px 0; overflow-x: auto; white-space: pre-wrap; word-break: break-all; max-height: 350px; overflow-y: auto; }
+        .copy-btn { background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 8px; width: 100%; }
+        .copy-btn:hover { background: #218838; }
+        .note-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin-top: 10px; border-radius: 6px; font-size: 11px; color: #856404; }
+        .input-section { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+        textarea { width: 100%; height: 120px; padding: 12px; font-family: 'Courier New', monospace; font-size: 10px; border: 2px solid #e0e0e0; border-radius: 10px; resize: vertical; }
+        .button-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; flex: 1; text-align: center; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: #f8f9fa; padding: 12px; border-radius: 10px; text-align: center; position: relative; }
+        .stat-number { font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { color: #666; font-size: 11px; margin-top: 4px; }
+        .section { background: #f8f9fa; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
+        .section-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .badge { padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; }
+        .badge-page { background: #17a2b8; color: white; }
+        .badge-article { background: #28a745; color: white; }
+        .badge-duplicate { background: #ffc107; color: #333; }
+        .page-list, .article-list, .duplicate-list, .external-list { max-height: 150px; overflow-y: auto; }
+        .page-item, .article-item, .duplicate-item, .external-item { padding: 6px; border-bottom: 1px solid #e0e0e0; font-family: monospace; font-size: 10px; word-break: break-all; display: flex; justify-content: space-between; align-items: center; }
+        .page-item a, .article-item a, .external-item a { color: #667eea; text-decoration: none; flex: 1; }
+        .page-count-badge, .article-count-badge, .external-count-badge { background: #667eea; color: white; padding: 2px 6px; border-radius: 10px; font-size: 9px; margin-left: 8px; }
+        .external-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; cursor: pointer; margin-right: 10px; background: #f0f0f0; }
+        .external-item-content { display: flex; align-items: center; flex: 1; }
+        .search-wrapper { position: relative; display: inline-block; width: 100%; }
+        .filter-input { padding: 8px 30px 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 12px; width: 100%; }
+        .clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: #999; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .clear-search:hover { background: #e0e0e0; color: #333; }
+        .image-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; }
+        .image-card {
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            user-select: none;
+        }
+        .image-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        .image-card.selected { background: #d4edda; box-shadow: 0 0 0 3px #28a745, 0 8px 20px rgba(0,0,0,0.15); }
+        .image-card.selected .image-info { background: #d4edda; }
+        .image-card img { width: 100%; height: 160px; object-fit: cover; cursor: pointer; background: #f5f5f5; }
+        .image-info { padding: 10px; background: white; transition: background 0.2s; }
+        .image-filename { font-size: 10px; font-weight: 600; color: #333; word-break: break-all; margin-bottom: 8px; }
+        .image-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+        .tag { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 8px; font-weight: bold; }
+        .tag-html { background: #28a745; color: white; }
+        .tag-css { background: #6f42c1; color: white; }
+        .tag-external { background: #17a2b8; color: white; }
+        .tag-icon { background: #17a2b8; color: white; }
+        .tag-logo { background: #fd7e14; color: white; }
+        .tag-homepage { background: #20c997; color: white; }
+        .tag-duplicate { background: #ffc107; color: #333; }
+        .image-pages-count { font-size: 10px; color: #667eea; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+        .image-checkbox { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-top: 8px; cursor: pointer; padding-top: 5px; border-top: 1px solid #eee; }
+        .image-checkbox:hover { background: rgba(102, 126, 234, 0.1); }
+        .image-checkbox input { width: 16px; height: 16px; cursor: pointer; margin: 0; }
+        .image-checkbox span { cursor: pointer; }
+        .image-buttons { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.3s; }
+        .image-card:hover .image-buttons { opacity: 1; }
+        .icon-btn { width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .icon-btn:hover { transform: scale(1.1); }
+        .btn-view { background: rgba(102, 126, 234, 0.95); color: white; }
+        .btn-copy { background: rgba(40, 167, 69, 0.95); color: white; }
+        .btn-delete { background: rgba(220, 53, 69, 0.95); color: white; }
+        .btn-details { background: rgba(255, 193, 7, 0.95); color: #333; }
+        .filter-stats { display: flex; gap: 8px; margin-bottom: 15px; font-size: 11px; flex-wrap: wrap; align-items: center; }
+        .filter-badge { padding: 5px 12px; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 11px; font-weight: bold; display: inline-block; position: relative; }
+        .filter-badge.all { background: #6c757d; color: white; }
+        .filter-badge.html { background: #28a745; color: white; }
+        .filter-badge.css { background: #6f42c1; color: white; }
+        .filter-badge.external { background: #17a2b8; color: white; }
+        .filter-badge.icons { background: #17a2b8; color: white; }
+        .filter-badge.logos { background: #fd7e14; color: white; }
+        .filter-badge.homepage { background: #20c997; color: white; }
+        .filter-badge.duplicates { background: #ffc107; color: #333; }
+        .filter-badge.sort { background: #17a2b8; color: white; }
+        .filter-badge:hover { opacity: 0.8; transform: scale(1.02); }
+        .filter-badge.active { opacity: 1 !important; box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor; transform: scale(1.05); }
+        .filter-badge.hidden { display: none; }
+        .filter-badge .filter-delete { position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+        .filter-badge:hover .filter-delete { display: flex; }
+        .file-input-label { background: #6c757d; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; text-align: center; flex: 1; display: inline-block; }
+        .file-input-label:hover { background: #5a6268; }
+        input[type="file"] { display: none; }
+        .details-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 10001; justify-content: center; align-items: center; }
+        .details-content { background: white; border-radius: 16px; max-width: 650px; width: 90%; max-height: 85vh; overflow-y: auto; padding: 25px; animation: zoomIn 0.3s ease; position: relative; }
+        .details-close { position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; border-radius: 50%; background: #dc3545; color: white; border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; z-index: 10; }
+        .details-close:hover { transform: rotate(90deg) scale(1.1); background: #c82333; }
+        .details-content h3 { margin-bottom: 15px; color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; padding-right: 40px; }
+        .details-image { text-align: center; margin-bottom: 20px; }
+        .details-image img { max-width: 100%; max-height: 200px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .details-info { margin-bottom: 15px; }
+        .details-label { font-weight: bold; color: #667eea; margin-bottom: 5px; font-size: 12px; }
+        .details-value { background: #f8f9fa; padding: 10px; border-radius: 8px; word-break: break-all; font-family: monospace; font-size: 12px; }
+        .details-value a { color: #667eea; text-decoration: none; }
+        .pages-list { max-height: 200px; overflow-y: auto; }
+        .page-item-detail { padding: 8px; border-bottom: 1px solid #eee; font-family: monospace; font-size: 11px; }
+        .page-item-detail a { color: #667eea; text-decoration: none; }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .popup-content img { max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 10px; }
+        .popup-nav { display: flex; gap: 20px; margin-top: 20px; align-items: center; }
+        .popup-nav-btn { background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 16px; transition: all 0.2s; }
+        .popup-nav-btn:hover { background: rgba(255,255,255,0.4); transform: scale(1.05); }
+        .popup-counter { color: white; font-size: 14px; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; }
+        .popup-close { position: absolute; top: -40px; right: -40px; width: 40px; height: 40px; border-radius: 50%; background: #dc3545; color: white; border: none; font-size: 20px; cursor: pointer; }
+        .popup-close:hover { transform: rotate(90deg) scale(1.1); }
+        .popup-action-buttons { display: flex; gap: 15px; margin-top: 20px; }
+        .popup-action-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .popup-action-btn:hover { background: rgba(255,255,255,0.4); transform: scale(1.05); }
+        .popup-action-btn.delete { background: rgba(220,53,69,0.8); }
+        .popup-action-btn.delete:hover { background: rgba(220,53,69,1); }
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10002;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .toast {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+            pointer-events: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 200px;
+            text-align: center;
+        }
+        .toast.error { background: #dc3545; }
+        .toast.warning { background: #ffc107; color: #333; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; transform: translateX(100%); } }
+        .loading { text-align: center; padding: 50px; color: #999; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .group-separator { grid-column: 1 / -1; margin: 5px 0 5px 0; padding: 8px 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-size: 11px; font-weight: bold; }
+        .tab-btn { padding: 6px 12px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .tab-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        @media (max-width: 900px) { .sidebar { width: 380px; } .image-container { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); } }
+        @media (max-width: 700px) { .app { flex-direction: column; } .sidebar { width: 100%; max-height: 45vh; } .gallery-area { max-height: 55vh; } }
+    </style>
 </head>
 <body>
-
 <div class="app">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h1>📸 Website Image Collector</h1>
-      <p>Extract and view all images from every page of any website</p>
+    <div class="sidebar">
+        <div class="sidebar-header"><h1>📸 Website Image Collector</h1><p>Extract and view all images from every page of any website</p></div>
+        <div class="instructions"><h3>📋 How to Use:</h3><ol><li>Go to the sitemap page: <code>https://example.com/sitemap</code></li><li>Press <kbd>F12</kbd> to open Developer Console</li><li>Copy the code below (click <strong>"Copy Code"</strong>)</li><li>Paste into console and press <kbd>Enter</kbd></li><li><strong>Copy ALL console output</strong> (including the FINAL SUMMARY section)</li><li>Click <strong>"Parse Output"</strong> to see gallery</li></ol></div>
+        <div class="crawler-toggle-section"><div class="toggle-header"><div class="toggle-title">🎨 Extract CSS Background Images</div><label class="switch"><input type="checkbox" id="includeCssToggle" checked onchange="updateCrawlerCode()"><span class="slider"></span></label></div><div class="toggle-desc">✅ <strong>ON</strong> = Extracts &lt;img&gt; tags + CSS backgrounds<br>🔘 <strong>OFF</strong> = Only &lt;img&gt; tags</div></div>
+        <div class="code-block" id="crawlerCode"></div><button class="copy-btn" onclick="copyCrawlerCode()">📋 Copy Code to Clipboard</button>
+        <div class="note-box">
+            💡 <strong>Quick Guide:</strong><br>
+            • 📍 <strong>Go to sitemap page</strong> (e.g., https://example.com/sitemap)<br>
+            • 📋 <strong>Copy code above</strong> → Paste in console (F12) → Press Enter<br>
+            • 📄 <strong>Copy output</strong> → Paste below → Click "Parse Output"<br>
+            • 🔍 Click the <strong>ℹ️ button</strong> on any image to see its source page<br>
+            • 🎨 Toggle <strong>CSS ON/OFF</strong> to include background images<br>
+            <br>
+            <strong>🔥 Nice ka One, astiga ey! 😁😊</strong>
+        </div
+        <div class="input-section"><textarea id="consoleOutput" placeholder="Paste your COMPLETE console output here (including the FINAL SUMMARY section)..."></textarea><div class="button-group"><button class="btn btn-primary" onclick="parseConsoleOutput()">🔍 Parse Output</button><button class="btn btn-secondary" onclick="clearAll()">Clear All</button></div></div>
+        <div class="stats" id="stats">
+            <div class="stat-card"><div class="stat-number" id="pagesCount">0</div><div class="stat-label">📄 Pages</div></div>
+            <div class="stat-card"><div class="stat-number" id="articlesCount">0</div><div class="stat-label">📝 Articles/Blog</div></div>
+            <div class="stat-card"><div class="stat-number" id="totalOccurrences">0</div><div class="stat-label">🖼️ Total Occurrences</div></div>
+            <div class="stat-card"><div class="stat-number" id="uniqueCount">0</div><div class="stat-label">✨ Unique Images</div></div>
+            <div class="stat-card"><div class="stat-number" id="externalCount">0</div><div class="stat-label">🌐 External Images</div></div>
+            <div class="stat-card"><div class="stat-number" id="homepageCount">0</div><div class="stat-label">🏠 Homepage</div></div>
+            <div class="stat-card"><div class="stat-number" id="similarGroupCount">0</div><div class="stat-label">🔄 Similar Groups</div></div>
+            <div class="stat-card"><div class="stat-number" id="selectedCount">0</div><div class="stat-label">✅ Selected</div></div>
+            <div class="stat-card"><div class="stat-number" id="removedDuplicates">0</div><div class="stat-label">🗑️ Removed Duplicates</div></div>
+        </div>
+        <div class="section"><div class="section-title">🎮 Gallery Controls</div><div class="button-group"><button class="btn btn-success" onclick="selectAllVisibleImages()">✓ Select All Visible</button><button class="btn btn-warning" onclick="deselectAllImages()">☐ Deselect All</button><button class="btn btn-info" onclick="selectAllSimilarKeepOne()">🔄 Select Duplicates (Keep One)</button><button class="btn btn-info" onclick="copySelectedImages()">📋 Copy Selected</button><button class="btn btn-danger" onclick="deleteSelectedImages()">🗑️ Delete Selected</button></div><div class="button-group" style="margin-top: 10px;"><button class="btn btn-primary" onclick="exportData()">💾 Export Data (Backup)</button><label class="file-input-label" style="background: #6c757d;">📂 Import Data<input type="file" id="importFile" accept=".json" onchange="importData(event)"></label></div></div>
+        <div class="section" id="contentSection" style="display: block;"><div class="section-title">📚 Site Content</div><div class="tabs" style="display: flex; gap: 10px; margin-bottom: 10px;"><button class="tab-btn active" onclick="showContentTab('pages')">📄 Pages</button><button class="tab-btn" onclick="showContentTab('articles')">📝 Articles</button></div><div id="pagesListContainer" style="display: block;"><div class="section-title" style="font-size: 12px; margin-bottom: 5px;">Pages <span id="pagesCountBadge" class="page-count-badge">0</span></div><div class="page-list" id="pageList"></div></div><div id="articlesListContainer" style="display: none;"><div class="section-title" style="font-size: 12px; margin-bottom: 5px;">Articles/Blog Posts <span id="articlesCountBadge" class="article-count-badge">0</span></div><div class="article-list" id="articleList"></div></div></div>
+        <div class="section" id="externalSection" style="display: block;"><div class="section-title">🌐 External Images <span id="externalCountBadge" class="external-count-badge">0</span></div><div class="external-list" id="externalList"></div></div>
+        <div class="section" id="duplicatesSection" style="display: none;"><div class="section-title"><span>🗑️ Removed Images & Duplicates</span><span class="badge badge-duplicate" id="duplicatesBadge">0</span></div><div class="duplicate-list" id="duplicateList"></div></div>
     </div>
-
-    <div class="instructions">
-      <h3>📋 How to Use:</h3>
-      <ol>
-        <li>Go to the sitemap page: <code>https://example.com/sitemap</code></li>
-        <li>Press <kbd>F12</kbd> to open Developer Console</li>
-        <li>Copy the code below (click <strong>"Copy Code"</strong>)</li>
-        <li>Paste into console and press <kbd>Enter</kbd></li>
-        <li>The crawler will auto-detect: sitemap pages, blog pages, individual articles, and pagination</li>
-        <li>Copy ALL console output and paste below</li>
-        <li>Click <strong>"Parse Output"</strong> to see gallery</li>
-      </ol>
-    </div>
-
-    <div class="crawler-toggle-section">
-      <div class="toggle-header">
-        <div class="toggle-title">🎨 Extract CSS Background Images</div>
-        <label class="switch">
-          <input type="checkbox" id="includeCssToggle" checked onchange="updateCrawlerCode()">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="toggle-desc">
-        ✅ <strong>ON</strong> = Extracts &lt;img&gt; tags + CSS backgrounds (slower, more images)<br>
-        🔘 <strong>OFF</strong> = Only &lt;img&gt; tags (faster)
-      </div>
-    </div>
-
-    <div class="code-block" id="crawlerCode"></div>
-    <button class="copy-btn" onclick="copyCrawlerCode()">📋 Copy Code to Clipboard</button>
-
-    <div class="note-box">
-      💡 <strong>Quick Guide:</strong><br>
-      • 📍 <strong>Go to sitemap page</strong> (e.g., https://example.com/sitemap)<br>
-      • 📋 <strong>Copy code above</strong> → Paste in console (F12) → Press Enter<br>
-      • 📄 <strong>Copy output</strong> → Paste below → Click "Parse Output"<br>
-      • 🔍 Click the <strong>ℹ️ button</strong> on any image to see its source page<br>
-      • 🎨 Toggle <strong>CSS ON/OFF</strong> to include background images<br>
-      <br>
-      <strong>🔥 Nice ka One, astiga ey! 😁😊</strong>
-    </div>
-
-    <div class="input-section">
-      <textarea id="consoleOutput" placeholder="Paste your console output here..."></textarea>
-      <div class="button-group">
-        <button class="btn btn-primary" onclick="parseConsoleOutput()">🔍 Parse Output</button>
-        <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
-      </div>
-    </div>
-
-    <div class="stats" id="stats" style="display: none;">
-      <div class="stat-card"><div class="stat-number" id="pagesCount">0</div><div class="stat-label">📄 Pages Detected</div></div>
-      <div class="stat-card"><div class="stat-number" id="totalImages">0</div><div class="stat-label">🖼️ Total Images</div></div>
-      <div class="stat-card"><div class="stat-number" id="uniqueCount">0</div><div class="stat-label">✨ Unique Images</div></div>
-      <div class="stat-card"><div class="stat-number" id="duplicateCount">0</div><div class="stat-label">⚠️ Duplicates Removed</div></div>
-      <div class="stat-card"><div class="stat-number" id="selectedCount">0</div><div class="stat-label">✅ Selected</div></div>
-      <div class="stat-card"><div class="stat-number" id="cssImageCount">0</div><div class="stat-label">🎨 CSS Images</div></div>
-    </div>
-
-    <div class="section" id="pagesSection" style="display: none;">
-      <div class="section-title"><span>📄 Detected Pages</span><span class="badge badge-page" id="pagesBadge">0</span></div>
-      <div class="page-list" id="pageList"></div>
-    </div>
-
-    <div class="section" id="duplicatesSection" style="display: none;">
-      <div class="section-title"><span>⚠️ Duplicate Images Removed</span><span class="badge badge-duplicate" id="duplicatesBadge">0</span></div>
-      <div class="duplicate-list" id="duplicateList"></div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">🎮 Gallery Controls</div>
-      <div class="button-group">
-        <button class="btn btn-success" onclick="selectAllImages()">✓ Select All</button>
-        <button class="btn btn-warning" onclick="deselectAllImages()">☐ Deselect All</button>
-        <button class="btn btn-info" onclick="copySelectedImages()">📋 Copy Selected</button>
-        <button class="btn btn-danger" onclick="deleteSelectedImages()">🗑️ Delete Selected</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="gallery-area">
-    <div class="gallery-header">
-      <div class="gallery-title">🖼️ Image Gallery <span style="font-size: 12px;">(🎨 = CSS Background | 🖼️ = IMG Tag)</span></div>
-      <div class="search-wrapper">
-        <input type="text" id="filterInput" class="filter-input" placeholder="🔍 Filter images..." onkeyup="filterImages()">
-        <button class="clear-search" onclick="clearSearch()" title="Clear search">✕</button>
-      </div>
-    </div>
-    
-    <div class="filter-stats">
-      <span class="filter-badge all" onclick="filterByType('all')">📊 All</span>
-      <span class="filter-badge img" onclick="filterByType('img')">🖼️ IMG Tags</span>
-      <span class="filter-badge css" onclick="filterByType('css')">🎨 CSS Backgrounds</span>
-      <span class="filter-badge sort" onclick="toggleSortOrder()" id="sortBtn">📁 Sort: Numbers Last</span>
-    </div>
-    
-    <div class="image-container" id="imageContainer">
-      <div class="loading"><div class="spinner"></div><div>Run crawler, paste output, click "Parse Output"</div></div>
-    </div>
-  </div>
+    <div class="gallery-area"><div class="sticky-controls"><div class="search-wrapper" style="margin-bottom: 15px;"><input type="text" id="filterInput" class="filter-input" placeholder="🔍 Filter images by name or URL..." onkeyup="filterImages()"><button class="clear-search" onclick="clearSearch()" title="Clear search">✕</button></div><div class="filter-stats" id="filterContainer"><span class="filter-badge all" onclick="filterByType('all')">📊 All</span><span class="filter-badge html" onclick="filterByType('html')">🖼️ HTML</span><span class="filter-badge css" onclick="filterByType('css')">🎨 CSS</span><span class="filter-badge external" onclick="filterByType('external')">🌐 External</span><span class="filter-badge icons" onclick="filterByType('icons')">🔘 Icons</span><span class="filter-badge logos" onclick="filterByType('logos')">🏷️ Logos</span><span class="filter-badge homepage" onclick="filterByType('homepage')">🏠 Homepage</span><span class="filter-badge duplicates" onclick="filterByType('duplicates')">🔄 Duplicates</span><span class="filter-badge sort" onclick="toggleSortOrder()" id="sortBtn">📁 Sort: Numbers Last</span></div></div><div class="image-container" id="imageContainer"><div class="loading"><div class="spinner"></div><div>Run crawler, paste complete output, click "Parse Output"</div></div></div></div>
 </div>
-
-<!-- Image Popup -->
-<div id="popup" class="popup">
-  <div class="popup-content">
-    <button class="popup-close" onclick="closePopup()">✕</button>
-    <img src="" id="popupImage">
-  </div>
-</div>
-
-<!-- Details Popup -->
-<div id="detailsPopup" class="details-popup">
-  <div class="details-content">
-    <button class="details-close" onclick="closeDetailsPopup()">✕</button>
-    <h3>📸 Image Details</h3>
-    <div class="details-image">
-      <img src="" id="detailsImage">
-    </div>
-    <div class="details-info">
-      <div class="details-label">🔗 Image URL:</div>
-      <div class="details-value" id="detailsUrl"></div>
-    </div>
-    <div class="details-info">
-      <div class="details-label">🏷️ Image Type:</div>
-      <div class="details-value" id="detailsType"></div>
-    </div>
-    <div class="details-info">
-      <div class="details-label">📄 Found on Pages (<span id="pagesCountSpan">0</span> pages):</div>
-      <div class="details-value pages-list" id="detailsPages"></div>
-    </div>
-  </div>
-</div>
-
+<div id="popup" class="popup"><div class="popup-content"><button class="popup-close" onclick="closePopup()">✕</button><img src="" id="popupImage"><div class="popup-nav"><button class="popup-nav-btn" onclick="prevImage()">◀ Previous</button><span class="popup-counter" id="popupCounter">1 / 1</span><button class="popup-nav-btn" onclick="nextImage()">Next ▶</button></div><div class="popup-action-buttons"><button class="popup-action-btn" id="popupCopyBtn">📋 Copy URL</button><button class="popup-action-btn delete" id="popupDeleteBtn">🗑️ Delete Image</button></div></div></div>
+<div id="detailsPopup" class="details-popup"><div class="details-content"><button class="details-close" onclick="closeDetailsPopup()">✕</button><h3>📸 Image Details</h3><div class="details-image"><img src="" id="detailsImage"></div><div class="details-info"><div class="details-label">🔗 Image URL:</div><div class="details-value" id="detailsUrl"></div></div><div class="details-info"><div class="details-label">🏷️ Image Tags:</div><div class="details-value" id="detailsType"></div></div><div class="details-info"><div class="details-label">📄 Found on Pages (<span id="pagesCountSpan">0</span> pages):</div><div class="details-value pages-list" id="detailsPages"></div></div></div></div>
 <script>
-let detectedPages = [];
-let allImages = [];
-let uniqueImages = new Set();
-let duplicateImages = new Set();
-let selectedImages = new Set();
-let currentImageList = [];
-let cssImagesSet = new Set();
-let imgTagSet = new Set();
-let imageSourceMap = new Map();
-let currentFilter = 'all';
-let sortOrder = 'default';
+// ============ GLOBALS ==========
+let toastContainer = null, activeToasts = [];
+let detectedPages = [], detectedArticles = [], externalImagesList = [];
+let allImages = [], uniqueImages = new Set(), duplicateImages = new Set(), selectedImages = new Set();
+let currentImageList = [], cssImagesSet = new Set(), htmlImagesSet = new Set(), externalImagesSet = new Set(), iconImagesSet = new Set(), logoImagesSet = new Set(), homepageImagesSet = new Set();
+let imageSourceMap = new Map(), similarGroups = new Map(), imageToGroup = new Map();
+let currentFilter = 'all', sortOrder = 'default', currentContentTab = 'pages', homepageUrl = '', lastCheckedIndex = null, currentDisplayedUrls = [];
+let undoStack = [], redoStack = [], isUndoRedoOperation = false;
+let rawTotalCount = 0;
+let htmlOnlyCount = 0, cssOnlyCount = 0, duplicatesRemoved = 0;
 
-// Code WITH CSS (includes background images)
-const crawlerCodeWithCSS = `(async () => {
-  console.log('🔍 Scanning current page for sitemap links...');
-  const currentOrigin = window.location.origin;
-  
-  const sitemapSelectors = [
-    '.sitemap li a', '.sitemap-page li a', '#sitemap li a',
-    '.page-sitemap li a', '.post-sitemap li a', 'ul.sitemap a',
-    '.page_item a', '.page-item a', '.pagenav a',
-    '.menu-item a', '.nav-menu a', '.main-navigation a',
-    '.entry-content li a', '.content ul li a', '.page-content li a',
-    '.wp-block-page-list a', '.wp-block-sitemap-page a',
-    'a[href*="/page/"]', 'a[href*="/p/"]'
-  ];
-  
-  let sitemapLinks = [];
-  for (const selector of sitemapSelectors) {
-    const links = Array.from(document.querySelectorAll(selector)).map(a => a.href);
-    const internalLinks = links.filter(link => 
-      link.startsWith(currentOrigin) && 
-      !link.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i) &&
-      !link.includes('#') &&
-      !link.includes('/wp-content/') &&
-      !link.includes('/wp-includes/')
-    );
-    if (internalLinks.length > 0) {
-      sitemapLinks = internalLinks;
-      console.log(\`   ✅ Found \${internalLinks.length} links using selector: "\${selector}"\`);
-      break;
-    }
-  }
-  
-  if (sitemapLinks.length === 0) {
-    console.log('   ⚠️ No sitemap links found. Using all internal links...');
-    const allLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
-    sitemapLinks = [...new Set(allLinks.filter(link => 
-      link.startsWith(currentOrigin) && 
-      !link.match(/\\.(jpg|jpeg|png|gif|webp|css|js)$/i) &&
-      !link.includes('#') &&
-      !link.includes('/wp-content/')
-    ))];
-    console.log(\`   ✅ Found \${sitemapLinks.length} internal links as fallback\`);
-  }
-
-  console.log('🔍 Auto-detecting blog page...');
-  const blogUrls = new Set();
-  const articleUrls = new Set();
-  const blogKeywords = ['blog', 'news', 'articles', 'posts', 'category', 'home-care-blog'];
-  const allPageLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
-  
-  for (const link of allPageLinks) {
-    if (!link.startsWith(currentOrigin)) continue;
-    const lowerLink = link.toLowerCase();
-    for (const keyword of blogKeywords) {
-      if (lowerLink.includes(keyword) && !lowerLink.match(/\\/page\\/\\d+/) && !lowerLink.match(/\\.(jpg|png|gif|webp)$/)) {
-        blogUrls.add(link);
-        console.log(\`   ✅ Found blog page: \${link}\`);
-        break;
-      }
-    }
-  }
-  
-  if (blogUrls.size === 0) {
-    const commonPaths = ['/blog', '/news', '/articles', '/home-care-blog'];
-    for (const path of commonPaths) {
-      const testUrl = currentOrigin + path;
-      try {
-        const testRes = await fetch(testUrl, { method: 'HEAD' });
-        if (testRes.ok) {
-          blogUrls.add(testUrl);
-          console.log(\`   ✅ Found blog page via path: \${testUrl}\`);
-        }
-      } catch(e) {}
-    }
-  }
-
-  console.log('🔍 Finding individual articles...');
-  for (const blogUrl of blogUrls) {
-    try {
-      const response = await fetch(blogUrl);
-      const html = await response.text();
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      
-      const articleSelectors = ['article a', '.post a', '.blog-post a', '.entry-title a', 'h2 a', 'h3 a', '.read-more a', '.more-link'];
-      articleSelectors.forEach(selector => {
-        doc.querySelectorAll(selector).forEach(el => {
-          let href = el.href;
-          if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !href.match(/\\/category\\//)) {
-            if (!articleUrls.has(href)) {
-              articleUrls.add(href);
-              console.log(\`      📝 Found article: \${href.split('/').pop()}\`);
-            }
-          }
-        });
-      });
-      
-      const paginationSelectors = ['.pagination a', '.pages a', '.nav-links a', '.prev.page-numbers', '.next.page-numbers', 'a.page-numbers', '.older-posts a', '.newer-posts a'];
-      const paginationUrls = new Set();
-      paginationSelectors.forEach(selector => {
-        doc.querySelectorAll(selector).forEach(el => {
-          let href = el.href;
-          if (href && href.startsWith(currentOrigin) && href.match(/\\/page\\/\\d+/)) {
-            paginationUrls.add(href);
-            console.log(\`   📄 Found pagination: \${href}\`);
-          }
-        });
-      });
-      
-      for (let pageNum = 2; pageNum <= 10; pageNum++) {
-        const pageUrl = blogUrl.replace(/\\/$/, '') + '/page/' + pageNum;
-        try {
-          const pageRes = await fetch(pageUrl, { method: 'HEAD' });
-          if (pageRes.ok) {
-            paginationUrls.add(pageUrl);
-            console.log(\`   📄 Found pagination: \${pageUrl}\`);
-          } else break;
-        } catch(e) { break; }
-      }
-      
-      for (const pageUrl of paginationUrls) {
-        try {
-          const pageRes = await fetch(pageUrl);
-          const pageHtml = await pageRes.text();
-          const pageDoc = new DOMParser().parseFromString(pageHtml, 'text/html');
-          articleSelectors.forEach(selector => {
-            pageDoc.querySelectorAll(selector).forEach(el => {
-              let href = el.href;
-              if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !articleUrls.has(href)) {
-                articleUrls.add(href);
-                console.log(\`      📝 Found article from pagination: \${href.split('/').pop()}\`);
-              }
-            });
-          });
-        } catch(e) {}
-      }
-    } catch(e) {
-      console.log(\`   ⚠️ Could not fetch blog page: \${blogUrl}\`);
-    }
-  }
-
-  let allPagesToCrawl = [...sitemapLinks, ...blogUrls, ...articleUrls];
-  allPagesToCrawl = [...new Set(allPagesToCrawl)];
-  allPagesToCrawl = allPagesToCrawl.filter(url => !url.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i));
-  
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(\`📊 CRAWL SUMMARY:\`);
-  console.log(\`   📄 Sitemap pages: \${sitemapLinks.length}\`);
-  console.log(\`   📝 Blog pages: \${blogUrls.size}\`);
-  console.log(\`   📖 Individual articles: \${articleUrls.size}\`);
-  console.log(\`   📚 TOTAL pages to crawl: \${allPagesToCrawl.length}\`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  
-  if (allPagesToCrawl.length === 0) {
-    console.log('❌ No pages found to crawl.');
-    return;
-  }
-
-  let allImages = [];
-  let totalPages = allPagesToCrawl.length;
-  
-  console.log('▶️ Starting image extraction (INCLUDING CSS backgrounds)...');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  
-  function extractCSSBackgroundImages(doc, baseUrl) {
-    const images = [];
-    const elements = doc.querySelectorAll('*');
-    elements.forEach(el => {
-      const inlineStyle = el.getAttribute('style');
-      if (inlineStyle) {
-        const bgMatches = inlineStyle.match(/background(?:-image)?:\\s*url\\(['"]?([^'")]+)['"]?\\)/gi);
-        if (bgMatches) {
-          bgMatches.forEach(match => {
-            const urlMatch = match.match(/url\\(['"]?([^'")]+)['"]?\\)/i);
-            if (urlMatch && urlMatch[1]) {
-              try {
-                const absoluteUrl = new URL(urlMatch[1], baseUrl).href;
-                images.push(absoluteUrl);
-              } catch(e) {}
-            }
-          });
-        }
-      }
-      try {
-        const computedStyle = window.getComputedStyle(el);
-        const bgImage = computedStyle.backgroundImage;
-        if (bgImage && bgImage !== 'none') {
-          const urlMatch = bgImage.match(/url\\(['"]?([^'")]+)['"]?\\)/i);
-          if (urlMatch && urlMatch[1]) {
-            try {
-              const absoluteUrl = new URL(urlMatch[1], baseUrl).href;
-              images.push(absoluteUrl);
-            } catch(e) {}
-          }
-        }
-      } catch(e) {}
-    });
-    return images;
-  }
-
-  for (let i = 0; i < allPagesToCrawl.length; i++) {
-    const url = allPagesToCrawl[i];
-    const current = i + 1;
-    const shortName = url.split('/').slice(-2).join('/') || url;
-    
-    console.log(\`📄 [\${current}/\${totalPages}] Crawling: \${shortName}\`);
-    
-    try {
-      const res = await fetch(url);
-      const html = await res.text();
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-
-      const imgImages = Array.from(doc.querySelectorAll('img'))
-        .map(img => {
-          const src = img.getAttribute('src');
-          if (!src) return null;
-          try {
-            return new URL(src, url).href;
-          } catch(e) { return null; }
-        })
-        .filter(Boolean);
-
-      const cssImages = extractCSSBackgroundImages(doc, url);
-
-      console.log(\`   🖼️ IMG tags: \${imgImages.length} images\`);
-      console.log(\`   🎨 CSS backgrounds: \${cssImages.length} images\`);
-      
-      imgImages.forEach(img => console.log('🖼️ [IMG] ' + img + ' [SOURCE] ' + url));
-      cssImages.forEach(img => console.log('🎨 [CSS] ' + img + ' [SOURCE] ' + url));
-
-      allImages.push(...imgImages, ...cssImages);
-      
-      let percent = Math.round((current / totalPages) * 100);
-      let barLength = Math.floor(percent / 5);
-      console.log(\`   ✅ Page \${current} complete! Found \${imgImages.length + cssImages.length} images\`);
-      console.log(\`   █\`.repeat(barLength) + '░'.repeat(20 - barLength) + \` \${percent}%\`);
-      console.log('');
-
-    } catch (e) {
-      console.warn(\`   ⚠️ Failed: \${shortName} - \${e.message}\`);
-      console.log('');
-    }
-    
-    await new Promise(r => setTimeout(r, 200));
-  }
-
-  const uniqueImages = [...new Set(allImages)];
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🎉 CRAWL COMPLETE! 🎉');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📊 FINAL SUMMARY:');
-  console.log(\`   📄 Pages scanned: \${totalPages}\`);
-  console.log(\`   🖼️ Total images found: \${allImages.length}\`);
-  console.log(\`   ✨ Unique images: \${uniqueImages.length}\`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📋 UNIQUE IMAGE URLs (with source pages):');
-  uniqueImages.forEach(img => console.log(img));
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  
-  try {
-    await navigator.clipboard.writeText(uniqueImages.join('\\n'));
-    console.log('📋 All unique image URLs copied to clipboard!');
-  } catch(e) {}
-})();`;
-
-// Code WITHOUT CSS (only img tags)
-const crawlerCodeWithoutCSS = `(async () => {
-  console.log('🔍 Scanning current page for sitemap links...');
-  const currentOrigin = window.location.origin;
-  
-  const sitemapSelectors = [
-    '.sitemap li a', '.sitemap-page li a', '#sitemap li a',
-    '.page-sitemap li a', '.post-sitemap li a', 'ul.sitemap a',
-    '.page_item a', '.page-item a', '.pagenav a',
-    '.menu-item a', '.nav-menu a', '.main-navigation a',
-    '.entry-content li a', '.content ul li a', '.page-content li a',
-    '.wp-block-page-list a', '.wp-block-sitemap-page a',
-    'a[href*="/page/"]', 'a[href*="/p/"]'
-  ];
-  
-  let sitemapLinks = [];
-  for (const selector of sitemapSelectors) {
-    const links = Array.from(document.querySelectorAll(selector)).map(a => a.href);
-    const internalLinks = links.filter(link => 
-      link.startsWith(currentOrigin) && 
-      !link.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i) &&
-      !link.includes('#') &&
-      !link.includes('/wp-content/') &&
-      !link.includes('/wp-includes/')
-    );
-    if (internalLinks.length > 0) {
-      sitemapLinks = internalLinks;
-      console.log(\`   ✅ Found \${internalLinks.length} links using selector: "\${selector}"\`);
-      break;
-    }
-  }
-  
-  if (sitemapLinks.length === 0) {
-    console.log('   ⚠️ No sitemap links found. Using all internal links...');
-    const allLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
-    sitemapLinks = [...new Set(allLinks.filter(link => 
-      link.startsWith(currentOrigin) && 
-      !link.match(/\\.(jpg|jpeg|png|gif|webp|css|js)$/i) &&
-      !link.includes('#') &&
-      !link.includes('/wp-content/')
-    ))];
-    console.log(\`   ✅ Found \${sitemapLinks.length} internal links as fallback\`);
-  }
-
-  console.log('🔍 Auto-detecting blog page...');
-  const blogUrls = new Set();
-  const articleUrls = new Set();
-  const blogKeywords = ['blog', 'news', 'articles', 'posts', 'category', 'home-care-blog'];
-  const allPageLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
-  
-  for (const link of allPageLinks) {
-    if (!link.startsWith(currentOrigin)) continue;
-    const lowerLink = link.toLowerCase();
-    for (const keyword of blogKeywords) {
-      if (lowerLink.includes(keyword) && !lowerLink.match(/\\/page\\/\\d+/) && !lowerLink.match(/\\.(jpg|png|gif|webp)$/)) {
-        blogUrls.add(link);
-        console.log(\`   ✅ Found blog page: \${link}\`);
-        break;
-      }
-    }
-  }
-  
-  if (blogUrls.size === 0) {
-    const commonPaths = ['/blog', '/news', '/articles', '/home-care-blog'];
-    for (const path of commonPaths) {
-      const testUrl = currentOrigin + path;
-      try {
-        const testRes = await fetch(testUrl, { method: 'HEAD' });
-        if (testRes.ok) {
-          blogUrls.add(testUrl);
-          console.log(\`   ✅ Found blog page via path: \${testUrl}\`);
-        }
-      } catch(e) {}
-    }
-  }
-
-  console.log('🔍 Finding individual articles...');
-  for (const blogUrl of blogUrls) {
-    try {
-      const response = await fetch(blogUrl);
-      const html = await response.text();
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      
-      const articleSelectors = ['article a', '.post a', '.blog-post a', '.entry-title a', 'h2 a', 'h3 a', '.read-more a', '.more-link'];
-      articleSelectors.forEach(selector => {
-        doc.querySelectorAll(selector).forEach(el => {
-          let href = el.href;
-          if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !href.match(/\\/category\\//)) {
-            if (!articleUrls.has(href)) {
-              articleUrls.add(href);
-              console.log(\`      📝 Found article: \${href.split('/').pop()}\`);
-            }
-          }
-        });
-      });
-      
-      const paginationSelectors = ['.pagination a', '.pages a', '.nav-links a', '.prev.page-numbers', '.next.page-numbers', 'a.page-numbers', '.older-posts a', '.newer-posts a'];
-      const paginationUrls = new Set();
-      paginationSelectors.forEach(selector => {
-        doc.querySelectorAll(selector).forEach(el => {
-          let href = el.href;
-          if (href && href.startsWith(currentOrigin) && href.match(/\\/page\\/\\d+/)) {
-            paginationUrls.add(href);
-            console.log(\`   📄 Found pagination: \${href}\`);
-          }
-        });
-      });
-      
-      for (let pageNum = 2; pageNum <= 10; pageNum++) {
-        const pageUrl = blogUrl.replace(/\\/$/, '') + '/page/' + pageNum;
-        try {
-          const pageRes = await fetch(pageUrl, { method: 'HEAD' });
-          if (pageRes.ok) {
-            paginationUrls.add(pageUrl);
-            console.log(\`   📄 Found pagination: \${pageUrl}\`);
-          } else break;
-        } catch(e) { break; }
-      }
-      
-      for (const pageUrl of paginationUrls) {
-        try {
-          const pageRes = await fetch(pageUrl);
-          const pageHtml = await pageRes.text();
-          const pageDoc = new DOMParser().parseFromString(pageHtml, 'text/html');
-          articleSelectors.forEach(selector => {
-            pageDoc.querySelectorAll(selector).forEach(el => {
-              let href = el.href;
-              if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !articleUrls.has(href)) {
-                articleUrls.add(href);
-                console.log(\`      📝 Found article from pagination: \${href.split('/').pop()}\`);
-              }
-            });
-          });
-        } catch(e) {}
-      }
-    } catch(e) {
-      console.log(\`   ⚠️ Could not fetch blog page: \${blogUrl}\`);
-    }
-  }
-
-  let allPagesToCrawl = [...sitemapLinks, ...blogUrls, ...articleUrls];
-  allPagesToCrawl = [...new Set(allPagesToCrawl)];
-  allPagesToCrawl = allPagesToCrawl.filter(url => !url.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i));
-  
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(\`📊 CRAWL SUMMARY:\`);
-  console.log(\`   📄 Sitemap pages: \${sitemapLinks.length}\`);
-  console.log(\`   📝 Blog pages: \${blogUrls.size}\`);
-  console.log(\`   📖 Individual articles: \${articleUrls.size}\`);
-  console.log(\`   📚 TOTAL pages to crawl: \${allPagesToCrawl.length}\`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  
-  if (allPagesToCrawl.length === 0) {
-    console.log('❌ No pages found to crawl.');
-    return;
-  }
-
-  let allImages = [];
-  let totalPages = allPagesToCrawl.length;
-  
-  console.log('▶️ Starting image extraction (ONLY IMG tags)...');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-  for (let i = 0; i < allPagesToCrawl.length; i++) {
-    const url = allPagesToCrawl[i];
-    const current = i + 1;
-    const shortName = url.split('/').slice(-2).join('/') || url;
-    
-    console.log(\`📄 [\${current}/\${totalPages}] Crawling: \${shortName}\`);
-    
-    try {
-      const res = await fetch(url);
-      const html = await res.text();
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-
-      const imgImages = Array.from(doc.querySelectorAll('img'))
-        .map(img => {
-          const src = img.getAttribute('src');
-          if (!src) return null;
-          try {
-            return new URL(src, url).href;
-          } catch(e) { return null; }
-        })
-        .filter(Boolean);
-
-      console.log(\`   🖼️ IMG tags: \${imgImages.length} images\`);
-      
-      imgImages.forEach(img => console.log('🖼️ [IMG] ' + img + ' [SOURCE] ' + url));
-
-      allImages.push(...imgImages);
-      
-      let percent = Math.round((current / totalPages) * 100);
-      let barLength = Math.floor(percent / 5);
-      console.log(\`   ✅ Page \${current} complete! Found \${imgImages.length} images\`);
-      console.log(\`   █\`.repeat(barLength) + '░'.repeat(20 - barLength) + \` \${percent}%\`);
-      console.log('');
-
-    } catch (e) {
-      console.warn(\`   ⚠️ Failed: \${shortName} - \${e.message}\`);
-      console.log('');
-    }
-    
-    await new Promise(r => setTimeout(r, 200));
-  }
-
-  const uniqueImages = [...new Set(allImages)];
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🎉 CRAWL COMPLETE! 🎉');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📊 FINAL SUMMARY:');
-  console.log(\`   📄 Pages scanned: \${totalPages}\`);
-  console.log(\`   🖼️ Total images found: \${allImages.length}\`);
-  console.log(\`   ✨ Unique images: \${uniqueImages.length}\`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📋 UNIQUE IMAGE URLs (with source pages):');
-  uniqueImages.forEach(img => console.log(img));
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  
-  try {
-    await navigator.clipboard.writeText(uniqueImages.join('\\n'));
-    console.log('📋 All unique image URLs copied to clipboard!');
-  } catch(e) {}
-})();`;
-
-function updateCrawlerCode() {
-  const includeCss = document.getElementById('includeCssToggle').checked;
-  const codeBlock = document.getElementById('crawlerCode');
-  codeBlock.textContent = includeCss ? crawlerCodeWithCSS : crawlerCodeWithoutCSS;
-}
-
-function copyCrawlerCode() {
-  const code = document.getElementById('crawlerCode').textContent;
-  navigator.clipboard.writeText(code).then(() => showToast('✅ Crawler code copied! Paste it in console on the sitemap page.'));
-}
-
-function clearSearch() {
-  document.getElementById('filterInput').value = '';
-  filterImages();
-}
-
-function toggleSortOrder() {
-  sortOrder = sortOrder === 'default' ? 'numbersLast' : 'default';
-  document.getElementById('sortBtn').innerHTML = sortOrder === 'default' ? '📁 Sort: Numbers Last' : '📁 Sort: Default';
-  showToast(sortOrder === 'default' ? '📁 Default order' : '📁 Numbers moved to bottom');
-  displayImages();
-}
-
-function extractNumber(filename) {
-  const match = filename.match(/(\d+)/);
-  return match ? parseInt(match[0]) : null;
-}
-
-function sortImages(images) {
-  if (sortOrder === 'numbersLast') {
-    return [...images].sort((a, b) => {
-      const nameA = a.split('/').pop().split('?')[0].toLowerCase();
-      const nameB = b.split('/').pop().split('?')[0].toLowerCase();
-      const numA = extractNumber(nameA);
-      const numB = extractNumber(nameB);
-      if (numA !== null && numB !== null) return numA - numB;
-      if (numA !== null) return 1;
-      if (numB !== null) return -1;
-      return nameA.localeCompare(nameB);
-    });
-  }
-  return [...images];
-}
-
-function parseConsoleOutput() {
-  const text = document.getElementById('consoleOutput').value;
-  const lines = text.split(/\r?\n/);
-  
-  detectedPages = [];
-  allImages = [];
-  uniqueImages.clear();
-  duplicateImages.clear();
-  selectedImages.clear();
-  cssImagesSet.clear();
-  imgTagSet.clear();
-  imageSourceMap.clear();
-  
-  const pagePattern = /📄\s*\[\d+\/\d+\]\s*Crawling:\s*([^\s]+)/i;
-  const imagePattern = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|bmp|svg|ico))/i;
-  
-  let currentSource = '';
-  
-  for (const line of lines) {
-    // Skip summary lines
-    if (line.includes('Total unique images') || 
-        line.includes('✅ All images from sitemap') ||
-        line.includes('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') ||
-        line.includes('🎉 CRAWL COMPLETE') ||
-        line.includes('📊 FINAL SUMMARY') ||
-        line.includes('▶️ Starting image extraction') ||
-        (line.includes('Pages scanned') && !line.includes('http')) ||
-        (line.includes('Total images found') && !line.includes('http')) ||
-        (line.includes('Unique images') && !line.includes('http'))) {
-      continue;
-    }
-    
-    // Get page URL from crawling line
-    const pageMatch = line.match(pagePattern);
-    if (pageMatch) {
-      currentSource = pageMatch[1];
-      if (!detectedPages.includes(currentSource)) {
-        detectedPages.push(currentSource);
-      }
-    }
-    
-    // Also try to get source from [SOURCE] tag
-    if (line.includes('[SOURCE]')) {
-      const sourceMatch = line.match(/\[SOURCE\]\s*(https?:\/\/[^\s]+)/i);
-      if (sourceMatch) {
-        currentSource = sourceMatch[1];
-      }
-    }
-    
-    // Extract image URL
-    const imageMatch = line.match(imagePattern);
-    if (imageMatch) {
-      const imageUrl = imageMatch[1];
-      allImages.push(imageUrl);
-      
-      // Store source page
-      if (!imageSourceMap.has(imageUrl)) {
-        imageSourceMap.set(imageUrl, []);
-      }
-      const sources = imageSourceMap.get(imageUrl);
-      if (currentSource && !sources.includes(currentSource)) {
-        sources.push(currentSource);
-      }
-      
-      // Check if this is a CSS image - look for 🎨 emoji or [CSS] tag
-      if (line.includes('🎨') || line.includes('[CSS]')) {
-        cssImagesSet.add(imageUrl);
-      } else {
-        imgTagSet.add(imageUrl);
-      }
-    }
-  }
-  
-  // Remove duplicates for unique images
-  const tempSet = new Set();
-  for (const img of allImages) {
-    if (tempSet.has(img)) {
-      duplicateImages.add(img);
-    } else {
-      tempSet.add(img);
-      uniqueImages.add(img);
-    }
-  }
-  
-  updateStats();
-  displayDetectedPages();
-  displayDuplicates();
-  displayImages();
-  
-  showToast(`✅ Found ${detectedPages.length} pages, ${uniqueImages.size} unique images (${imgTagSet.size} IMG, ${cssImagesSet.size} CSS)`);
-}
-
-function updateStats() {
-  document.getElementById('stats').style.display = 'grid';
-  document.getElementById('pagesCount').textContent = detectedPages.length;
-  document.getElementById('totalImages').textContent = allImages.length;
-  document.getElementById('uniqueCount').textContent = uniqueImages.size;
-  document.getElementById('duplicateCount').textContent = duplicateImages.size;
-  document.getElementById('selectedCount').textContent = selectedImages.size;
-  document.getElementById('cssImageCount').textContent = cssImagesSet.size;
-  document.getElementById('pagesBadge').textContent = detectedPages.length;
-  document.getElementById('duplicatesBadge').textContent = duplicateImages.size;
-}
-
-function displayDetectedPages() {
-  const section = document.getElementById('pagesSection');
-  const container = document.getElementById('pageList');
-  if (detectedPages.length > 0) {
-    section.style.display = 'block';
-    container.innerHTML = detectedPages.map(url => `<div class="page-item"><a href="${url}" target="_blank">${url}</a></div>`).join('');
-  } else {
-    section.style.display = 'none';
-  }
-}
-
-function displayDuplicates() {
-  const section = document.getElementById('duplicatesSection');
-  const container = document.getElementById('duplicateList');
-  if (duplicateImages.size > 0) {
-    section.style.display = 'block';
-    container.innerHTML = Array.from(duplicateImages).map(url => `<div class="duplicate-item">${url}</div>`).join('');
-  } else section.style.display = 'none';
-}
-
-// FIXED: Filter function that properly separates IMG and CSS
-function filterByType(type) {
-  currentFilter = type;
-  console.log(`Filter changed to: ${type}`);
-  
-  // Update button styling
-  document.querySelectorAll('.filter-badge').forEach(btn => {
-    btn.style.opacity = '0.6';
-  });
-  if (type === 'all') document.querySelector('.filter-badge.all').style.opacity = '1';
-  if (type === 'img') document.querySelector('.filter-badge.img').style.opacity = '1';
-  if (type === 'css') document.querySelector('.filter-badge.css').style.opacity = '1';
-  
-  displayImages();
-}
-
-function showImageDetails(url) {
-  const sources = imageSourceMap.get(url) || ['Unknown source'];
-  const isCss = cssImagesSet.has(url);
-  const typeLabel = isCss ? '🎨 CSS Background Image' : '🖼️ IMG Tag';
-  
-  document.getElementById('detailsImage').src = url;
-  document.getElementById('detailsUrl').innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
-  document.getElementById('detailsType').innerHTML = typeLabel;
-  document.getElementById('pagesCountSpan').textContent = sources.length;
-  
-  const pagesContainer = document.getElementById('detailsPages');
-  pagesContainer.innerHTML = sources.map(source => `
-    <div class="page-item-detail">
-      <a href="${source}" target="_blank">${source}</a>
-    </div>
-  `).join('');
-  
-  document.getElementById('detailsPopup').style.display = 'flex';
-}
-
-function closeDetailsPopup() {
-  document.getElementById('detailsPopup').style.display = 'none';
-}
-
-// FIXED: Display function that properly filters by type
-function displayImages() {
-  const container = document.getElementById('imageContainer');
-  container.innerHTML = '';
-  
-  if (uniqueImages.size === 0) {
-    container.innerHTML = '<div class="loading">✨ No images to display.</div>';
-    return;
-  }
-  
-  // Apply type filter
-  let filteredByType = [];
-  
-  if (currentFilter === 'all') {
-    // Show ALL unique images
-    filteredByType = Array.from(uniqueImages);
-    console.log(`📊 Showing ALL: ${filteredByType.length} images`);
-  } 
-  else if (currentFilter === 'img') {
-    // Show ONLY images that are from IMG tags (NOT in cssImagesSet)
-    filteredByType = Array.from(uniqueImages).filter(url => !cssImagesSet.has(url));
-    console.log(`📊 Showing IMG only: ${filteredByType.length} images (CSS excluded: ${cssImagesSet.size})`);
-  } 
-  else if (currentFilter === 'css') {
-    // Show ONLY images that are CSS backgrounds
-    filteredByType = Array.from(uniqueImages).filter(url => cssImagesSet.has(url));
-    console.log(`📊 Showing CSS only: ${filteredByType.length} images`);
-  }
-  
-  // Apply sorting
-  currentImageList = sortImages(filteredByType);
-  
-  // Apply search filter
-  const searchTerm = document.getElementById('filterInput').value.toLowerCase();
-  let displayedImages = currentImageList;
-  if (searchTerm) {
-    displayedImages = currentImageList.filter(url => 
-      url.toLowerCase().includes(searchTerm) || 
-      url.split('/').pop().toLowerCase().includes(searchTerm)
-    );
-  }
-  
-  // Render images
-  for (const url of displayedImages) {
-    const isCssImage = cssImagesSet.has(url);
-    const sources = imageSourceMap.get(url) || [];
-    const pagesCount = sources.length;
-    
-    const card = document.createElement('div');
-    card.className = 'image-card';
-    card.setAttribute('data-type', isCssImage ? 'css' : 'img');
-    if (selectedImages.has(url)) card.classList.add('selected');
-    
-    const img = document.createElement('img');
-    img.src = url;
-    img.loading = 'lazy';
-    img.onerror = () => { img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect width="200" height="150" fill="%23ddd"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" fill="%23999"%3EFailed%3C/text%3E%3C/svg%3E'; };
-    img.onclick = (e) => { e.stopPropagation(); openPopup(url); };
-    
-    const fileName = url.split('/').pop().split('?')[0];
-    const info = document.createElement('div');
-    info.className = 'image-info';
-    info.innerHTML = `
-      <div class="image-filename">${fileName.substring(0, 35)}${fileName.length > 35 ? '...' : ''}</div>
-      <div class="${isCssImage ? 'css-label' : 'img-label'}">
-        ${isCssImage ? '🎨 CSS BACKGROUND' : '🖼️ IMG TAG'}
-      </div>
-      <div class="image-pages-count">
-        📄 Found on ${pagesCount} page${pagesCount !== 1 ? 's' : ''}
-      </div>
-      <label class="image-checkbox">
-        <input type="checkbox" class="checkbox" ${selectedImages.has(url) ? 'checked' : ''}>
-        <span>Select this image</span>
-      </label>
-    `;
-    
-    const btnDiv = document.createElement('div');
-    btnDiv.className = 'image-buttons';
-    
-    const viewBtn = document.createElement('button'); viewBtn.className = 'icon-btn btn-view'; viewBtn.innerHTML = '👁️'; viewBtn.title = 'View full size'; viewBtn.onclick = (e) => { e.stopPropagation(); openPopup(url); };
-    const detailsBtn = document.createElement('button'); detailsBtn.className = 'icon-btn btn-details'; detailsBtn.innerHTML = 'ℹ️'; detailsBtn.title = 'Image details & source pages'; detailsBtn.onclick = (e) => { e.stopPropagation(); showImageDetails(url); };
-    const copyBtn = document.createElement('button'); copyBtn.className = 'icon-btn btn-copy'; copyBtn.innerHTML = '📋'; copyBtn.title = 'Copy image URL'; copyBtn.onclick = (e) => { e.stopPropagation(); copyImageUrl(url); };
-    const delBtn = document.createElement('button'); delBtn.className = 'icon-btn btn-delete'; delBtn.innerHTML = '🗑️'; delBtn.title = 'Delete image'; delBtn.onclick = (e) => { e.stopPropagation(); deleteImage(url); };
-    
-    btnDiv.appendChild(viewBtn);
-    btnDiv.appendChild(detailsBtn);
-    btnDiv.appendChild(copyBtn);
-    btnDiv.appendChild(delBtn);
-    
-    card.appendChild(img);
-    card.appendChild(info);
-    card.appendChild(btnDiv);
-    
-    const chk = info.querySelector('.checkbox');
-    chk.onchange = (e) => {
-      e.stopPropagation();
-      if (chk.checked) { selectedImages.add(url); card.classList.add('selected'); }
-      else { selectedImages.delete(url); card.classList.remove('selected'); }
-      document.getElementById('selectedCount').textContent = selectedImages.size;
-    };
-    card.onclick = (e) => { if (e.target === card || e.target === img) openPopup(url); };
-    container.appendChild(card);
-  }
-}
-
-function copyImageUrl(url) {
-  navigator.clipboard.writeText(url).then(() => showToast('✅ URL copied!'));
-}
-
-function deleteImage(url) {
-  if (confirm('Remove this image?')) {
-    uniqueImages.delete(url);
-    selectedImages.delete(url);
-    displayImages();
-    updateStats();
-  }
-}
-
-function selectAllImages() { 
-  const searchTerm = document.getElementById('filterInput').value.toLowerCase();
-  let imagesToSelect = currentImageList;
-  if (searchTerm) {
-    imagesToSelect = currentImageList.filter(url => 
-      url.toLowerCase().includes(searchTerm) || 
-      url.split('/').pop().toLowerCase().includes(searchTerm)
-    );
-  }
-  imagesToSelect.forEach(u => selectedImages.add(u)); 
-  displayImages(); 
-  updateStats(); 
-}
-
-function deselectAllImages() { selectedImages.clear(); displayImages(); updateStats(); }
-function deleteSelectedImages() {
-  if (selectedImages.size === 0) { showToast('No images selected', 'error'); return; }
-  if (confirm(`Delete ${selectedImages.size} image(s)?`)) {
-    for (const url of selectedImages) uniqueImages.delete(url);
-    selectedImages.clear();
-    displayImages();
-    updateStats();
-  }
-}
-function copySelectedImages() {
-  if (selectedImages.size === 0) { showToast('No images selected', 'error'); return; }
-  navigator.clipboard.writeText(Array.from(selectedImages).join('\n')).then(() => showToast(`✅ Copied ${selectedImages.size} URLs!`));
-}
-function filterImages() { displayImages(); }
-function openPopup(url) { document.getElementById('popupImage').src = url; document.getElementById('popup').style.display = 'flex'; }
-function closePopup() { document.getElementById('popup').style.display = 'none'; }
-function clearAll() {
-  if (confirm('Clear all?')) {
-    detectedPages = []; allImages = []; uniqueImages.clear(); duplicateImages.clear(); selectedImages.clear(); cssImagesSet.clear(); imgTagSet.clear(); imageSourceMap.clear();
-    document.getElementById('consoleOutput').value = '';
-    document.getElementById('stats').style.display = 'none';
-    document.getElementById('pagesSection').style.display = 'none';
-    document.getElementById('duplicatesSection').style.display = 'none';
-    document.getElementById('imageContainer').innerHTML = '<div class="loading">✨ No data.<br>Run crawler, paste output, click "Parse Output"</div>';
-  }
-}
 function showToast(msg, type = 'success') {
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.style.background = type === 'error' ? '#dc3545' : '#28a745';
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+    if(!toastContainer){ toastContainer=document.createElement('div'); toastContainer.className='toast-container'; document.body.appendChild(toastContainer); }
+    while(activeToasts.length>=3){ let old=activeToasts.shift(); if(old&&old.parentNode){ old.style.animation='fadeOut 0.3s forwards'; setTimeout(()=>old.parentNode?.removeChild(old),300); } }
+    let toast=document.createElement('div'); toast.className=`toast ${type}`; toast.textContent=msg; toastContainer.appendChild(toast); activeToasts.push(toast);
+    setTimeout(()=>{ let idx=activeToasts.indexOf(toast); if(idx>-1) activeToasts.splice(idx,1); toast.style.animation='fadeOut 0.3s forwards'; setTimeout(()=>toast.parentNode?.removeChild(toast),300); },3000);
 }
 
-// Initialize
-document.getElementById('includeCssToggle').checked = true;
+function updateStats(){
+    document.getElementById('pagesCount').textContent=detectedPages.length;
+    document.getElementById('articlesCount').textContent=detectedArticles.length;
+    document.getElementById('totalOccurrences').textContent=rawTotalCount;
+    document.getElementById('uniqueCount').textContent=uniqueImages.size;
+    document.getElementById('externalCount').textContent=externalImagesSet.size;
+    document.getElementById('homepageCount').textContent=homepageImagesSet.size;
+    document.getElementById('similarGroupCount').textContent=similarGroups.size;
+    document.getElementById('selectedCount').textContent=selectedImages.size;
+    document.getElementById('removedDuplicates').textContent=duplicatesRemoved;
+    document.getElementById('pagesCountBadge').textContent=detectedPages.length;
+    document.getElementById('articlesCountBadge').textContent=detectedArticles.length;
+    document.getElementById('externalCountBadge').textContent=externalImagesSet.size;
+    document.getElementById('duplicatesBadge').textContent=duplicateImages.size;
+}
+
+function selectAllVisibleImages(){
+    const checkboxes = document.querySelectorAll('.image-card .checkbox');
+    if(checkboxes.length === 0){ showToast('No images to select','warning'); return; }
+    saveStateToUndo();
+    checkboxes.forEach(cb => { const url = cb.getAttribute('data-url'); if(url && !selectedImages.has(url)) selectedImages.add(url); cb.checked = true; });
+    document.querySelectorAll('.image-card').forEach(card => { if(card.querySelector('.checkbox')?.checked) card.classList.add('selected'); });
+    updateStats(); updateFilterVisibility();
+    showToast(`✅ Selected ${selectedImages.size} images`);
+}
+function deselectAllImages(){ saveStateToUndo(); selectedImages.clear(); displayImages(); updateStats(); updateFilterVisibility(); showToast(`☐ Deselected all images`); }
+function copySelectedImages(){ if(selectedImages.size===0){ showToast('No images selected','error'); return; } navigator.clipboard.writeText(Array.from(selectedImages).join('\n')).then(()=>showToast(`✅ Copied ${selectedImages.size} URLs!`)); }
+function deleteSelectedImages(){ if(selectedImages.size===0){ showToast('No images selected','error'); return; } saveStateToUndo(); for(let url of selectedImages){ uniqueImages.delete(url); let gid=imageToGroup.get(url); if(gid!==undefined){ let grp=similarGroups.get(gid); if(grp){ grp.delete(url); if(grp.size<=1){ similarGroups.delete(gid); for(let rem of grp) imageToGroup.delete(rem); } } imageToGroup.delete(url); } } selectedImages.clear(); displayImages(); updateStats(); updateFilterVisibility(); showToast(`🗑️ Deleted selected images`); }
+function exportData(){ let data={version:'14.0',timestamp:new Date().toISOString(),detectedPages,detectedArticles,externalImagesList,homepageUrl,allImages,uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),selectedImages:Array.from(selectedImages),rawTotalCount,htmlOnlyCount,cssOnlyCount,duplicatesRemoved}; let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`image-collector-backup-${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href); showToast('✅ Data exported!'); }
+function importData(event){ let file=event.target.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); detectedPages=data.detectedPages||[]; detectedArticles=data.detectedArticles||[]; externalImagesList=data.externalImagesList||[]; homepageUrl=data.homepageUrl||''; allImages=data.allImages||[]; uniqueImages=new Set(data.uniqueImages||[]); duplicateImages=new Set(data.duplicateImages||[]); cssImagesSet=new Set(data.cssImagesSet||[]); htmlImagesSet=new Set(data.htmlImagesSet||[]); externalImagesSet=new Set(data.externalImagesSet||[]); iconImagesSet=new Set(data.iconImagesSet||[]); logoImagesSet=new Set(data.logoImagesSet||[]); homepageImagesSet=new Set(data.homepageImagesSet||[]); imageSourceMap=new Map(data.imageSourceMap||[]); selectedImages=new Set(data.selectedImages||[]); similarGroups.clear(); imageToGroup.clear(); if(data.similarGroups) for(let [id,urls] of data.similarGroups) similarGroups.set(parseInt(id),new Set(urls)); if(data.imageToGroup) for(let [url,id] of data.imageToGroup) imageToGroup.set(url,parseInt(id)); rawTotalCount=data.rawTotalCount||allImages.length; htmlOnlyCount=data.htmlOnlyCount||0; cssOnlyCount=data.cssOnlyCount||0; duplicatesRemoved=data.duplicatesRemoved||0; updateStats(); displayDetectedPages(); displayDuplicates(); displayExternalImages(); displayImages(); updateFilterVisibility(); showToast(`✅ Imported ${uniqueImages.size} images`); }catch(err){ showToast('❌ Invalid file','error'); } }; reader.readAsText(file); event.target.value=''; }
+function clearAll(){ detectedPages=[]; detectedArticles=[]; externalImagesList=[]; allImages=[]; uniqueImages.clear(); duplicateImages.clear(); selectedImages.clear(); cssImagesSet.clear(); htmlImagesSet.clear(); externalImagesSet.clear(); iconImagesSet.clear(); logoImagesSet.clear(); homepageImagesSet.clear(); imageSourceMap.clear(); similarGroups.clear(); imageToGroup.clear(); homepageUrl=''; rawTotalCount=0; htmlOnlyCount=0; cssOnlyCount=0; duplicatesRemoved=0; document.getElementById('consoleOutput').value=''; document.getElementById('imageContainer').innerHTML='<div class="loading"><div class="spinner"></div><div>Run crawler, paste complete output, click "Parse Output"</div></div>'; updateStats(); updateFilterVisibility(); showToast('✅ All data cleared'); closePopup(); }
+function clearSearch(){ document.getElementById('filterInput').value=''; filterImages(); showToast('🔍 Search cleared'); }
+function toggleSortOrder(){ sortOrder=sortOrder==='default'?'numbersLast':'default'; document.getElementById('sortBtn').innerHTML=sortOrder==='default'?'📁 Sort: Numbers Last':'📁 Sort: Default'; displayImages(); }
+function extractNumber(fn){ let m=fn.match(/(\d+)/); return m?parseInt(m[0]):null; }
+function sortImages(imgs){ if(sortOrder==='numbersLast'){ return [...imgs].sort((a,b)=>{ let na=a.split('/').pop().split('?')[0].toLowerCase(), nb=b.split('/').pop().split('?')[0].toLowerCase(); let numa=extractNumber(na), numb=extractNumber(nb); if(numa!==null && numb!==null) return numa-numb; if(numa!==null) return 1; if(numb!==null) return -1; return na.localeCompare(nb); }); } return [...imgs]; }
+function isIconImage(url){ let low=url.toLowerCase(), fn=url.split('/').pop().toLowerCase(); if(fn.endsWith('.svg')) return true; if(fn.match(/\d+x\d+/) && parseInt(fn.match(/\d+/)[0])<=64) return true; let kw=['icon','ico','favicon','sprite','symbol','glyph','facebook','twitter','instagram','linkedin','youtube','pinterest','social','share','like','comment','heart','star','menu','hamburger','close','search','cart','user','arrow','chevron','play','pause','volume','fullscreen','calendar','clock','location','email','phone','message','warning','info','check','circle','square','triangle']; return kw.some(k=>low.includes(k)); }
+function isLogoImage(url){ let low=url.toLowerCase(), kw=['logo','brand','header-logo','footer-logo','site-logo','company-logo']; return kw.some(k=>low.includes(k)); }
+function isExternalImage(url, baseDomain){ if(!baseDomain) return false; try{ let urlDomain=new URL(url).hostname.replace(/^www\./,''); let baseDomainClean=baseDomain.replace(/^www\./,''); return !urlDomain.includes(baseDomainClean); }catch(e){ return false; } }
+function getBaseName(fn){ return fn.toLowerCase().replace(/-\d+x\d+/,'').replace(/-\d+/,'').replace(/[0-9a-f]{8,}/,'').replace(/-v\d+/,'').replace(/\.(jpg|jpeg|png|gif|webp|svg)$/i,'').replace(/[-_]/g,' ').trim(); }
+function groupSimilarImages(imgs){ similarGroups.clear(); imageToGroup.clear(); let groups=new Map(); for(let url of imgs){ let fn=url.split('/').pop().split('?')[0]; let bn=getBaseName(fn); if(!groups.has(bn)) groups.set(bn,[]); groups.get(bn).push(url); } let gid=0; for(let [bn,urls] of groups){ if(urls.length>1){ for(let u of urls) imageToGroup.set(u,gid); similarGroups.set(gid,new Set(urls)); gid++; } } }
+function selectAllSimilarKeepOne(){ if(similarGroups.size===0){ showToast('No duplicate image groups found','error'); return; } saveStateToUndo(); let searchTerm=document.getElementById('filterInput').value.toLowerCase(); let displayed=currentImageList; if(searchTerm) displayed=currentImageList.filter(u=>u.toLowerCase().includes(searchTerm)||u.split('/').pop().toLowerCase().includes(searchTerm)); let groupsToSel=new Set(); for(let u of displayed){ let g=imageToGroup.get(u); if(g!==undefined) groupsToSel.add(g); } let selCount=0, total=0; for(let gid of groupsToSel){ let grp=similarGroups.get(gid); if(grp && grp.size>1){ total++; let arr=Array.from(grp); for(let i=1;i<arr.length;i++){ if(!selectedImages.has(arr[i])){ selectedImages.add(arr[i]); selCount++; } } } } updateStats(); displayImages(); updateFilterVisibility(); showToast(`✅ Selected ${selCount} duplicate images from ${total} groups`); }
+function filterByType(type){ currentFilter=type; document.querySelectorAll('.filter-badge').forEach(btn=>{ btn.classList.remove('active'); btn.style.opacity='0.6'; }); let map={all:'.filter-badge.all',html:'.filter-badge.html',css:'.filter-badge.css',external:'.filter-badge.external',icons:'.filter-badge.icons',logos:'.filter-badge.logos',homepage:'.filter-badge.homepage',duplicates:'.filter-badge.duplicates'}; if(map[type]){ let btn=document.querySelector(map[type]); if(btn){ btn.classList.add('active'); btn.style.opacity='1'; } } displayImages(); }
+function getPriorityTags(url){ let tags=[]; if(currentFilter==='homepage' && homepageImagesSet.has(url)) tags.push('<span class="tag tag-homepage">🏠 Homepage</span>'); if(currentFilter==='html' && htmlImagesSet.has(url)) tags.push('<span class="tag tag-html">🖼️ HTML</span>'); if(currentFilter==='css' && cssImagesSet.has(url)) tags.push('<span class="tag tag-css">🎨 CSS</span>'); if(currentFilter==='external' && externalImagesSet.has(url)) tags.push('<span class="tag tag-external">🌐 External</span>'); if(currentFilter==='icons' && iconImagesSet.has(url)) tags.push('<span class="tag tag-icon">🔘 Icon/UI</span>'); if(currentFilter==='logos' && logoImagesSet.has(url)) tags.push('<span class="tag tag-logo">🏷️ Logo</span>'); if(currentFilter!=='homepage' && homepageImagesSet.has(url)) tags.push('<span class="tag tag-homepage">🏠 Homepage</span>'); if(currentFilter!=='html' && htmlImagesSet.has(url)) tags.push('<span class="tag tag-html">🖼️ HTML</span>'); if(currentFilter!=='css' && cssImagesSet.has(url)) tags.push('<span class="tag tag-css">🎨 CSS</span>'); if(currentFilter!=='external' && externalImagesSet.has(url)) tags.push('<span class="tag tag-external">🌐 External</span>'); if(currentFilter!=='icons' && iconImagesSet.has(url)) tags.push('<span class="tag tag-icon">🔘 Icon/UI</span>'); if(currentFilter!=='logos' && logoImagesSet.has(url)) tags.push('<span class="tag tag-logo">🏷️ Logo</span>'); let gid=imageToGroup.get(url); if(gid!==undefined){ let sz=similarGroups.get(gid).size; tags.push(`<span class="tag tag-duplicate">🔄 Duplicate (${sz})</span>`); } return tags; }
+function groupImagesForDisplay(images){ if(currentFilter!=='duplicates') return images.map(img=>({type:'image',url:img})); let grouped=[], processed=new Set(), sorted=Array.from(similarGroups.entries()).sort((a,b)=>b[1].size-a[1].size); for(let [gid,urls] of sorted){ let arr=Array.from(urls); let grpImgs=images.filter(img=>arr.includes(img)); if(grpImgs.length>1){ grouped.push({type:'group-header',groupId:gid,count:grpImgs.length}); for(let img of grpImgs.sort()){ grouped.push({type:'image',url:img}); processed.add(img); } } } for(let img of images) if(!processed.has(img)) grouped.push({type:'image',url:img}); return grouped; }
+function displayImages(){ let container=document.getElementById('imageContainer'); container.innerHTML=''; if(uniqueImages.size===0){ container.innerHTML='<div class="loading">✨ No images to display.</div>'; return; } let filtered=[]; if(currentFilter==='all') filtered=Array.from(uniqueImages); else if(currentFilter==='html') filtered=Array.from(uniqueImages).filter(u=>htmlImagesSet.has(u)); else if(currentFilter==='css') filtered=Array.from(uniqueImages).filter(u=>cssImagesSet.has(u)); else if(currentFilter==='external') filtered=Array.from(uniqueImages).filter(u=>externalImagesSet.has(u)); else if(currentFilter==='icons') filtered=Array.from(uniqueImages).filter(u=>iconImagesSet.has(u)); else if(currentFilter==='logos') filtered=Array.from(uniqueImages).filter(u=>logoImagesSet.has(u)); else if(currentFilter==='homepage') filtered=Array.from(uniqueImages).filter(u=>homepageImagesSet.has(u)); else if(currentFilter==='duplicates') filtered=Array.from(uniqueImages).filter(u=>imageToGroup.has(u)); if(currentFilter==='duplicates' && filtered.length){ let tmp=[], seen=new Set(); for(let u of filtered){ let gid=imageToGroup.get(u); if(gid!==undefined && !seen.has(gid)){ seen.add(gid); let grp=Array.from(similarGroups.get(gid)); tmp.push(...grp); } } filtered=tmp; } currentImageList=sortImages(filtered); let search=document.getElementById('filterInput').value.toLowerCase(); let rawDisplay=currentImageList; if(search) rawDisplay=currentImageList.filter(u=>u.toLowerCase().includes(search)||u.split('/').pop().toLowerCase().includes(search)); let grouped=groupImagesForDisplay(rawDisplay); currentDisplayedUrls=grouped.filter(i=>i.type==='image').map(i=>i.url); let idx=0; for(let item of grouped){ if(item.type==='group-header'){ let div=document.createElement('div'); div.className='group-separator'; div.innerHTML=`📁 Similar Images Group (${item.count} images)`; container.appendChild(div); continue; } let url=item.url; let tags=getPriorityTags(url); let sources=imageSourceMap.get(url)||[]; let pc=sources.length; let card=document.createElement('div'); card.className='image-card'; if(selectedImages.has(url)) card.classList.add('selected'); let img=document.createElement('img'); img.src=url; img.loading='lazy'; img.onerror=()=>{ img.src='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect width="200" height="150" fill="%23ddd"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" fill="%23999"%3EFailed%3C/text%3E%3C/svg%3E'; }; img.onclick=(e)=>{ e.stopPropagation(); openPopup(url); }; let fname=url.split('/').pop().split('?')[0]; let info=document.createElement('div'); info.className='image-info'; info.innerHTML=`<div class="image-filename">${fname.substring(0,40)}${fname.length>40?'...':''}</div><div class="image-tags">${tags.join('')}</div><div class="image-pages-count">📄 Found on ${pc} page${pc!==1?'s':''}</div><label class="image-checkbox"><input type="checkbox" class="checkbox" data-index="${idx}" data-url="${url}" ${selectedImages.has(url)?'checked':''}><span>Select this image</span></label>`; let btns=document.createElement('div'); btns.className='image-buttons'; let view=document.createElement('button'); view.className='icon-btn btn-view'; view.innerHTML='👁️'; view.title='View'; view.onclick=(e)=>{ e.stopPropagation(); openPopup(url); }; let detail=document.createElement('button'); detail.className='icon-btn btn-details'; detail.innerHTML='ℹ️'; detail.title='Details'; detail.onclick=(e)=>{ e.stopPropagation(); showImageDetails(url); }; let copy=document.createElement('button'); copy.className='icon-btn btn-copy'; copy.innerHTML='📋'; copy.title='Copy URL'; copy.onclick=(e)=>{ e.stopPropagation(); copyImageUrl(url); }; let del=document.createElement('button'); del.className='icon-btn btn-delete'; del.innerHTML='🗑️'; del.title='Delete'; del.onclick=(e)=>{ e.stopPropagation(); deleteImage(url); }; btns.appendChild(view); btns.appendChild(detail); btns.appendChild(copy); btns.appendChild(del); card.appendChild(img); card.appendChild(info); card.appendChild(btns); let chk=info.querySelector('.checkbox'); let labelSpan=info.querySelector('.image-checkbox span'); let handleChange=(e,clickedIdx)=>{ e.stopPropagation(); let isChecked=chk.checked; if(e.shiftKey && lastCheckedIndex!==null && lastCheckedIndex!==clickedIdx){ let start=Math.min(lastCheckedIndex,clickedIdx), end=Math.max(lastCheckedIndex,clickedIdx); for(let i=start;i<=end;i++){ let imgUrl=currentDisplayedUrls[i]; if(isChecked){ if(!selectedImages.has(imgUrl)) selectedImages.add(imgUrl); } else { if(selectedImages.has(imgUrl)) selectedImages.delete(imgUrl); } } updateStats(); displayImages(); updateFilterVisibility(); showToast(`${isChecked?'Selected':'Deselected'} ${end-start+1} images`); } else { if(isChecked) selectedImages.add(url); else selectedImages.delete(url); updateStats(); card.classList.toggle('selected',isChecked); updateFilterVisibility(); } lastCheckedIndex=clickedIdx; }; chk.addEventListener('change',(e)=>{ let ci=parseInt(chk.getAttribute('data-index')); handleChange(e,ci); }); labelSpan.addEventListener('click',(e)=>{ e.stopPropagation(); e.preventDefault(); chk.checked=!chk.checked; let ci=parseInt(chk.getAttribute('data-index')); let fake={shiftKey:e.shiftKey,stopPropagation:()=>{}}; handleChange(fake,ci); }); card.onclick=(e)=>{ if(e.target===card || e.target===img) openPopup(url); }; container.appendChild(card); idx++; } }
+function showImageDetails(url){ let sources=imageSourceMap.get(url)||[]; let gid=imageToGroup.get(url); let tags=[]; if(htmlImagesSet.has(url)) tags.push('🖼️ HTML'); if(cssImagesSet.has(url)) tags.push('🎨 CSS'); if(externalImagesSet.has(url)) tags.push('🌐 External'); if(iconImagesSet.has(url)) tags.push('🔘 Icon/UI'); if(logoImagesSet.has(url)) tags.push('🏷️ Logo/Brand'); if(homepageImagesSet.has(url)) tags.push('🏠 Homepage'); if(gid!==undefined) tags.push(`🔄 Duplicate (${similarGroups.get(gid).size} images)`); document.getElementById('detailsImage').src=url; document.getElementById('detailsUrl').innerHTML=`<a href="${url}" target="_blank">${url}</a>`; document.getElementById('detailsType').innerHTML=tags.join(' | ')||'Standard Image'; document.getElementById('pagesCountSpan').textContent=sources.length; let pagesDiv=document.getElementById('detailsPages'); pagesDiv.innerHTML=sources.map(s=>`<div class="page-item-detail"><a href="${s}" target="_blank">${s}</a></div>`).join(''); document.getElementById('detailsPopup').style.display='flex'; }
+function closeDetailsPopup(){ document.getElementById('detailsPopup').style.display='none'; }
+function copyImageUrl(url){ navigator.clipboard.writeText(url).then(()=>showToast('✅ URL copied!')); }
+function deleteImage(url){ saveStateToUndo(); uniqueImages.delete(url); selectedImages.delete(url); let gid=imageToGroup.get(url); if(gid!==undefined){ let grp=similarGroups.get(gid); if(grp){ grp.delete(url); if(grp.size<=1){ similarGroups.delete(gid); for(let rem of grp) imageToGroup.delete(rem); } } imageToGroup.delete(url); } displayImages(); updateStats(); updateFilterVisibility(); showToast(`🗑️ Image deleted`); }
+function filterImages(){ displayImages(); }
+function showContentTab(tab){ currentContentTab=tab; document.getElementById('pagesListContainer').style.display=tab==='pages'?'block':'none'; document.getElementById('articlesListContainer').style.display=tab==='articles'?'block':'none'; let btns=document.querySelectorAll('.tab-btn'); btns.forEach(b=>b.classList.remove('active')); if(event?.target) event.target.classList.add('active'); }
+function updateFilterVisibility(){ let htmlCnt=Array.from(uniqueImages).filter(u=>htmlImagesSet.has(u)).length; let cssCnt=Array.from(uniqueImages).filter(u=>cssImagesSet.has(u)).length; let extCnt=externalImagesSet.size; let iconCnt=Array.from(uniqueImages).filter(u=>iconImagesSet.has(u)).length; let logoCnt=Array.from(uniqueImages).filter(u=>logoImagesSet.has(u)).length; let homeCnt=homepageImagesSet.size; let dupCnt=Array.from(uniqueImages).filter(u=>imageToGroup.has(u)).length; let filters=[{name:'html',count:htmlCnt},{name:'css',count:cssCnt},{name:'external',count:extCnt},{name:'icons',count:iconCnt},{name:'logos',count:logoCnt},{name:'homepage',count:homeCnt},{name:'duplicates',count:dupCnt}]; for(let f of filters){ let btn=document.querySelector(`.filter-badge.${f.name}`); if(btn){ if(f.count===0) btn.classList.add('hidden'); else { btn.classList.remove('hidden'); btn.innerHTML=getLabel(f.name,f.count); } let delBtn=btn.querySelector('.filter-delete'); if(!delBtn){ delBtn=document.createElement('button'); delBtn.className='filter-delete'; delBtn.innerHTML='✕'; delBtn.title=`Delete all ${f.name} images`; delBtn.onclick=(e)=>{ e.stopPropagation(); deleteByFilter(f.name); }; btn.appendChild(delBtn); } } } let allBtn=document.querySelector('.filter-badge.all'); if(allBtn) allBtn.innerHTML=`📊 All (${uniqueImages.size})`; }
+function getLabel(name,count){ let map={html:`🖼️ HTML (${count})`,css:`🎨 CSS (${count})`,external:`🌐 External (${count})`,icons:`🔘 Icons (${count})`,logos:`🏷️ Logos (${count})`,homepage:`🏠 Homepage (${count})`,duplicates:`🔄 Duplicates (${count})`}; return map[name]; }
+function deleteByFilter(ftype){ let toDel=[]; if(ftype==='html') toDel=Array.from(uniqueImages).filter(u=>htmlImagesSet.has(u)); else if(ftype==='css') toDel=Array.from(uniqueImages).filter(u=>cssImagesSet.has(u)); else if(ftype==='external') toDel=Array.from(uniqueImages).filter(u=>externalImagesSet.has(u)); else if(ftype==='icons') toDel=Array.from(uniqueImages).filter(u=>iconImagesSet.has(u)); else if(ftype==='logos') toDel=Array.from(uniqueImages).filter(u=>logoImagesSet.has(u)); else if(ftype==='homepage') toDel=Array.from(uniqueImages).filter(u=>homepageImagesSet.has(u)); else if(ftype==='duplicates') toDel=Array.from(uniqueImages).filter(u=>imageToGroup.has(u)); if(!toDel.length) return; saveStateToUndo(); for(let url of toDel){ uniqueImages.delete(url); selectedImages.delete(url); let gid=imageToGroup.get(url); if(gid!==undefined){ let grp=similarGroups.get(gid); if(grp){ grp.delete(url); if(grp.size<=1){ similarGroups.delete(gid); for(let rem of grp) imageToGroup.delete(rem); } } imageToGroup.delete(url); } } displayImages(); updateStats(); updateFilterVisibility(); switchToNextFilter(); showToast(`🗑️ Deleted ${toDel.length} ${ftype} images`); }
+function switchToNextFilter(){ let order=['all','html','css','external','icons','logos','homepage','duplicates']; let idx=order.indexOf(currentFilter); for(let i=idx+1;i<order.length;i++){ let btn=document.querySelector(`.filter-badge.${order[i]}`); if(btn && !btn.classList.contains('hidden')){ filterByType(order[i]); return; } } for(let i=0;i<idx;i++){ let btn=document.querySelector(`.filter-badge.${order[i]}`); if(btn && !btn.classList.contains('hidden')){ filterByType(order[i]); return; } } filterByType('all'); }
+function saveStateToUndo(){ if(isUndoRedoOperation) return; let state={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,htmlOnlyCount,cssOnlyCount,duplicatesRemoved}; undoStack.push(state); redoStack=[]; if(undoStack.length>50) undoStack.shift(); }
+function restoreState(state,isRedo=false){ isUndoRedoOperation=true; detectedPages=state.detectedPages||[]; detectedArticles=state.detectedArticles||[]; externalImagesList=state.externalImagesList||[]; allImages=state.allImages||[]; uniqueImages=new Set(state.uniqueImages||[]); duplicateImages=new Set(state.duplicateImages||[]); selectedImages=new Set(state.selectedImages||[]); cssImagesSet=new Set(state.cssImagesSet||[]); htmlImagesSet=new Set(state.htmlImagesSet||[]); externalImagesSet=new Set(state.externalImagesSet||[]); iconImagesSet=new Set(state.iconImagesSet||[]); logoImagesSet=new Set(state.logoImagesSet||[]); homepageImagesSet=new Set(state.homepageImagesSet||[]); imageSourceMap=new Map(state.imageSourceMap||[]); homepageUrl=state.homepageUrl||''; rawTotalCount=state.rawTotalCount||0; htmlOnlyCount=state.htmlOnlyCount||0; cssOnlyCount=state.cssOnlyCount||0; duplicatesRemoved=state.duplicatesRemoved||0; similarGroups.clear(); imageToGroup.clear(); if(state.similarGroups) for(let [id,urls] of state.similarGroups) similarGroups.set(parseInt(id),new Set(urls)); if(state.imageToGroup) for(let [url,id] of state.imageToGroup) imageToGroup.set(url,parseInt(id)); updateStats(); displayDetectedPages(); displayDuplicates(); displayExternalImages(); displayImages(); updateFilterVisibility(); isUndoRedoOperation=false; showToast(isRedo?'↪️ Redo':'↩️ Undo'); }
+function undo(){ if(undoStack.length===0){ showToast('Nothing to undo','error'); return; } let cur={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,htmlOnlyCount,cssOnlyCount,duplicatesRemoved}; redoStack.push(cur); let prev=undoStack.pop(); restoreState(prev,false); closePopup(); }
+function redo(){ if(redoStack.length===0){ showToast('Nothing to redo','error'); return; } let cur={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,htmlOnlyCount,cssOnlyCount,duplicatesRemoved}; undoStack.push(cur); let nxt=redoStack.pop(); restoreState(nxt,true); closePopup(); }
+document.addEventListener('keydown',(e)=>{ if(e.ctrlKey && e.key==='z'){ e.preventDefault(); undo(); } else if(e.ctrlKey && e.key==='y'){ e.preventDefault(); redo(); } });
+let currentPopupImages=[], currentPopupIndex=0;
+function updatePopupImageList(){ let imgs=Array.from(document.querySelectorAll('.image-card img')).map(i=>i.src); currentPopupImages=imgs; if(currentPopupImages.length===0) closePopup(); else { if(currentPopupIndex>=currentPopupImages.length) currentPopupIndex=currentPopupImages.length-1; if(currentPopupIndex<0) currentPopupIndex=0; } }
+function openPopup(url){ updatePopupImageList(); let idx=currentPopupImages.indexOf(url); if(idx!==-1) currentPopupIndex=idx; else if(currentPopupImages.length) currentPopupIndex=0; else return; document.getElementById('popupImage').src=currentPopupImages[currentPopupIndex]; document.getElementById('popupCounter').textContent=`${currentPopupIndex+1} / ${currentPopupImages.length}`; document.getElementById('popup').style.display='flex'; }
+function nextImage(){ if(!currentPopupImages.length){ closePopup(); return; } currentPopupIndex=(currentPopupIndex+1)%currentPopupImages.length; document.getElementById('popupImage').src=currentPopupImages[currentPopupIndex]; document.getElementById('popupCounter').textContent=`${currentPopupIndex+1} / ${currentPopupImages.length}`; }
+function prevImage(){ if(!currentPopupImages.length){ closePopup(); return; } currentPopupIndex=(currentPopupIndex-1+currentPopupImages.length)%currentPopupImages.length; document.getElementById('popupImage').src=currentPopupImages[currentPopupIndex]; document.getElementById('popupCounter').textContent=`${currentPopupIndex+1} / ${currentPopupImages.length}`; }
+function closePopup(){ document.getElementById('popup').style.display='none'; currentPopupImages=[]; currentPopupIndex=0; }
+function copyCurrentPopupUrl(){ let url=document.getElementById('popupImage').src; navigator.clipboard.writeText(url).then(()=>showToast('✅ URL copied!')); }
+function deleteCurrentPopupImage(){ let url=document.getElementById('popupImage').src; deleteImage(url); setTimeout(()=>{ updatePopupImageList(); if(currentPopupImages.length){ if(currentPopupIndex>=currentPopupImages.length) currentPopupIndex=currentPopupImages.length-1; if(currentPopupIndex<0) currentPopupIndex=0; document.getElementById('popupImage').src=currentPopupImages[currentPopupIndex]; document.getElementById('popupCounter').textContent=`${currentPopupIndex+1} / ${currentPopupImages.length}`; } else closePopup(); },100); }
+document.addEventListener('keydown',(e)=>{ let pop=document.getElementById('popup'); if(pop.style.display==='flex'){ if(e.key==='ArrowLeft'){ e.preventDefault(); prevImage(); } else if(e.key==='ArrowRight'){ e.preventDefault(); nextImage(); } else if(e.key==='Escape') closePopup(); } });
+function displayDetectedPages(){ let pageDiv=document.getElementById('pageList'), artDiv=document.getElementById('articleList'); pageDiv.innerHTML=detectedPages.slice(0,20).map((u,i)=>`<div class="page-item"><a href="${u}" target="_blank">${u}</a><span class="page-count-badge">${i+1}</span></div>`).join(''); artDiv.innerHTML=detectedArticles.slice(0,20).map((u,i)=>`<div class="article-item"><a href="${u}" target="_blank">${u}</a><span class="article-count-badge">${i+1}</span></div>`).join(''); }
+function displayExternalImages(){ let extDiv=document.getElementById('externalList'); extDiv.innerHTML=''; let sortedExt=Array.from(externalImagesSet).slice(0,20); for(let url of sortedExt){ let div=document.createElement('div'); div.className='external-item'; div.innerHTML=`<div class="external-item-content"><img class="external-thumb" src="${url}" onerror="this.style.display='none'"><a href="${url}" target="_blank">${url.substring(0,60)}${url.length>60?'...':''}</a></div>`; div.querySelector('.external-thumb')?.addEventListener('click',(e)=>{ e.stopPropagation(); openPopup(url); }); extDiv.appendChild(div); } }
+function displayDuplicates(){ let sec=document.getElementById('duplicatesSection'), cont=document.getElementById('duplicateList'); if(duplicateImages.size){ sec.style.display='block'; cont.innerHTML=Array.from(duplicateImages).slice(0,20).map(u=>`<div class="duplicate-item">${u}</div>`).join(''); } else sec.style.display='none'; }
+function parseConsoleOutput(){
+    let text = document.getElementById('consoleOutput').value;
+    let lines = text.split(/\r?\n/);
+    
+    // Reset all data
+    detectedPages = [];
+    detectedArticles = [];
+    externalImagesList = [];
+    allImages = [];
+    uniqueImages.clear();
+    duplicateImages.clear();
+    selectedImages.clear();
+    cssImagesSet.clear();
+    htmlImagesSet.clear();
+    externalImagesSet.clear();
+    iconImagesSet.clear();
+    logoImagesSet.clear();
+    homepageImagesSet.clear();
+    imageSourceMap.clear();
+    similarGroups.clear();
+    imageToGroup.clear();
+    homepageUrl = '';
+    rawTotalCount = 0;
+    duplicatesRemoved = 0;
+
+    // READ THE FINAL SUMMARY FROM CONSOLE OUTPUT
+    let pagesScanned = 0;
+    let htmlOnlyVal = 0;
+    let cssOnlyVal = 0;
+    let externalVal = 0;
+    let duplicatesRemovedVal = 0;
+    let totalUniqueVal = 0;
+    let totalOccurrencesVal = 0;
+    
+    for (let line of lines) {
+        let trimmed = line.trim();
+        if (trimmed.includes('📄 Pages scanned:')) {
+            let match = trimmed.match(/📄 Pages scanned:\s*(\d+)/);
+            if (match) pagesScanned = parseInt(match[1]);
+        }
+        if (trimmed.includes('🖼️ HTML only:')) {
+            let match = trimmed.match(/🖼️ HTML only:\s*(\d+)/);
+            if (match) htmlOnlyVal = parseInt(match[1]);
+        }
+        if (trimmed.includes('🎨 CSS only:')) {
+            let match = trimmed.match(/🎨 CSS only:\s*(\d+)/);
+            if (match) cssOnlyVal = parseInt(match[1]);
+        }
+        if (trimmed.includes('🌍 External:')) {
+            let match = trimmed.match(/🌍 External:\s*(\d+)/);
+            if (match) externalVal = parseInt(match[1]);
+        }
+        if (trimmed.includes('🔄 Duplicates removed:')) {
+            let match = trimmed.match(/🔄 Duplicates removed:\s*(\d+)/);
+            if (match) duplicatesRemovedVal = parseInt(match[1]);
+        }
+        if (trimmed.includes('🖼️ Total unique images:')) {
+            let match = trimmed.match(/🖼️ Total unique images:\s*(\d+)/);
+            if (match) totalUniqueVal = parseInt(match[1]);
+        }
+        if (trimmed.includes('📊 Total occurrences:')) {
+            let match = trimmed.match(/📊 Total occurrences:\s*(\d+)/);
+            if (match) totalOccurrencesVal = parseInt(match[1]);
+        }
+    }
+    
+    // If we found the summary values, use them directly for statistics
+    if (pagesScanned > 0) {
+        // Set statistics directly from console summary
+        rawTotalCount = totalOccurrencesVal;
+        duplicatesRemoved = duplicatesRemovedVal;
+        
+        // Create detected pages from crawling lines
+        let pagePattern1 = /📄\s*\[\d+\/\d+\]\s*Crawling:\s*([^\s]+)/i;
+        let pagePattern2 = /📄\s*\[\d+\/\d+\]\s*-\s*Crawling:\s*([^\s]+)/i;
+        let actualPages = [];
+        for (let line of lines) {
+            let pageMatch = line.match(pagePattern1) || line.match(pagePattern2);
+            if (pageMatch) {
+                let pUrl = pageMatch[1];
+                if (!actualPages.includes(pUrl)) actualPages.push(pUrl);
+            }
+        }
+        if (actualPages.length > 0) {
+            detectedPages = actualPages;
+        } else {
+            // Fallback: create placeholder pages
+            for (let i = 1; i <= pagesScanned; i++) {
+                detectedPages.push(`Page ${i}`);
+            }
+        }
+        
+        // Extract external image URLs from the console output
+        let imgPattern = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|bmp|svg|ico|avif|heic)(?:[?#][^\s]*)?)/i;
+        let srcPattern = /\[SOURCE\]\s*(https?:\/\/[^\s]+)/i;
+        let uniqueUrlSet = new Set();
+        let homepageDomain = '';
+        
+        // Try to get homepage domain from first page URL
+        if (detectedPages.length > 0) {
+            try {
+                let firstPageUrl = detectedPages[0];
+                if (!firstPageUrl.startsWith('http')) firstPageUrl = 'http://' + firstPageUrl;
+                homepageDomain = new URL(firstPageUrl).hostname.replace(/^www\./, '');
+            } catch(e) {}
+        }
+        
+        for (let line of lines) {
+            let imgMatch = line.match(imgPattern);
+            if (imgMatch) {
+                let imgUrl = imgMatch[1];
+                if (!uniqueUrlSet.has(imgUrl)) {
+                    uniqueUrlSet.add(imgUrl);
+                    uniqueImages.add(imgUrl);
+                    allImages.push(imgUrl);
+                    
+                    // Determine if external (different domain from homepage)
+                    let isExt = false;
+                    if (homepageDomain) {
+                        try {
+                            let urlDomain = new URL(imgUrl).hostname.replace(/^www\./, '');
+                            if (urlDomain !== homepageDomain && !urlDomain.includes(homepageDomain)) {
+                                isExt = true;
+                            }
+                        } catch(e) {}
+                    }
+                    
+                    if (isExt) {
+                        externalImagesSet.add(imgUrl);
+                        externalImagesList.push(imgUrl);
+                    }
+                    
+                    // Determine HTML/CSS based on line content
+                    if (line.includes('🎨') || line.includes('[CSS]')) {
+                        cssImagesSet.add(imgUrl);
+                    } else {
+                        htmlImagesSet.add(imgUrl);
+                    }
+                    
+                    if (isIconImage(imgUrl)) iconImagesSet.add(imgUrl);
+                    if (isLogoImage(imgUrl)) logoImagesSet.add(imgUrl);
+                    
+                    // Get source page
+                    let srcMatch = line.match(srcPattern);
+                    if (srcMatch) {
+                        let srcUrl = srcMatch[1];
+                        if (!imageSourceMap.has(imgUrl)) imageSourceMap.set(imgUrl, []);
+                        let sources = imageSourceMap.get(imgUrl);
+                        if (!sources.includes(srcUrl)) sources.push(srcUrl);
+                        
+                        // Check if this image appears on homepage
+                        try {
+                            let srcDomain = new URL(srcUrl).hostname.replace(/^www\./, '');
+                            if (srcDomain === homepageDomain && (srcUrl === homepageUrl || srcUrl.endsWith('/'))) {
+                                homepageImagesSet.add(imgUrl);
+                            }
+                        } catch(e) {}
+                    } else {
+                        if (!imageSourceMap.has(imgUrl)) imageSourceMap.set(imgUrl, []);
+                        let sources = imageSourceMap.get(imgUrl);
+                        if (!sources.includes('from_console')) sources.push('from_console');
+                    }
+                }
+            }
+        }
+        
+        groupSimilarImages(Array.from(uniqueImages));
+        updateStats();
+        displayDetectedPages();
+        displayDuplicates();
+        displayExternalImages();
+        displayImages();
+        updateFilterVisibility();
+        showToast(`✅ Parsed: ${detectedPages.length} pages, ${uniqueImages.size} unique images, ${externalImagesSet.size} external images (different domains)`);
+        return;
+    }
+    
+    // If no summary found, show error
+    showToast('❌ Could not find FINAL SUMMARY in console output. Please make sure you copied the complete console output including the summary section.', 'error');
+}
+const baseCrawlerWithCSS = `(async () => {
+  console.log('🔍 Scanning current page for sitemap links...');
+  const currentOrigin = window.location.origin;
+  const sitemapSelectors = ['.sitemap li a', '.sitemap-page li a', '#sitemap li a', '.page-sitemap li a', '.post-sitemap li a', 'ul.sitemap a', '.page_item a', '.page-item a', '.pagenav a', '.menu-item a', '.nav-menu a', '.main-navigation a', '.entry-content li a', '.content ul li a', '.page-content li a', '.wp-block-page-list a', '.wp-block-sitemap-page a', 'a[href*="/page/"]', 'a[href*="/p/"]'];
+  let sitemapLinks = [];
+  for (const selector of sitemapSelectors) {
+    const links = Array.from(document.querySelectorAll(selector)).map(a => a.href);
+    const internalLinks = links.filter(link => link.startsWith(currentOrigin) && !link.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i) && !link.includes('#') && !link.includes('/wp-content/') && !link.includes('/wp-includes/'));
+    if (internalLinks.length > 0) { sitemapLinks = internalLinks; console.log(\`   ✅ Found \${internalLinks.length} links using selector: "\${selector}"\`); break; }
+  }
+  if (sitemapLinks.length === 0) {
+    console.log('   ⚠️ No sitemap links found. Using all internal links...');
+    const allLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
+    sitemapLinks = [...new Set(allLinks.filter(link => link.startsWith(currentOrigin) && !link.match(/\\.(jpg|jpeg|png|gif|webp|css|js)$/i) && !link.includes('#') && !link.includes('/wp-content/')) )];
+    console.log(\`   ✅ Found \${sitemapLinks.length} internal links as fallback\`);
+  }
+  const homepageUrl = currentOrigin + '/';
+  if (!sitemapLinks.includes(homepageUrl)) { sitemapLinks.unshift(homepageUrl); console.log(\`   ➕ Manually added homepage: \${homepageUrl}\`); }
+  console.log('🔍 Auto-detecting blog page...');
+  const blogUrls = new Set(); const articleUrls = new Set(); const blogKeywords = ['blog', 'news', 'articles', 'posts', 'category'];
+  const allPageLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
+  for (const link of allPageLinks) { if (!link.startsWith(currentOrigin)) continue; const lowerLink = link.toLowerCase(); for (const keyword of blogKeywords) { if (lowerLink.includes(keyword) && !lowerLink.match(/\\/page\\/\\d+/) && !lowerLink.match(/\\.(jpg|png|gif|webp)$/)) { blogUrls.add(link); console.log(\`   ✅ Found blog page: \${link}\`); break; } } }
+  console.log('🔍 Finding individual articles...');
+  for (const blogUrl of blogUrls) {
+    try {
+      const response = await fetch(blogUrl);
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const articleSelectors = ['article a', '.post a', '.blog-post a', '.entry-title a', 'h2 a', 'h3 a', '.read-more a', '.more-link'];
+      articleSelectors.forEach(selector => { doc.querySelectorAll(selector).forEach(el => { let href = el.href; if (href && href.startsWith(currentOrigin) && !href.match(/\\/page\\/\\d+/) && !href.match(/\\/category\\//)) { if (!articleUrls.has(href)) { articleUrls.add(href); console.log(\`      📝 Found article: \${href.split('/').pop()}\`); } } }); });
+    } catch(e) {}
+  }
+  let pageUrls = [...sitemapLinks];
+  let finalPages = pageUrls.filter(url => !articleUrls.has(url));
+  let finalArticles = Array.from(articleUrls);
+  let allPagesToCrawl = [...finalPages, ...finalArticles];
+  allPagesToCrawl = [...new Set(allPagesToCrawl)];
+  allPagesToCrawl = allPagesToCrawl.filter(url => !url.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i));
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(\`📊 CRAWL SUMMARY:\`);
+  console.log(\`   📄 Pages: \${finalPages.length}\`);
+  console.log(\`   📝 Articles/Blog posts: \${finalArticles.length}\`);
+  console.log(\`   📚 TOTAL pages to crawl: \${allPagesToCrawl.length}\`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  if (allPagesToCrawl.length === 0) { console.log('❌ No pages found to crawl.'); return; }
+  let allImages = []; let totalPages = allPagesToCrawl.length; let pagesScanned = 0; let articlesScanned = 0;
+  let htmlUnique = new Set(); let cssUnique = new Set(); let totalOccurrences = 0;
+  console.log('▶️ Starting image extraction (INCLUDING CSS backgrounds)...');
+  for (let i = 0; i < allPagesToCrawl.length; i++) {
+    const url = allPagesToCrawl[i];
+    const current = i + 1;
+    const shortName = url.split('/').slice(-2).join('/') || url;
+    const isArticle = finalArticles.includes(url);
+    if (isArticle) { articlesScanned++; } else { pagesScanned++; }
+    console.log(\`📄 [\${current}/\${totalPages}] - Crawling: \${shortName}\`);
+    try {
+      const res = await fetch(url);
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const imgImages = Array.from(doc.querySelectorAll('img')).map(img => { const src = img.getAttribute('src'); if (!src) return null; try { return new URL(src, url).href; } catch(e) { return null; } }).filter(Boolean);
+      const cssImages = (function extractCSSBackgroundImages(doc, baseUrl) { const images = []; const elements = doc.querySelectorAll('*'); elements.forEach(el => { const inlineStyle = el.getAttribute('style'); if (inlineStyle) { const bgMatches = inlineStyle.match(/background(?:-image)?:\\s*url\\(['"]?([^'")]+)['"]?\\)/gi); if (bgMatches) { bgMatches.forEach(match => { const urlMatch = match.match(/url\\(['"]?([^'")]+)['"]?\\)/i); if (urlMatch && urlMatch[1]) { try { images.push(new URL(urlMatch[1], baseUrl).href); } catch(e) {} } }); } } try { const computedStyle = window.getComputedStyle(el); const bgImage = computedStyle.backgroundImage; if (bgImage && bgImage !== 'none') { const urlMatch = bgImage.match(/url\\(['"]?([^'")]+)['"]?\\)/i); if (urlMatch && urlMatch[1]) { try { images.push(new URL(urlMatch[1], baseUrl).href); } catch(e) {} } } } catch(e) {} }); return images; })(doc, url);
+      for(let img of imgImages){ totalOccurrences++; if(!htmlUnique.has(img)){ htmlUnique.add(img); console.log('🖼️ [HTML] ' + img + ' [SOURCE] ' + url); } else { console.log('🖼️ [HTML] (duplicate) ' + img + ' [SOURCE] ' + url); } }
+      for(let css of cssImages){ totalOccurrences++; if(!cssUnique.has(css)){ cssUnique.add(css); console.log('🎨 [CSS] ' + css + ' [SOURCE] ' + url); } else { console.log('🎨 [CSS] (duplicate) ' + css + ' [SOURCE] ' + url); } }
+      let progressPercent = Math.round((current / totalPages) * 100);
+      let progressBar = '█'.repeat(Math.floor(progressPercent / 5)) + '░'.repeat(20 - Math.floor(progressPercent / 5));
+      console.log(\`   ✅ Page \${current} complete! Found \${imgImages.length + cssImages.length} images \${progressBar} \${progressPercent}%\`);
+      console.log('');
+    } catch (e) { console.warn(\`   ⚠️ Failed: \${shortName} - \${e.message}\`); console.log(''); }
+    await new Promise(r => setTimeout(r, 200));
+  }
+  const both = new Set([...htmlUnique].filter(x => cssUnique.has(x)));
+  const htmlOnly = htmlUnique.size - both.size;
+  const cssOnly = cssUnique.size - both.size;
+  const baseDomain = new URL(window.location.origin).hostname.replace(/^www\./,'');
+  let externalCount = 0;
+  let allUnique = new Set([...htmlUnique, ...cssUnique]);
+  for(let u of allUnique) {
+    try { let urlDomain = new URL(u).hostname.replace(/^www\./,''); if(!urlDomain.includes(baseDomain)) externalCount++; } catch(e){}
+  }
+  const duplicateCount = totalOccurrences - (htmlOnly + cssOnly + both.size);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🎉 CRAWL COMPLETE! 🎉');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📊 FINAL SUMMARY:');
+  console.log(\`   📄 Pages scanned: \${pagesScanned + articlesScanned}\`);
+  console.log(\`   🖼️ HTML only: \${htmlOnly}\`);
+  console.log(\`   🎨 CSS only: \${cssOnly}\`);
+  console.log(\`   🌍 External: \${externalCount}\`);
+  console.log(\`   🔄 Duplicates removed: \${duplicateCount}\`);
+  console.log(\`   🖼️ Total unique images: \${htmlOnly + cssOnly + externalCount}\`);
+  console.log(\`   📊 Total occurrences: \${totalOccurrences}\`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  try { await navigator.clipboard.writeText(Array.from(allUnique).join('\\n')); console.log('📋 All unique image URLs copied to clipboard!'); } catch(e) {}
+})();`;
+const baseCrawlerWithoutCSS = baseCrawlerWithCSS.replace(/INCLUDING CSS backgrounds/g,'ONLY HTML images').replace(/for\(let css of cssImages\){[^}]+}/,'').replace(/cssUnique/g,'new Set()').replace(/🎨 CSS only: \${cssOnly}/,'');
+function updateCrawlerCode() { document.getElementById('crawlerCode').textContent = document.getElementById('includeCssToggle').checked ? baseCrawlerWithCSS : baseCrawlerWithoutCSS; }
+function copyCrawlerCode(){ navigator.clipboard.writeText(document.getElementById('crawlerCode').textContent).then(()=>showToast('✅ Crawler code copied!')); }
 updateCrawlerCode();
+setTimeout(()=>{ let cp=document.getElementById('popupCopyBtn'), dl=document.getElementById('popupDeleteBtn'); if(cp) cp.onclick=copyCurrentPopupUrl; if(dl) dl.onclick=deleteCurrentPopupImage; },100);
+setTimeout(()=>{ let allBtn=document.querySelector('.filter-badge.all'); if(allBtn){ allBtn.classList.add('active'); allBtn.style.opacity='1'; } updateFilterVisibility(); },100);
 </script>
 </body>
 </html>
