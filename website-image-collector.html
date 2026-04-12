@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Collector Pro - Correct Statistics</title>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Image Collector Pro - Correct Page Count</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -234,7 +233,8 @@
         <div class="instructions"><h3>📋 How to Use:</h3><ol><li>Go to the sitemap page: <code>https://example.com/sitemap</code></li><li>Press <kbd>F12</kbd> to open Developer Console</li><li>Copy the code below (click <strong>"Copy Code"</strong>)</li><li>Paste into console and press <kbd>Enter</kbd></li><li><strong>Copy ALL console output</strong> (including the FINAL SUMMARY section)</li><li>Click <strong>"Parse Output"</strong> to see gallery</li></ol></div>
         <div class="crawler-toggle-section"><div class="toggle-header"><div class="toggle-title">🎨 Extract CSS Background Images</div><label class="switch"><input type="checkbox" id="includeCssToggle" checked onchange="updateCrawlerCode()"><span class="slider"></span></label></div><div class="toggle-desc">✅ <strong>ON</strong> = Extracts &lt;img&gt; tags + CSS backgrounds<br>🔘 <strong>OFF</strong> = Only &lt;img&gt; tags</div></div>
         <div class="code-block" id="crawlerCode"></div><button class="copy-btn" onclick="copyCrawlerCode()">📋 Copy Code to Clipboard</button>
-        <div class="note-box"> 💡 <strong>Quick Guide:</strong><br> • 📍 <strong>Go to sitemap page</strong> (e.g., https://example.com/sitemap)<br> • 📋 <strong>Copy code above</strong> → Paste in console (F12) → Press Enter<br> • 📄 <strong>Copy output</strong> → Paste below → Click "Parse Output"<br> • 🔍 Click the <strong>ℹ️ button</strong> on any image to see its source page<br> • 🎨 Toggle <strong>CSS ON/OFF</strong> to include background images<br> <br> <strong>🔥 Nice ka One, astiga ey! 😁😊</strong> </div
+        
+        <div class="note-box"> 💡 <strong>Quick Guide:</strong><br> • 📍 <strong>Go to sitemap page</strong> (e.g., https://example.com/sitemap)<br> • 📋 <strong>Copy code above</strong> → Paste in console (F12) → Press Enter<br> • 📄 <strong>Copy output</strong> → Paste below → Click "Parse Output"<br> • 🔍 Click the <strong>ℹ️ button</strong> on any image to see its source page<br> • 🎨 Toggle <strong>CSS ON/OFF</strong> to include background images<br> <br> <strong>🔥 Nice ka One, astiga ey! 😁😊</strong> </div>
         <div class="input-section"><textarea id="consoleOutput" placeholder="Paste your COMPLETE console output here (including the FINAL SUMMARY section)..."></textarea><div class="button-group"><button class="btn btn-primary" onclick="parseConsoleOutput()">🔍 Parse Output</button><button class="btn btn-secondary" onclick="clearAll()">Clear All</button></div></div>
         <div class="stats" id="stats">
             <div class="stat-card"><div class="stat-number" id="pagesCount">0</div><div class="stat-label">📄 Pages</div></div>
@@ -266,7 +266,7 @@ let imageSourceMap = new Map(), similarGroups = new Map(), imageToGroup = new Ma
 let currentFilter = 'all', sortOrder = 'default', currentContentTab = 'pages', homepageUrl = '', lastCheckedIndex = null, currentDisplayedUrls = [];
 let undoStack = [], redoStack = [], isUndoRedoOperation = false;
 let rawTotalCount = 0;
-let htmlOnlyCount = 0, cssOnlyCount = 0, duplicatesRemoved = 0;
+let duplicatesRemoved = 0;
 
 function showToast(msg, type = 'success') {
     if(!toastContainer){ toastContainer=document.createElement('div'); toastContainer.className='toast-container'; document.body.appendChild(toastContainer); }
@@ -303,9 +303,9 @@ function selectAllVisibleImages(){
 function deselectAllImages(){ saveStateToUndo(); selectedImages.clear(); displayImages(); updateStats(); updateFilterVisibility(); showToast(`☐ Deselected all images`); }
 function copySelectedImages(){ if(selectedImages.size===0){ showToast('No images selected','error'); return; } navigator.clipboard.writeText(Array.from(selectedImages).join('\n')).then(()=>showToast(`✅ Copied ${selectedImages.size} URLs!`)); }
 function deleteSelectedImages(){ if(selectedImages.size===0){ showToast('No images selected','error'); return; } saveStateToUndo(); for(let url of selectedImages){ uniqueImages.delete(url); let gid=imageToGroup.get(url); if(gid!==undefined){ let grp=similarGroups.get(gid); if(grp){ grp.delete(url); if(grp.size<=1){ similarGroups.delete(gid); for(let rem of grp) imageToGroup.delete(rem); } } imageToGroup.delete(url); } } selectedImages.clear(); displayImages(); updateStats(); updateFilterVisibility(); showToast(`🗑️ Deleted selected images`); }
-function exportData(){ let data={version:'14.0',timestamp:new Date().toISOString(),detectedPages,detectedArticles,externalImagesList,homepageUrl,allImages,uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),selectedImages:Array.from(selectedImages),rawTotalCount,htmlOnlyCount,cssOnlyCount,duplicatesRemoved}; let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`image-collector-backup-${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href); showToast('✅ Data exported!'); }
-function importData(event){ let file=event.target.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); detectedPages=data.detectedPages||[]; detectedArticles=data.detectedArticles||[]; externalImagesList=data.externalImagesList||[]; homepageUrl=data.homepageUrl||''; allImages=data.allImages||[]; uniqueImages=new Set(data.uniqueImages||[]); duplicateImages=new Set(data.duplicateImages||[]); cssImagesSet=new Set(data.cssImagesSet||[]); htmlImagesSet=new Set(data.htmlImagesSet||[]); externalImagesSet=new Set(data.externalImagesSet||[]); iconImagesSet=new Set(data.iconImagesSet||[]); logoImagesSet=new Set(data.logoImagesSet||[]); homepageImagesSet=new Set(data.homepageImagesSet||[]); imageSourceMap=new Map(data.imageSourceMap||[]); selectedImages=new Set(data.selectedImages||[]); similarGroups.clear(); imageToGroup.clear(); if(data.similarGroups) for(let [id,urls] of data.similarGroups) similarGroups.set(parseInt(id),new Set(urls)); if(data.imageToGroup) for(let [url,id] of data.imageToGroup) imageToGroup.set(url,parseInt(id)); rawTotalCount=data.rawTotalCount||allImages.length; htmlOnlyCount=data.htmlOnlyCount||0; cssOnlyCount=data.cssOnlyCount||0; duplicatesRemoved=data.duplicatesRemoved||0; updateStats(); displayDetectedPages(); displayDuplicates(); displayExternalImages(); displayImages(); updateFilterVisibility(); showToast(`✅ Imported ${uniqueImages.size} images`); }catch(err){ showToast('❌ Invalid file','error'); } }; reader.readAsText(file); event.target.value=''; }
-function clearAll(){ detectedPages=[]; detectedArticles=[]; externalImagesList=[]; allImages=[]; uniqueImages.clear(); duplicateImages.clear(); selectedImages.clear(); cssImagesSet.clear(); htmlImagesSet.clear(); externalImagesSet.clear(); iconImagesSet.clear(); logoImagesSet.clear(); homepageImagesSet.clear(); imageSourceMap.clear(); similarGroups.clear(); imageToGroup.clear(); homepageUrl=''; rawTotalCount=0; htmlOnlyCount=0; cssOnlyCount=0; duplicatesRemoved=0; document.getElementById('consoleOutput').value=''; document.getElementById('imageContainer').innerHTML='<div class="loading"><div class="spinner"></div><div>Run crawler, paste complete output, click "Parse Output"</div></div>'; updateStats(); updateFilterVisibility(); showToast('✅ All data cleared'); closePopup(); }
+function exportData(){ let data={version:'15.0',timestamp:new Date().toISOString(),detectedPages,detectedArticles,externalImagesList,homepageUrl,allImages,uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),selectedImages:Array.from(selectedImages),rawTotalCount,duplicatesRemoved}; let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`image-collector-backup-${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href); showToast('✅ Data exported!'); }
+function importData(event){ let file=event.target.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); detectedPages=data.detectedPages||[]; detectedArticles=data.detectedArticles||[]; externalImagesList=data.externalImagesList||[]; homepageUrl=data.homepageUrl||''; allImages=data.allImages||[]; uniqueImages=new Set(data.uniqueImages||[]); duplicateImages=new Set(data.duplicateImages||[]); cssImagesSet=new Set(data.cssImagesSet||[]); htmlImagesSet=new Set(data.htmlImagesSet||[]); externalImagesSet=new Set(data.externalImagesSet||[]); iconImagesSet=new Set(data.iconImagesSet||[]); logoImagesSet=new Set(data.logoImagesSet||[]); homepageImagesSet=new Set(data.homepageImagesSet||[]); imageSourceMap=new Map(data.imageSourceMap||[]); selectedImages=new Set(data.selectedImages||[]); similarGroups.clear(); imageToGroup.clear(); if(data.similarGroups) for(let [id,urls] of data.similarGroups) similarGroups.set(parseInt(id),new Set(urls)); if(data.imageToGroup) for(let [url,id] of data.imageToGroup) imageToGroup.set(url,parseInt(id)); rawTotalCount=data.rawTotalCount||allImages.length; duplicatesRemoved=data.duplicatesRemoved||0; updateStats(); displayDetectedPages(); displayDuplicates(); displayExternalImages(); displayImages(); updateFilterVisibility(); showToast(`✅ Imported ${uniqueImages.size} images`); }catch(err){ showToast('❌ Invalid file','error'); } }; reader.readAsText(file); event.target.value=''; }
+function clearAll(){ detectedPages=[]; detectedArticles=[]; externalImagesList=[]; allImages=[]; uniqueImages.clear(); duplicateImages.clear(); selectedImages.clear(); cssImagesSet.clear(); htmlImagesSet.clear(); externalImagesSet.clear(); iconImagesSet.clear(); logoImagesSet.clear(); homepageImagesSet.clear(); imageSourceMap.clear(); similarGroups.clear(); imageToGroup.clear(); homepageUrl=''; rawTotalCount=0; duplicatesRemoved=0; document.getElementById('consoleOutput').value=''; document.getElementById('imageContainer').innerHTML='<div class="loading"><div class="spinner"></div><div>Run crawler, paste complete output, click "Parse Output"</div></div>'; updateStats(); updateFilterVisibility(); showToast('✅ All data cleared'); closePopup(); }
 function clearSearch(){ document.getElementById('filterInput').value=''; filterImages(); showToast('🔍 Search cleared'); }
 function toggleSortOrder(){ sortOrder=sortOrder==='default'?'numbersLast':'default'; document.getElementById('sortBtn').innerHTML=sortOrder==='default'?'📁 Sort: Numbers Last':'📁 Sort: Default'; displayImages(); }
 function extractNumber(fn){ let m=fn.match(/(\d+)/); return m?parseInt(m[0]):null; }
@@ -330,10 +330,10 @@ function updateFilterVisibility(){ let htmlCnt=Array.from(uniqueImages).filter(u
 function getLabel(name,count){ let map={html:`🖼️ HTML (${count})`,css:`🎨 CSS (${count})`,external:`🌐 External (${count})`,icons:`🔘 Icons (${count})`,logos:`🏷️ Logos (${count})`,homepage:`🏠 Homepage (${count})`,duplicates:`🔄 Duplicates (${count})`}; return map[name]; }
 function deleteByFilter(ftype){ let toDel=[]; if(ftype==='html') toDel=Array.from(uniqueImages).filter(u=>htmlImagesSet.has(u)); else if(ftype==='css') toDel=Array.from(uniqueImages).filter(u=>cssImagesSet.has(u)); else if(ftype==='external') toDel=Array.from(uniqueImages).filter(u=>externalImagesSet.has(u)); else if(ftype==='icons') toDel=Array.from(uniqueImages).filter(u=>iconImagesSet.has(u)); else if(ftype==='logos') toDel=Array.from(uniqueImages).filter(u=>logoImagesSet.has(u)); else if(ftype==='homepage') toDel=Array.from(uniqueImages).filter(u=>homepageImagesSet.has(u)); else if(ftype==='duplicates') toDel=Array.from(uniqueImages).filter(u=>imageToGroup.has(u)); if(!toDel.length) return; saveStateToUndo(); for(let url of toDel){ uniqueImages.delete(url); selectedImages.delete(url); let gid=imageToGroup.get(url); if(gid!==undefined){ let grp=similarGroups.get(gid); if(grp){ grp.delete(url); if(grp.size<=1){ similarGroups.delete(gid); for(let rem of grp) imageToGroup.delete(rem); } } imageToGroup.delete(url); } } displayImages(); updateStats(); updateFilterVisibility(); switchToNextFilter(); showToast(`🗑️ Deleted ${toDel.length} ${ftype} images`); }
 function switchToNextFilter(){ let order=['all','html','css','external','icons','logos','homepage','duplicates']; let idx=order.indexOf(currentFilter); for(let i=idx+1;i<order.length;i++){ let btn=document.querySelector(`.filter-badge.${order[i]}`); if(btn && !btn.classList.contains('hidden')){ filterByType(order[i]); return; } } for(let i=0;i<idx;i++){ let btn=document.querySelector(`.filter-badge.${order[i]}`); if(btn && !btn.classList.contains('hidden')){ filterByType(order[i]); return; } } filterByType('all'); }
-function saveStateToUndo(){ if(isUndoRedoOperation) return; let state={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,htmlOnlyCount,cssOnlyCount,duplicatesRemoved}; undoStack.push(state); redoStack=[]; if(undoStack.length>50) undoStack.shift(); }
-function restoreState(state,isRedo=false){ isUndoRedoOperation=true; detectedPages=state.detectedPages||[]; detectedArticles=state.detectedArticles||[]; externalImagesList=state.externalImagesList||[]; allImages=state.allImages||[]; uniqueImages=new Set(state.uniqueImages||[]); duplicateImages=new Set(state.duplicateImages||[]); selectedImages=new Set(state.selectedImages||[]); cssImagesSet=new Set(state.cssImagesSet||[]); htmlImagesSet=new Set(state.htmlImagesSet||[]); externalImagesSet=new Set(state.externalImagesSet||[]); iconImagesSet=new Set(state.iconImagesSet||[]); logoImagesSet=new Set(state.logoImagesSet||[]); homepageImagesSet=new Set(state.homepageImagesSet||[]); imageSourceMap=new Map(state.imageSourceMap||[]); homepageUrl=state.homepageUrl||''; rawTotalCount=state.rawTotalCount||0; htmlOnlyCount=state.htmlOnlyCount||0; cssOnlyCount=state.cssOnlyCount||0; duplicatesRemoved=state.duplicatesRemoved||0; similarGroups.clear(); imageToGroup.clear(); if(state.similarGroups) for(let [id,urls] of state.similarGroups) similarGroups.set(parseInt(id),new Set(urls)); if(state.imageToGroup) for(let [url,id] of state.imageToGroup) imageToGroup.set(url,parseInt(id)); updateStats(); displayDetectedPages(); displayDuplicates(); displayExternalImages(); displayImages(); updateFilterVisibility(); isUndoRedoOperation=false; showToast(isRedo?'↪️ Redo':'↩️ Undo'); }
-function undo(){ if(undoStack.length===0){ showToast('Nothing to undo','error'); return; } let cur={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,htmlOnlyCount,cssOnlyCount,duplicatesRemoved}; redoStack.push(cur); let prev=undoStack.pop(); restoreState(prev,false); closePopup(); }
-function redo(){ if(redoStack.length===0){ showToast('Nothing to redo','error'); return; } let cur={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,htmlOnlyCount,cssOnlyCount,duplicatesRemoved}; undoStack.push(cur); let nxt=redoStack.pop(); restoreState(nxt,true); closePopup(); }
+function saveStateToUndo(){ if(isUndoRedoOperation) return; let state={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,duplicatesRemoved}; undoStack.push(state); redoStack=[]; if(undoStack.length>50) undoStack.shift(); }
+function restoreState(state,isRedo=false){ isUndoRedoOperation=true; detectedPages=state.detectedPages||[]; detectedArticles=state.detectedArticles||[]; externalImagesList=state.externalImagesList||[]; allImages=state.allImages||[]; uniqueImages=new Set(state.uniqueImages||[]); duplicateImages=new Set(state.duplicateImages||[]); selectedImages=new Set(state.selectedImages||[]); cssImagesSet=new Set(state.cssImagesSet||[]); htmlImagesSet=new Set(state.htmlImagesSet||[]); externalImagesSet=new Set(state.externalImagesSet||[]); iconImagesSet=new Set(state.iconImagesSet||[]); logoImagesSet=new Set(state.logoImagesSet||[]); homepageImagesSet=new Set(state.homepageImagesSet||[]); imageSourceMap=new Map(state.imageSourceMap||[]); homepageUrl=state.homepageUrl||''; rawTotalCount=state.rawTotalCount||0; duplicatesRemoved=state.duplicatesRemoved||0; similarGroups.clear(); imageToGroup.clear(); if(state.similarGroups) for(let [id,urls] of state.similarGroups) similarGroups.set(parseInt(id),new Set(urls)); if(state.imageToGroup) for(let [url,id] of state.imageToGroup) imageToGroup.set(url,parseInt(id)); updateStats(); displayDetectedPages(); displayDuplicates(); displayExternalImages(); displayImages(); updateFilterVisibility(); isUndoRedoOperation=false; showToast(isRedo?'↪️ Redo':'↩️ Undo'); }
+function undo(){ if(undoStack.length===0){ showToast('Nothing to undo','error'); return; } let cur={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,duplicatesRemoved}; redoStack.push(cur); let prev=undoStack.pop(); restoreState(prev,false); closePopup(); }
+function redo(){ if(redoStack.length===0){ showToast('Nothing to redo','error'); return; } let cur={detectedPages:[...detectedPages],detectedArticles:[...detectedArticles],externalImagesList:[...externalImagesList],allImages:[...allImages],uniqueImages:Array.from(uniqueImages),duplicateImages:Array.from(duplicateImages),selectedImages:Array.from(selectedImages),cssImagesSet:Array.from(cssImagesSet),htmlImagesSet:Array.from(htmlImagesSet),externalImagesSet:Array.from(externalImagesSet),iconImagesSet:Array.from(iconImagesSet),logoImagesSet:Array.from(logoImagesSet),homepageImagesSet:Array.from(homepageImagesSet),imageSourceMap:Array.from(imageSourceMap.entries()),similarGroups:Array.from(similarGroups.entries()).map(([id,urls])=>[id,Array.from(urls)]),imageToGroup:Array.from(imageToGroup.entries()),homepageUrl,rawTotalCount,duplicatesRemoved}; undoStack.push(cur); let nxt=redoStack.pop(); restoreState(nxt,true); closePopup(); }
 document.addEventListener('keydown',(e)=>{ if(e.ctrlKey && e.key==='z'){ e.preventDefault(); undo(); } else if(e.ctrlKey && e.key==='y'){ e.preventDefault(); redo(); } });
 let currentPopupImages=[], currentPopupIndex=0;
 function updatePopupImageList(){ let imgs=Array.from(document.querySelectorAll('.image-card img')).map(i=>i.src); currentPopupImages=imgs; if(currentPopupImages.length===0) closePopup(); else { if(currentPopupIndex>=currentPopupImages.length) currentPopupIndex=currentPopupImages.length-1; if(currentPopupIndex<0) currentPopupIndex=0; } }
@@ -419,98 +419,121 @@ function parseConsoleOutput(){
         rawTotalCount = totalOccurrencesVal;
         duplicatesRemoved = duplicatesRemovedVal;
         
-        // Create detected pages from crawling lines
+        // Create detected pages from crawling lines (ignore duplicate lines)
         let pagePattern1 = /📄\s*\[\d+\/\d+\]\s*Crawling:\s*([^\s]+)/i;
         let pagePattern2 = /📄\s*\[\d+\/\d+\]\s*-\s*Crawling:\s*([^\s]+)/i;
         let actualPages = [];
+        let seenPages = new Set();
         for (let line of lines) {
+            // Skip duplicate page entries
+            if (line.includes('(duplicate)')) continue;
             let pageMatch = line.match(pagePattern1) || line.match(pagePattern2);
             if (pageMatch) {
                 let pUrl = pageMatch[1];
-                if (!actualPages.includes(pUrl)) actualPages.push(pUrl);
+                if (!seenPages.has(pUrl)) {
+                    seenPages.add(pUrl);
+                    actualPages.push(pUrl);
+                }
             }
         }
         if (actualPages.length > 0) {
             detectedPages = actualPages;
         } else {
-            // Fallback: create placeholder pages
             for (let i = 1; i <= pagesScanned; i++) {
                 detectedPages.push(`Page ${i}`);
             }
         }
         
-        // Extract external image URLs from the console output
+        // Extract unique image URLs and track which pages they appear on (ignore duplicate lines)
         let imgPattern = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|bmp|svg|ico|avif|heic)(?:[?#][^\s]*)?)/i;
         let srcPattern = /\[SOURCE\]\s*(https?:\/\/[^\s]+)/i;
-        let uniqueUrlSet = new Set();
+        let imagePageMap = new Map(); // url -> Set of pages
+        let imageTypeMap = new Map(); // url -> {isHtml, isCss}
         let homepageDomain = '';
         
-        // Try to get homepage domain from first page URL
         if (detectedPages.length > 0) {
             try {
                 let firstPageUrl = detectedPages[0];
                 if (!firstPageUrl.startsWith('http')) firstPageUrl = 'http://' + firstPageUrl;
                 homepageDomain = new URL(firstPageUrl).hostname.replace(/^www\./, '');
+                homepageUrl = new URL(firstPageUrl).origin + '/';
             } catch(e) {}
         }
         
         for (let line of lines) {
+            // Skip duplicate lines - they don't add new source pages
+            if (line.includes('(duplicate)')) continue;
+            
             let imgMatch = line.match(imgPattern);
-            if (imgMatch) {
+            let srcMatch = line.match(srcPattern);
+            
+            if (imgMatch && srcMatch) {
                 let imgUrl = imgMatch[1];
-                if (!uniqueUrlSet.has(imgUrl)) {
-                    uniqueUrlSet.add(imgUrl);
-                    uniqueImages.add(imgUrl);
-                    allImages.push(imgUrl);
-                    
-                    // Determine if external (different domain from homepage)
-                    let isExt = false;
-                    if (homepageDomain) {
-                        try {
-                            let urlDomain = new URL(imgUrl).hostname.replace(/^www\./, '');
-                            if (urlDomain !== homepageDomain && !urlDomain.includes(homepageDomain)) {
-                                isExt = true;
-                            }
-                        } catch(e) {}
-                    }
-                    
-                    if (isExt) {
-                        externalImagesSet.add(imgUrl);
-                        externalImagesList.push(imgUrl);
-                    }
-                    
-                    // Determine HTML/CSS based on line content
-                    if (line.includes('🎨') || line.includes('[CSS]')) {
-                        cssImagesSet.add(imgUrl);
-                    } else {
-                        htmlImagesSet.add(imgUrl);
-                    }
-                    
-                    if (isIconImage(imgUrl)) iconImagesSet.add(imgUrl);
-                    if (isLogoImage(imgUrl)) logoImagesSet.add(imgUrl);
-                    
-                    // Get source page
-                    let srcMatch = line.match(srcPattern);
-                    if (srcMatch) {
-                        let srcUrl = srcMatch[1];
-                        if (!imageSourceMap.has(imgUrl)) imageSourceMap.set(imgUrl, []);
-                        let sources = imageSourceMap.get(imgUrl);
-                        if (!sources.includes(srcUrl)) sources.push(srcUrl);
-                        
-                        // Check if this image appears on homepage
-                        try {
-                            let srcDomain = new URL(srcUrl).hostname.replace(/^www\./, '');
-                            if (srcDomain === homepageDomain && (srcUrl === homepageUrl || srcUrl.endsWith('/'))) {
-                                homepageImagesSet.add(imgUrl);
-                            }
-                        } catch(e) {}
-                    } else {
-                        if (!imageSourceMap.has(imgUrl)) imageSourceMap.set(imgUrl, []);
-                        let sources = imageSourceMap.get(imgUrl);
-                        if (!sources.includes('from_console')) sources.push('from_console');
-                    }
+                let srcUrl = srcMatch[1];
+                
+                // Initialize image data if not exists
+                if (!imagePageMap.has(imgUrl)) {
+                    imagePageMap.set(imgUrl, new Set());
+                    imageTypeMap.set(imgUrl, {isHtml: false, isCss: false});
+                }
+                
+                // Add source page to the set (unique pages only)
+                imagePageMap.get(imgUrl).add(srcUrl);
+                
+                // Track type (HTML or CSS)
+                let typeData = imageTypeMap.get(imgUrl);
+                if (line.includes('🎨') || line.includes('[CSS]')) {
+                    typeData.isCss = true;
+                } else {
+                    typeData.isHtml = true;
                 }
             }
+        }
+        
+        // Now build the image data structures
+        for (let [imgUrl, pagesSet] of imagePageMap) {
+            uniqueImages.add(imgUrl);
+            allImages.push(imgUrl);
+            
+            // Store sources array for display
+            let sourcesArray = Array.from(pagesSet);
+            imageSourceMap.set(imgUrl, sourcesArray);
+            
+            // Determine if external image (different domain)
+            let isExt = false;
+            if (homepageDomain) {
+                try {
+                    let urlDomain = new URL(imgUrl).hostname.replace(/^www\./, '');
+                    if (urlDomain !== homepageDomain && !urlDomain.includes(homepageDomain)) {
+                        isExt = true;
+                    }
+                } catch(e) {}
+            }
+            
+            if (isExt) {
+                externalImagesSet.add(imgUrl);
+                externalImagesList.push(imgUrl);
+            }
+            
+            // Set HTML/CSS flags
+            let typeData = imageTypeMap.get(imgUrl);
+            if (typeData.isHtml) htmlImagesSet.add(imgUrl);
+            if (typeData.isCss) cssImagesSet.add(imgUrl);
+            
+            // Check if appears on homepage
+            for (let src of sourcesArray) {
+                try {
+                    let srcNorm = src.replace(/\/$/, '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
+                    let homeNorm = homepageUrl.replace(/\/$/, '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
+                    if (srcNorm === homeNorm || srcNorm === homeNorm + '/') {
+                        homepageImagesSet.add(imgUrl);
+                        break;
+                    }
+                } catch(e) {}
+            }
+            
+            if (isIconImage(imgUrl)) iconImagesSet.add(imgUrl);
+            if (isLogoImage(imgUrl)) logoImagesSet.add(imgUrl);
         }
         
         groupSimilarImages(Array.from(uniqueImages));
@@ -520,7 +543,7 @@ function parseConsoleOutput(){
         displayExternalImages();
         displayImages();
         updateFilterVisibility();
-        showToast(`✅ Parsed: ${detectedPages.length} pages, ${uniqueImages.size} unique images, ${externalImagesSet.size} external images (different domains)`);
+        showToast(`✅ Parsed: ${detectedPages.length} pages, ${uniqueImages.size} unique images, ${externalImagesSet.size} external images`);
         return;
     }
     
