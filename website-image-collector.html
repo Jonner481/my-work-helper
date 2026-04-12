@@ -234,16 +234,7 @@
         <div class="instructions"><h3>📋 How to Use:</h3><ol><li>Go to the sitemap page: <code>https://example.com/sitemap</code></li><li>Press <kbd>F12</kbd> to open Developer Console</li><li>Copy the code below (click <strong>"Copy Code"</strong>)</li><li>Paste into console and press <kbd>Enter</kbd></li><li><strong>Copy ALL console output</strong> (including the FINAL SUMMARY section)</li><li>Click <strong>"Parse Output"</strong> to see gallery</li></ol></div>
         <div class="crawler-toggle-section"><div class="toggle-header"><div class="toggle-title">🎨 Extract CSS Background Images</div><label class="switch"><input type="checkbox" id="includeCssToggle" checked onchange="updateCrawlerCode()"><span class="slider"></span></label></div><div class="toggle-desc">✅ <strong>ON</strong> = Extracts &lt;img&gt; tags + CSS backgrounds<br>🔘 <strong>OFF</strong> = Only &lt;img&gt; tags</div></div>
         <div class="code-block" id="crawlerCode"></div><button class="copy-btn" onclick="copyCrawlerCode()">📋 Copy Code to Clipboard</button>
-        <div class="note-box">
-            💡 <strong>Quick Guide:</strong><br>
-            • 📍 <strong>Go to sitemap page</strong> (e.g., https://example.com/sitemap)<br>
-            • 📋 <strong>Copy code above</strong> → Paste in console (F12) → Press Enter<br>
-            • 📄 <strong>Copy output</strong> → Paste below → Click "Parse Output"<br>
-            • 🔍 Click the <strong>ℹ️ button</strong> on any image to see its source page<br>
-            • 🎨 Toggle <strong>CSS ON/OFF</strong> to include background images<br>
-            <br>
-            <strong>🔥 Nice ka One, astiga ey! 😁😊</strong>
-        </div
+        <div class="note-box">💡 <strong>FEATURES:</strong><br>• <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd> for Undo/Redo<br>• <kbd>Shift+Click</kbd> on checkbox to select range<br>• <kbd>←</kbd> <kbd>→</kbd> arrows to navigate popup images<br>• External images are those from different domains (not matching the homepage domain)</div>
         <div class="input-section"><textarea id="consoleOutput" placeholder="Paste your COMPLETE console output here (including the FINAL SUMMARY section)..."></textarea><div class="button-group"><button class="btn btn-primary" onclick="parseConsoleOutput()">🔍 Parse Output</button><button class="btn btn-secondary" onclick="clearAll()">Clear All</button></div></div>
         <div class="stats" id="stats">
             <div class="stat-card"><div class="stat-number" id="pagesCount">0</div><div class="stat-label">📄 Pages</div></div>
