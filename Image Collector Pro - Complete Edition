@@ -1,0 +1,2830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Collector Pro - Complete Edition</title>
+    <link rel="icon" href="favicon.png">
+    <style>
+       * {margin:0; padding:0; box-sizing:border-box;}
+        body {font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, sans-serif; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); height:100vh; overflow:hidden;}
+        .app {display:flex; height:100vh; gap:0;}
+        .sidebar {width:580px; background:rgba(255, 255, 255, 0.98); overflow-y:auto; padding:20px; box-shadow:5px 0 20px rgba(0, 0, 0, 0.1); z-index:10;}
+        .gallery-area {flex:1; overflow-y:auto; padding:20px; position:relative;}
+        .sticky-controls {position:sticky; top:0; z-index:100; background:rgba(255,255,255,0.98); backdrop-filter:blur(10px); border-radius:12px; padding:15px; margin-bottom:20px; box-shadow:0 4px 12px rgba(0, 0, 0, 0.1);}
+        .sidebar::-webkit-scrollbar, .gallery-area::-webkit-scrollbar {width:8px;}
+        .sidebar::-webkit-scrollbar-track {background:#f1f1f1; border-radius:10px;}
+        .sidebar::-webkit-scrollbar-thumb {background:#667eea; border-radius:10px;}
+        .sidebar-header {margin-bottom:20px; padding-bottom:15px; border-bottom:2px solid #e0e0e0;}
+        .sidebar-header h1 {font-size:24px; margin-bottom:8px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
+        .sidebar-header p {color:#666; font-size:13px;}
+        .page-number {display:inline-block; background:#667eea; color:white; padding:2px 8px; border-radius:20px; font-size:10px; margin-right:8px;}
+        .batch-control {background:#e9ecef; border-radius:8px; padding:10px; margin-bottom:15px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+        .batch-control label {font-size:12px; font-weight:bold; color:#333;}
+        .batch-select {padding:5px 10px; border-radius:6px; border:1px solid #ccc; background:white; font-size:12px; cursor:pointer;}
+        .batch-info {font-size:11px; color:#666; margin-left:auto;}
+        .mode-selector {display:flex; gap:10px; margin-bottom:15px; background:#f0f0f0; padding:5px; border-radius:10px;}
+        .mode-btn {flex:1; padding:10px; border:none; background:transparent; border-radius:8px; cursor:pointer; font-size:13px; font-weight:bold; transition:all 0.2s; color:#666;}
+        .mode-btn.active {background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; box-shadow:0 2px 8px rgba(102, 126, 234, 0.3);}
+        .mode-panel {display:none;}
+        .mode-panel.active {display:block;}
+        .guidelines {background:linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-radius:12px; padding:15px; margin-bottom:20px; border:1px solid #667eea30;}
+        .guidelines h3 {font-size:14px; margin-bottom:10px; color:#333; display:flex; align-items:center; gap:8px;}
+        .guidelines-content {font-size:12px; color:#555; line-height:1.5;}
+        .instructions {background:#f8f9fa; border-left:4px solid #667eea; padding:12px; border-radius:8px; margin-bottom:15px;}
+        .instructions h3 {font-size:13px; margin-bottom:8px; color:#333;}
+        .instructions ol {margin-left:18px; font-size:11px; color:#555;}
+        .instructions li {margin:3px 0;}
+        .instructions code {background:#e9ecef; padding:2px 4px; border-radius:4px; font-size:10px;}
+        .crawler-toggle-section {background:linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-radius:12px; padding:15px; margin-bottom:15px; border:2px solid #667eea;}
+        .toggle-header {display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+        .toggle-title {font-size:14px; font-weight:bold; color:#333;}
+        .toggle-desc {font-size:11px; color:#666; margin-top:5px;}
+        .switch {position:relative; display:inline-block; width:52px; height:26px;}
+        .switch input {opacity:0; width:0; height:0;}
+        .slider {position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#ccc; transition:0.3s; border-radius:26px;}
+        .slider:before {position:absolute; content:""; height:20px; width:20px; left:3px; bottom:3px; background-color:white; transition:0.3s; border-radius:50%;}
+        input:checked + .slider {background-color:#28a745;}
+        input:checked + .slider:before {transform:translateX(26px);}
+        .code-block {background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:8px; font-family:'Courier New', monospace; font-size:10px; margin:10px 0; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:350px; overflow-y:auto;}
+        .copy-btn {background:#28a745; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:12px; margin-top:8px; width:100%;}
+        .copy-btn:hover {background:#218838;}
+        .note-box {background:#fff3cd; border-left:4px solid #ffc107; padding:10px; margin-top:10px; border-radius:6px; font-size:11px; color:#856404;}
+        .input-section {background:#f8f9fa; border-radius:12px; padding:15px; margin-bottom:20px;}
+        textarea {width:100%; height:120px; padding:12px; font-family:'Courier New', monospace; font-size:10px; border:2px solid #e0e0e0; border-radius:10px; resize:vertical;}
+        .button-group {display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+        .btn {padding:8px 16px; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; flex:1; text-align:center; position:relative;}
+        .btn:hover { filter: brightness(120%); }
+        .btn-primary {background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white;}
+        .btn-success {background:#28a745; color:white;}
+        .btn-danger {background:#dc3545; color:white;}
+        .btn-warning {background:#ffc107; color:#333;}
+        .btn-info {background:#17a2b8; color:white;}
+        .btn-secondary {background:#6c757d; color:white;}
+        .btn-loading {pointer-events:none; opacity:0.7;}
+        .btn-loading::after {content:""; position:absolute; width:14px; height:14px; top:50%; right:10px; transform:translateY(-50%); border:2px solid white; border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite;}
+
+        @keyframes spin {
+        to {transform:translateY(-50%) rotate(360deg);}
+        }
+
+        .stats {display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:20px;}
+        .stat-card {background:#f0f0f0; padding:12px; border-radius:10px; text-align:center; position:relative;}
+        .stat-number {font-size:24px; font-weight:bold; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
+        .stat-label {color:#666; font-size:11px; margin-top:4px;}
+        .section {background:#f8f9fa; border-radius:12px; padding:12px; margin-bottom:15px;}
+        .section-title {font-size:14px; font-weight:bold; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;}
+        .badge {padding:2px 8px; border-radius:12px; font-size:10px; font-weight:bold;}
+        .page-list, .article-list, .external-list {max-height:150px; overflow-y:auto;}
+        .page-item, .article-item, .external-item {padding:6px; border-bottom:1px solid #e0e0e0; font-family:monospace; font-size:10px; word-break:break-all; display:flex; justify-content:space-between; align-items:center;}
+        .page-item a, .article-item a, .external-item a {color:#667eea; text-decoration:none; flex:1;}
+        .page-count-badge, .article-count-badge, .external-count-badge {background:#667eea; color:white; padding:2px 6px; border-radius:10px; font-size:9px; margin-left:8px;}
+        .external-thumb {width:40px; height:40px; object-fit:cover; border-radius:6px; cursor:pointer; margin-right:10px; background:#f0f0f0;}
+        .external-item-content {display:flex; align-items:center; flex:1;}
+        .search-wrapper {position:relative; display:inline-block; width:100%;}
+        .filter-input {padding:8px 30px 8px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:12px; width:100%;}
+        .clear-search {position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:14px; color:#999; padding:0; width:20px; height:20px; display:flex; align-items:center; justify-content:center; border-radius:50%;}
+        .clear-search:hover {background:#e0e0e0; color:#333;}
+        .image-container {display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:15px; min-height:200px;}
+        .image-card {position:relative; background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition:all 0.3s; user-select:none; break-inside:avoid; cursor:pointer;}
+        .image-card:hover {transform:translateY(-4px); box-shadow:0 8px 20px rgba(0,0,0,0.15);}
+        .image-card.selected {background:#d4edda; box-shadow:0 0 0 3px #28a745, 0 8px 20px rgba(0,0,0,0.15);}
+        .image-card.selected .image-info {background:#d4edda;}
+        .image-card img {width:100%; height:160px; object-fit:cover; pointer-events:auto; background:#f5f5f5; cursor:pointer;}
+        .image-info {padding:10px; background:white; transition:background 0.2s;}
+        .image-filename {font-size:10px; font-weight:600; color:#333; word-break:break-all; margin-bottom:8px;}
+        .image-tags {display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;}
+        .tag {display:inline-block; padding:2px 6px; border-radius:10px; font-size:8px; font-weight:bold;}
+        .tag-html {background:#28a745; color:white;}
+        .tag-css {background:#6f42c1; color:white;}
+        .tag-external {background:#17a2b8; color:white;}
+        .tag-icon {background:#17a2b8; color:white;}
+        .tag-logo {background:#fd7e14; color:white;}
+        .tag-homepage {background:#20c997; color:white;}
+        .tag-similar {background:#ffc107; color:#333;}
+        .tag-stock {background:#e83e8c; color:white;}
+        .image-pages-count {font-size:10px; color:#667eea; margin-top:5px; display:flex; align-items:center; gap:5px;}
+        .image-checkbox {display:flex; align-items:center; gap:6px; font-size:11px; margin-top:8px; cursor:pointer; padding-top:5px; border-top:1px solid #eee;}
+        .image-checkbox:hover {background:rgba(102, 126, 234, 0.1);}
+        .image-checkbox input {width:16px; height:16px; cursor:pointer; margin:0;}
+        .image-checkbox span {cursor:pointer;}
+        .image-buttons {position:absolute; top:8px; right:8px; display:flex; gap:6px; opacity:0; transition:opacity 0.3s; z-index:10;}
+        .image-card:hover .image-buttons {opacity:1;}
+        .icon-btn {width:32px; height:32px; border-radius:50%; border:none; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;}
+        .icon-btn:hover {transform:scale(1.1);}
+        .btn-view {background:rgba(102, 126, 234, 0.95); color:white;}
+        .btn-copy {background:rgba(40, 167, 69, 0.95); color:white;}
+        .btn-delete {background:rgba(220, 53, 69, 0.95); color:white;}
+        .btn-details {background:rgba(255, 193, 7, 0.95); color:#333;}
+        .btn-tineye {background:rgba(0, 123, 255, 0.95); color:white;}
+        .filter-stats {display:flex; gap:8px; margin-bottom:15px; font-size:11px; flex-wrap:wrap; align-items:center;}
+        .filter-badge {padding:5px 12px; border-radius:20px; cursor:pointer; transition:all 0.2s; font-size:11px; font-weight:bold; display:inline-block; position:relative;}
+        .filter-badge.all {background:#6c757d; color:white;}
+        .filter-badge.html {background:#28a745; color:white;}
+        .filter-badge.css {background:#6f42c1; color:white;}
+        .filter-badge.external {background:#17a2b8; color:white;}
+        .filter-badge.icons {background:#17a2b8; color:white;}
+        .filter-badge.logos {background:#fd7e14; color:white;}
+        .filter-badge.homepage {background:#20c997; color:white;}
+        .filter-badge.similar {background:#ffc107; color:#333;}
+        .filter-badge.stock {background:#e83e8c; color:white;}
+        .filter-badge.sort {background:#17a2b8; color:white;}
+        .filter-badge:hover {opacity:0.8; transform:scale(1.02);}
+        .filter-badge.active {opacity:1 !important; box-shadow:0 0 0 2px white, 0 0 0 4px currentColor; transform:scale(1.05);}
+        .filter-badge.hidden {display:none !important;}
+        .filter-badge .filter-delete {position:absolute; top:-8px; right:-8px; background:#dc3545; color:white; border:none; border-radius:50%; width:18px; height:18px; font-size:10px; cursor:pointer; display:none; align-items:center; justify-content:center; opacity:0.9;}
+        .filter-badge:hover .filter-delete {display:flex;}
+        .filter-delete:hover {background:#c82333; transform:scale(1.1);}
+        .file-input-label {background:#6c757d; color:white; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; text-align:center; flex:1; display:inline-block;}
+        .file-input-label:hover {background:#5a6268;}
+        input[type="file"] {display:none;}
+        .details-popup {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0, 0, 0, 0.95); z-index:10001; justify-content:center; align-items:center;}
+        .details-content {background:white; border-radius:16px; max-width:650px; width:90%; max-height:85vh; overflow-y:auto; padding:25px; animation:zoomIn 0.3s ease; position:relative;}
+        .details-close {position:absolute; top:15px; right:15px; width:36px; height:36px; border-radius:50%; background:#dc3545; color:white; border:none; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.3s; z-index:10;}
+        .details-close:hover {transform:rotate(90deg) scale(1.1); background:#c82333;}
+        .details-content h3 {margin-bottom:15px; color:#333; border-bottom:2px solid #667eea; padding-bottom:10px; padding-right:40px;}
+        .details-image {text-align:center; margin-bottom:20px;}
+        .details-image img {max-width:100%; max-height:200px; object-fit:contain; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+        .details-info {margin-bottom:15px;}
+        .details-label {font-weight:bold; color:#667eea; margin-bottom:5px; font-size:12px;}
+        .details-value {background:#f8f9fa; padding:10px; border-radius:8px; word-break:break-all; font-family:monospace; font-size:12px;}
+        .details-value a {color:#667eea; text-decoration:none;}
+        .pages-list {max-height:200px; overflow-y:auto;}
+        .page-item-detail {padding:8px; border-bottom:1px solid #eee; font-family:monospace; font-size:11px;}
+        .page-item-detail a {color:#667eea; text-decoration:none;}
+        .tabs {display:flex; gap:10px; margin-bottom:10px;}
+        .tab-btn {padding:6px 12px; border:none; background:#e0e0e0; border-radius:8px; cursor:pointer; font-size:12px; transition:all 0.2s;}
+        .tab-btn.active {background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white;}
+        .tab-count {font-size:10px; opacity:0.8; margin-left:4px;}
+
+        @keyframes zoomIn {
+        from {transform:scale(0.9); opacity:0;}
+        to {transform:scale(1); opacity:1;}
+        }
+
+        .popup {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0, 0, 0, 0.95); z-index:10000; justify-content:center; align-items:center; padding:20px; box-sizing:border-box;}
+        .popup-content {position:relative; max-width:95%; max-height:95%; display:flex; flex-direction:column; align-items:center;}
+        .popup-content img {max-width:100%; max-height:60vh; width:auto; height:auto; object-fit:contain; border-radius:10px; cursor:default;}
+        .popup-nav {display:flex; gap:20px; margin-top:20px; align-items:center; flex-wrap:wrap; justify-content:center;}
+        .popup-nav-btn {background:rgba(255,255,255,0.2); border:2px solid white; color:white; padding:8px 16px; border-radius:30px; cursor:pointer; font-size:14px; transition:all 0.2s;}
+        .popup-nav-btn:hover {background:rgba(255,255,255,0.4); transform:scale(1.05);}
+        .popup-counter {color:white; font-size:14px; background:rgba(0,0,0,0.5); padding:6px 12px; border-radius:20px;}
+        .popup-close {position:absolute; top:-40px; right:-40px; width:36px; height:36px; border-radius:50%; background:#dc3545; color:white; border:none; font-size:18px; cursor:pointer;}
+        .popup-close:hover {transform:rotate(90deg) scale(1.1);}
+        .popup-action-buttons {display:flex; gap:12px; margin-top:15px; flex-wrap:wrap; justify-content:center;}
+        .popup-action-btn {background:rgba(255,255,255,0.2); border:1px solid white; color:white; padding:6px 12px; border-radius:20px; cursor:pointer; font-size:11px; transition:all 0.2s;}
+        .popup-action-btn:hover {background:rgba(255,255,255,0.4); transform:scale(1.05);}
+        .popup-action-btn.delete {background:rgba(220,53,69,0.8);}
+        .popup-action-btn.delete:hover {background:rgba(220,53,69,1);}
+        .popup-alt-section {scrollbar-width:thin; max-height:25vh; overflow-y:auto; width:100%; max-width:600px; margin-top:15px; background:rgba(0,0,0,0.7); border-radius:10px; padding:0;}
+        .popup-alt-section::-webkit-scrollbar {width:5px;}
+        .popup-alt-section::-webkit-scrollbar-track {background:#333; border-radius:5px;}
+        .popup-alt-section::-webkit-scrollbar-thumb {background:#667eea; border-radius:5px;}
+        .popup-alt-header {position:sticky; top:0; background:rgba(0,0,0,0.9); padding:10px 15px; border-bottom:1px solid #555; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center; z-index:1;}
+        .popup-alt-header span:first-child {color:white; font-size:12px; font-weight:bold;}
+        .popup-alt-count {color:#667eea; font-size:11px; background:rgba(102,126,234,0.2); padding:2px 8px; border-radius:20px;}
+        .popup-alt-list {padding:10px; font-size:11px; color:#ddd; max-height:calc(25vh - 50px); overflow-y:auto;}
+        .alt-item {margin-bottom:8px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.1);}
+        .alt-item-header {display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+        .alt-number {color:#667eea; font-weight:bold; flex-shrink:0;}
+        .alt-page-link {color:#667eea; text-decoration:none; font-weight:bold; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+        .alt-page-link:hover {text-decoration:underline;}
+        .alt-icons {display:inline-flex; flex-direction:column; gap:4px; flex-shrink:0;}
+        .alt-icon-html {background:#28a745; color:white; padding:2px 6px; border-radius:10px; font-size:8px; font-weight:bold; white-space:nowrap;}
+        .alt-icon-css {background:#6f42c1; color:white; padding:2px 6px; border-radius:10px; font-size:8px; font-weight:bold; white-space:nowrap;}
+        .alt-text-wrapper {display:flex; align-items:center; justify-content:space-between; margin-top:6px; padding-left:20px; gap:8px;}
+        .alt-text {color:#ddd; word-break:break-word; flex:1;}
+        .alt-text-icons {display:inline-flex; flex-direction:column; gap:4px; flex-shrink:0;}
+        .toast-container {position:fixed; bottom:20px; right:20px; z-index:10002; display:flex; flex-direction:column; gap:10px; pointer-events:none;}
+        .toast {background:#28a745; color:white; padding:10px 20px; border-radius:8px; animation:slideIn 0.3s ease; pointer-events:auto; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:200px; text-align:center;}
+        .toast.error {background:#dc3545;}
+        .toast.warning {background:#ffc107; color:#333;}
+
+        @keyframes slideIn {
+        from {transform:translateX(100%); opacity:0;}
+        to {transform:translateX(0); opacity:1;}
+        }
+
+        @keyframes fadeOut {
+        from {opacity:1;}
+        to {opacity:0; transform:translateX(100%);}
+        }
+
+        .loading {text-align:center; padding:50px; color:#999;}
+        .spinner {width:40px; height:40px; border:3px solid #f3f3f3; border-top:3px solid #667eea; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px;}
+        .group-separator {grid-column:1 / -1; margin:5px 0 5px 0; padding:8px 12px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border-radius:8px; font-size:11px; font-weight:bold;}
+
+        @media (max-width: 900px) {
+        .sidebar {width:380px;}
+        .image-container {grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));}
+        }
+
+        @media (max-width: 800px) {
+        .popup-content img {max-height:50vh;}
+        .popup-alt-section {max-height:20vh;}
+        .popup-nav-btn {padding:6px 12px; font-size:12px;}
+        .popup-action-btn {padding:5px 10px; font-size:10px;}
+        .popup-close {top:-30px; right:-30px; width:30px; height:30px; font-size:16px;}
+        .alt-page-link {max-width:calc(100% - 80px);}
+        }
+
+        @media (max-width: 700px) {
+        .app {flex-direction:column;}
+        .sidebar {width:100%; max-height:45vh;}
+        .gallery-area {max-height:55vh;}
+        }
+
+        @media (max-width: 600px) {
+        .popup-content img {max-height:40vh;}
+        .popup-alt-section {max-height:15vh;}
+        .alt-item .alt-page-link {max-width:120px;}
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="sidebar">
+        <div class="sidebar-header"><h1>📸 Website Image Collector</h1><p>Extract and view all images from every page of any website</p></div>
+        
+        <div class="guidelines">
+            <h3>📖 Quick Start Guide</h3>
+            <div class="guidelines-content">
+                <strong>Method 1 - Website Crawler (Default):</strong><br>
+                1. Go to website sitemap → Press F12 → Copy code below → Paste in console → Run<br>
+                2. Download .txt file → Copy ALL contents → Paste in "Console Output" box → Click "Parse Output"<br><br>
+                <strong>Method 2 - Direct URLs:</strong><br>
+                • Switch to "Direct URLs" tab → Paste image URLs (one per line) → Click "Add URLs to Gallery"<br><br>
+                <strong>💡 Features:</strong><br>
+                • Use ← → arrow keys to navigate in popup<br>
+                • Hover over filter to see ✕ delete button<br>
+                • Ctrl+Z / Ctrl+Y for Undo/Redo<br>
+                • Adjust batch size (1-3) to control computer load
+                <br><br>
+                <strong>🔥 Nice ka One, astiga ey! 😁😊</strong>
+            </div>
+        </div>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="switchMode('crawler')">🤖 Website Crawler</button>
+            <button class="mode-btn" onclick="switchMode('direct')">🔗 Direct URLs</button>
+        </div>
+        
+        <div id="crawlerMode" class="mode-panel active">
+            <div class="instructions">
+                <h3>📋 How to Use Website Crawler:</h3>
+                <ol>
+                    <li>Go to the sitemap page: <code>https://example.com/sitemap</code></li>
+                    <li>Press <kbd>F12</kbd> to open Developer Console</li>
+                    <li>Select batch size below (1-3, default 2)</li>
+                    <li>Copy the code below (click <strong>"Copy Code"</strong>)</li>
+                    <li>Paste into console and press <kbd>Enter</kbd></li>
+                    <li>The crawler will run and <strong>download a .txt file</strong> with all results</li>
+                    <li>Open the downloaded file and copy ALL its contents</li>
+                    <li>Paste below and click <strong>"Parse Output"</strong> to see gallery</li>
+                </ol>
+            </div>
+            
+            <div class="batch-control">
+                <label>📦 Crawl Batch Size:</label>
+                <select id="batchSize" class="batch-select" onchange="updateCrawlerCode()">
+                    <option value="1">🐢 1 page at a time (Slowest, Safest)</option>
+                    <option value="2" selected>⚡ 2 pages at a time (Balanced)</option>
+                    <option value="3">🚀 3 pages at a time (Fastest, Uses more RAM)</option>
+                </select>
+                <span class="batch-info">Lower = more stable, Higher = faster</span>
+            </div>
+            
+            <div class="crawler-toggle-section">
+                <div class="toggle-header">
+                    <div class="toggle-title">🎨 Extract CSS Background Images</div>
+                    <label class="switch"><input type="checkbox" id="includeCssToggle" checked onchange="updateCrawlerCode()"><span class="slider"></span></label>
+                </div>
+                <div class="toggle-desc">✅ <strong>ON</strong> = Extracts &lt;img&gt; tags + CSS backgrounds<br>🔘 <strong>OFF</strong> = Only &lt;img&gt; tags</div>
+            </div>
+            <div class="code-block" id="crawlerCode"></div>
+            <button class="copy-btn" onclick="copyCrawlerCode()">📋 Copy Code to Clipboard</button>
+            <div class="input-section">
+                <textarea id="consoleOutput" placeholder="Paste your console output here (from the downloaded .txt file)..."></textarea>
+                <div class="button-group">
+                    <button class="btn btn-primary" id="parseBtn" onclick="parseConsoleOutputOptimized()">🔍 Parse Output</button>
+                    <button class="btn btn-secondary" onclick="clearCrawlerData()">Clear Crawler Data</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="directMode" class="mode-panel">
+            <div class="instructions">
+                <h3>🔗 How to Use Direct URLs:</h3>
+                <ol>
+                    <li>Paste image URLs (one per line) in the textarea below</li>
+                    <li>Click <strong>"Add URLs to Gallery"</strong> to display images</li>
+                    <li>Use filters and selection tools to organize</li>
+                    <li>Export your collection using <strong>"Export Data"</strong></li>
+                </ol>
+            </div>
+            <div class="input-section">
+                <div class="section-title">➕ Add Image URLs</div>
+                <textarea id="urlsTextarea" placeholder="Paste multiple URLs (one per line) here...&#10;https://example.com/image1.jpg&#10;https://example.com/image2.png" style="height: 150px;"></textarea>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="loadUrlsFromTextarea()">📋 Add URLs to Gallery</button>
+                    <button class="btn btn-warning" onclick="clearDirectData()">🗑️ Clear Direct URLs Data</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📚 Site Content</div>
+            <div class="stats" id="stats">
+                <div class="stat-card"><div class="stat-number" id="pagesCount">0</div><div class="stat-label">📄 Pages</div></div>
+                <div class="stat-card"><div class="stat-number" id="homepageCount">0</div><div class="stat-label">🏠 Homepage</div></div>
+                <div class="stat-card"><div class="stat-number" id="totalOccurrences">0</div><div class="stat-label">🖼️ Total Occurrences</div></div>
+                <div class="stat-card"><div class="stat-number" id="articlesCount">0</div><div class="stat-label">📝 Articles/Blog Posts</div></div>
+                <div class="stat-card"><div class="stat-number" id="uniqueCount">0</div><div class="stat-label">✨ Unique Images</div></div>
+                <div class="stat-card"><div class="stat-number" id="duplicatesRemoved">0</div><div class="stat-label">🗑️ Duplicates Removed</div></div>
+                <div class="stat-card"><div class="stat-number" id="totalPagesScanned">0</div><div class="stat-label">📚 Total Pages</div></div>
+                <div class="stat-card"><div class="stat-number" id="externalCount">0</div><div class="stat-label">🌐 External Images</div></div>
+                <div class="stat-card"><div class="stat-number" id="trashedCount">0</div><div class="stat-label">🗑️ Trashed</div></div>
+                <div class="stat-card"><div class="stat-number" id="selectedCount">0</div><div class="stat-label">✅ Selected</div></div>
+                <div class="stat-card"><div class="stat-number" id="similarGroupCount">0</div><div class="stat-label">🔄 Similar Groups</div></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">🎮 Gallery Controls</div>
+            <div class="button-group">
+                <button class="btn btn-success" onclick="selectAllVisibleImages()">✓ Select All Visible</button>
+                <button class="btn btn-warning" onclick="deselectAllImages()">☐ Deselect All</button>
+                <button class="btn btn-info" onclick="selectAllSimilarKeepOne()">🔄 Select Similar (Keep One)</button>
+                <button class="btn btn-info" onclick="selectHomepageOnlyImages()">🏠 Select Homepage-Only</button>
+                <button class="btn btn-info" onclick="copySelectedImages()">📋 Copy Selected</button>
+                <button class="btn btn-danger" onclick="deleteSelectedImages()">🗑️ Delete Selected</button>
+            </div>
+            <div class="button-group" style="margin-top: 10px;">
+                <button class="btn btn-primary" onclick="exportData()">💾 Export Data (TXT)</button>
+                <label class="file-input-label" style="background: #6c757d;">📂 Import TXT
+                    <input type="file" id="importFile" accept=".txt, .json" onchange="importData(event)">
+                </label>
+            </div>
+        </div>
+        
+        <div class="section" id="contentSection">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showContentTab('pages')">📄 Pages <span id="pagesTabCount" class="tab-count">(0)</span></button>
+            <button class="tab-btn" onclick="showContentTab('articles')">📝 Articles <span id="articlesTabCount" class="tab-count">(0)</span></button>
+        </div>
+        <div id="pagesListContainer" style="display: block;">
+            <div class="page-list" id="pageList"></div>
+        </div>
+        <div id="articlesListContainer" style="display: none;">
+            <div class="article-list" id="articleList"></div>
+        </div>
+        </div>
+        
+        <div class="section" id="externalSection">
+            <div class="section-title">🌐 External Images <span id="externalCountBadge" class="external-count-badge">0</span></div>
+            <div class="external-list" id="externalList"></div>
+        </div>
+    </div>
+    <div class="gallery-area">
+        <div class="sticky-controls">
+            <div class="search-wrapper" style="margin-bottom: 15px;">
+                <input type="text" id="filterInput" class="filter-input" placeholder="🔍 Filter images by name or URL..." onkeyup="filterImages()">
+                <button class="clear-search" onclick="clearSearch()" title="Clear search">✕</button>
+            </div>
+            <div class="filter-stats" id="filterContainer">
+                <span class="filter-badge all" onclick="filterByType('all')">📊 All</span>
+                <span class="filter-badge html" onclick="filterByType('html')">🖼️ HTML</span>
+                <span class="filter-badge css" onclick="filterByType('css')">🎨 CSS</span>
+                <span class="filter-badge external" onclick="filterByType('external')">🌐 External</span>
+                <span class="filter-badge icons" onclick="filterByType('icons')">🔘 Icons</span>
+                <span class="filter-badge logos" onclick="filterByType('logos')">🏷️ Logos</span>
+                <span class="filter-badge homepage" onclick="filterByType('homepage')">🏠 Homepage</span>
+                <span class="filter-badge similar" onclick="filterByType('similar')">🔄 Similar</span>
+                <span class="filter-badge stock" onclick="filterByType('stock')">🛒 Stock</span>
+                <span class="filter-badge sort" onclick="toggleSortOrder()" id="sortBtn">📁 Sort: Numbers Last</span>
+            </div>
+        </div>
+        <div class="image-container" id="imageContainer">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>👋 Welcome! Select a method above to get started</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup -->
+<div id="popup" class="popup">
+    <div class="popup-content">
+        <button class="popup-close" onclick="closePopup()">✕</button>
+        <img src="" id="popupImage">
+        <div class="popup-nav">
+            <button class="popup-nav-btn" onclick="prevImage()">◀ Previous</button>
+            <span class="popup-counter" id="popupCounter">1 / 1</span>
+            <button class="popup-nav-btn" onclick="nextImage()">Next ▶</button>
+        </div>
+        <!-- Alt Text Section -->
+        <div class="popup-alt-section" id="popupAltSection">
+            <div class="popup-alt-header">
+                <span>📝 Image Alt Text & Page References</span>
+                <span class="popup-alt-count" id="popupAltCount">(0)</span>
+            </div>
+            <div class="popup-alt-list" id="popupAltList"></div>
+        </div>
+        <div class="popup-action-buttons">
+            <button class="popup-action-btn" id="popupCopyBtn">📋 Copy URL</button>
+            <button class="popup-action-btn delete" id="popupDeleteBtn">🗑️ Delete Image</button>
+            <button class="popup-action-btn" id="popupTinEyeBtn">🔍 TinEye Search</button>
+        </div>
+    </div>
+</div>
+
+<!-- Details Popup -->
+<div id="detailsPopup" class="details-popup">
+    <div class="details-content">
+        <button class="details-close" onclick="closeDetailsPopup()">✕</button>
+        <h3>📸 Image Details</h3>
+        <div class="details-image"><img src="" id="detailsImage"></div>
+        <div class="details-info"><div class="details-label">🔗 Image URL:</div><div class="details-value" id="detailsUrl"></div></div>
+        <div class="details-info"><div class="details-label">🏷️ Image Tags:</div><div class="details-value" id="detailsType"></div></div>
+        <div class="details-info"><div class="details-label">📄 Found on Pages (<span id="pagesCountSpan">0</span> pages):</div><div class="details-value pages-list" id="detailsPages"></div></div>
+    </div>
+</div>
+
+<script>
+// ============ SEPARATE DATA STORES FOR EACH MODE ==========
+let crawlerUndoStack = [];
+let crawlerRedoStack = [];
+let directUndoStack = [];
+let directRedoStack = [];
+
+let crawlerData = {
+    detectedPages: [], detectedArticles: [], externalImagesList: [],
+    allImages: [], uniqueImages: new Set(), selectedImages: new Set(),
+    cssImagesSet: new Set(), htmlImagesSet: new Set(), bothImagesSet: new Set(),
+    externalImagesSet: new Set(), iconImagesSet: new Set(), logoImagesSet: new Set(),
+    homepageImagesSet: new Set(), stockImagesSet: new Set(),
+    imageSourceMap: new Map(), similarGroups: new Map(), imageToGroup: new Map(),
+    homepageUrl: '', totalOccurrencesCount: 0, trashedCount: 0, duplicatesRemoved: 0, originalTotalOccurrences: 0
+};
+
+let directData = {
+    detectedPages: [], detectedArticles: [], externalImagesList: [],
+    allImages: [], uniqueImages: new Set(), selectedImages: new Set(),
+    cssImagesSet: new Set(), htmlImagesSet: new Set(), bothImagesSet: new Set(),
+    externalImagesSet: new Set(), iconImagesSet: new Set(), logoImagesSet: new Set(),
+    homepageImagesSet: new Set(), stockImagesSet: new Set(),
+    imageSourceMap: new Map(), similarGroups: new Map(), imageToGroup: new Map(),
+    homepageUrl: '', totalOccurrencesCount: 0, trashedCount: 0, duplicatesRemoved: 0, originalTotalOccurrences: 0
+};
+
+let currentMode = 'crawler';
+let isUndoRedoOperation = false;
+
+// ============ GLOBALS ==========
+
+let toastContainer = null, activeToasts = [];
+let detectedPages = [], detectedArticles = [], externalImagesList = [];
+let allImages = [], uniqueImages = new Set(), selectedImages = new Set();
+let currentImageList = [], cssImagesSet = new Set(), htmlImagesSet = new Set(), bothImagesSet = new Set(), externalImagesSet = new Set(), iconImagesSet = new Set(), logoImagesSet = new Set(), homepageImagesSet = new Set(), stockImagesSet = new Set();
+let imageSourceMap = new Map(), similarGroups = new Map(), imageToGroup = new Map();
+let currentFilter = 'all', sortOrder = 'default', currentContentTab = 'pages', homepageUrl = '', lastCheckedIndex = null, currentDisplayedUrls = [];
+let totalOccurrencesCount = 0, trashedCount = 0, duplicatesRemoved = 0, originalTotalOccurrences = 0;
+let imageAltMap = new Map(); // Stores {imageUrl: [{pageUrl: pageUrl, alt: altText}]}
+
+// Popup variables
+let currentPopupImages = [], currentPopupIndex = 0;
+
+// ============ HELPER FUNCTIONS ==========
+function showToast(msg, type = 'success') {
+    if(!toastContainer){ 
+        toastContainer = document.createElement('div'); 
+        toastContainer.className = 'toast-container'; 
+        document.body.appendChild(toastContainer); 
+    }
+    
+    // Keep only last 3 toasts
+    while(activeToasts.length >= 3){ 
+        let old = activeToasts.shift(); 
+        if(old && old.parentNode){ 
+            old.style.animation = 'fadeOut 0.3s forwards'; 
+            setTimeout(() => old.parentNode?.removeChild(old), 300); 
+        } 
+    }
+    
+    let toast = document.createElement('div'); 
+    toast.className = `toast ${type}`; 
+    
+    // Shorten common messages
+    let shortMsg = msg;
+    if (msg.includes('Parsed')) shortMsg = msg.replace('occurrences', 'occ').replace('unique images', 'imgs');
+    if (msg.includes('Deleted')) shortMsg = msg.substring(0, 50);
+    if (msg.includes('Selected')) shortMsg = msg.replace('images', 'img');
+    
+    toast.textContent = shortMsg; 
+    toastContainer.appendChild(toast); 
+    activeToasts.push(toast);
+    
+    // Auto-hide after 2 seconds (faster)
+    setTimeout(() => { 
+        let idx = activeToasts.indexOf(toast); 
+        if(idx > -1) activeToasts.splice(idx,1); 
+        toast.style.animation = 'fadeOut 0.3s forwards'; 
+        setTimeout(() => toast.parentNode?.removeChild(toast), 500); 
+    }, 2000);
+}
+
+function isValidImageUrl(url) {
+    if (url.startsWith('data:image/svg+xml')) return false;
+    if (!url || url.length < 10) return false;
+    if (url.includes('viewBox=') && url.includes('svg')) return false;
+    return true;
+}
+
+function getDomain(url) {
+    try { return new URL(url).hostname.replace(/^www\./, ''); } catch(e) { return ''; }
+}
+
+function isSameDomain(url1, url2) {
+    try {
+        let domain1 = new URL(url1).hostname.replace(/^www\./, '');
+        let domain2 = new URL(url2).hostname.replace(/^www\./, '');
+        
+        // Check if one is subdomain of the other
+        return domain1 === domain2 || 
+               domain1.endsWith('.' + domain2) || 
+               domain2.endsWith('.' + domain1);
+    } catch(e) { return false; }
+}
+
+function isIconImage(url) {
+    let low = url.toLowerCase(), fn = url.split('/').pop().toLowerCase();
+    if(fn.endsWith('.svg')) return true;
+    if(fn.match(/\d+x\d+/) && parseInt(fn.match(/\d+/)[0]) <= 64) return true;
+    let kw = ['icon', 'ico', 'favicon', 'sprite', 'symbol', 'glyph', 'facebook', 'twitter', 'instagram', 'linkedin', 'youtube', 'pinterest', 'social', 'share', 'like', 'comment', 'heart', 'star', 'menu', 'hamburger', 'close', 'search', 'cart', 'user', 'arrow', 'chevron', 'play', 'pause', 'volume', 'fullscreen', 'calendar', 'clock', 'location', 'email', 'phone', 'message', 'warning', 'info', 'check', 'circle', 'square', 'triangle'];
+    return kw.some(k => low.includes(k));
+}
+
+function isLogoImage(url) {
+    let low = url.toLowerCase();
+    let kw = ['logo', 'brand', 'header-logo', 'footer-logo', 'site-logo', 'company-logo'];
+    return kw.some(k => low.includes(k));
+}
+
+function isStockImage(url) {
+    let low = url.toLowerCase();
+    let patterns = ['envato', 'shutterstock', 'adobe', 'istock', 'gettyimages', 'depositphotos', 'freepik', 'pexels', 'unsplash', 'pixabay', '123rf', 'dreamstime', 'alamy', 'canstock', 'bigstock'];
+    return patterns.some(p => low.includes(p));
+}
+
+function getBaseName(fn) {
+    return fn.toLowerCase().replace(/-\d+x\d+/,'').replace(/-\d+/,'').replace(/[0-9a-f]{8,}/,'').replace(/-v\d+/,'').replace(/\.(jpg|jpeg|png|gif|webp|svg)$/i,'').replace(/[-_]/g,' ').trim();
+}
+
+function groupSimilarImages(imgs) {
+    similarGroups.clear(); 
+    imageToGroup.clear(); 
+    let groups = new Map();
+    for(let url of imgs) {
+        let fn = url.split('/').pop().split('?')[0];
+        let bn = getBaseName(fn);
+        if(!groups.has(bn)) groups.set(bn, []);
+        groups.get(bn).push(url);
+    }
+    let gid = 0;
+    for(let [bn, urls] of groups) {
+        if(urls.length > 1) {
+            for(let u of urls) imageToGroup.set(u, gid);
+            similarGroups.set(gid, new Set(urls));
+            gid++;
+        }
+    }
+}
+
+function updateStats() {
+    document.getElementById('pagesCount').textContent = detectedPages.length;
+    document.getElementById('articlesCount').textContent = detectedArticles.length;
+    document.getElementById('totalPagesScanned').textContent = detectedPages.length + detectedArticles.length;
+    document.getElementById('totalOccurrences').textContent = originalTotalOccurrences;
+    document.getElementById('uniqueCount').textContent = uniqueImages.size;
+    document.getElementById('duplicatesRemoved').textContent = duplicatesRemoved;
+    document.getElementById('externalCount').textContent = externalImagesSet.size;
+    document.getElementById('homepageCount').textContent = homepageImagesSet.size;
+    document.getElementById('similarGroupCount').textContent = similarGroups.size;
+    document.getElementById('selectedCount').textContent = selectedImages.size;
+    document.getElementById('trashedCount').textContent = trashedCount;
+    document.getElementById('externalCountBadge').textContent = externalImagesSet.size;
+    document.getElementById('pagesTabCount').textContent = `(${detectedPages.length})`;
+    document.getElementById('articlesTabCount').textContent = `(${detectedArticles.length})`;
+}
+
+function saveStateToUndo() {
+    if(isUndoRedoOperation) return;
+    let state = {
+        detectedPages: [...detectedPages], detectedArticles: [...detectedArticles],
+        externalImagesList: [...externalImagesList], allImages: [...allImages],
+        uniqueImages: Array.from(uniqueImages), selectedImages: Array.from(selectedImages),
+        cssImagesSet: Array.from(cssImagesSet), htmlImagesSet: Array.from(htmlImagesSet),
+        bothImagesSet: Array.from(bothImagesSet), externalImagesSet: Array.from(externalImagesSet),
+        iconImagesSet: Array.from(iconImagesSet), logoImagesSet: Array.from(logoImagesSet),
+        homepageImagesSet: Array.from(homepageImagesSet), stockImagesSet: Array.from(stockImagesSet),
+        imageSourceMap: Array.from(imageSourceMap.entries()),
+        similarGroups: Array.from(similarGroups.entries()).map(([id, urls]) => [id, Array.from(urls)]),
+        imageToGroup: Array.from(imageToGroup.entries()),
+        homepageUrl, totalOccurrencesCount, trashedCount, duplicatesRemoved, originalTotalOccurrences: originalTotalOccurrences // ADD duplicatesRemoved
+    };
+    
+    if(currentMode === 'crawler') {
+        crawlerUndoStack.push(state);
+        crawlerRedoStack = [];
+    } else {
+        directUndoStack.push(state);
+        directRedoStack = [];
+    }
+}
+
+function restoreState(state, isRedo = false) {
+    isUndoRedoOperation = true;
+    detectedPages = state.detectedPages || [];
+    detectedArticles = state.detectedArticles || [];
+    externalImagesList = state.externalImagesList || [];
+    allImages = state.allImages || [];
+    uniqueImages = new Set(state.uniqueImages || []);
+    selectedImages = new Set(state.selectedImages || []);
+    cssImagesSet = new Set(state.cssImagesSet || []);
+    htmlImagesSet = new Set(state.htmlImagesSet || []);
+    bothImagesSet = new Set(state.bothImagesSet || []);
+    externalImagesSet = new Set(state.externalImagesSet || []);
+    iconImagesSet = new Set(state.iconImagesSet || []);
+    logoImagesSet = new Set(state.logoImagesSet || []);
+    homepageImagesSet = new Set(state.homepageImagesSet || []);
+    stockImagesSet = new Set(state.stockImagesSet || []);
+    imageSourceMap = new Map(state.imageSourceMap || []);
+    homepageUrl = state.homepageUrl || '';
+    totalOccurrencesCount = state.totalOccurrencesCount || 0;
+    trashedCount = state.trashedCount || 0;
+    duplicatesRemoved = state.duplicatesRemoved || 0;  
+    originalTotalOccurrences = state.originalTotalOccurrences || 0; 
+    
+    similarGroups.clear();
+    imageToGroup.clear();
+    if(state.similarGroups) {
+        for(let [id, urls] of state.similarGroups) {
+            similarGroups.set(parseInt(id), new Set(urls));
+        }
+    }
+    if(state.imageToGroup) {
+        for(let [url, id] of state.imageToGroup) {
+            imageToGroup.set(url, parseInt(id));
+        }
+    }
+    
+    updateStats();
+    displayDetectedPages();
+    displayDetectedArticles();
+    displayExternalImages();
+    displayImagesOptimized();
+    updateFilterVisibility();
+    isUndoRedoOperation = false;
+    showToast(isRedo ? '↪️ Redo' : '↩️ Undo');
+}
+
+function undo() {
+    let undoStack = currentMode === 'crawler' ? crawlerUndoStack : directUndoStack;
+    let redoStack = currentMode === 'crawler' ? crawlerRedoStack : directRedoStack;
+    
+    if(undoStack.length === 0) { showToast('Nothing to undo', 'error'); return; }
+    
+    let cur = {
+        detectedPages: [...detectedPages], detectedArticles: [...detectedArticles],
+        externalImagesList: [...externalImagesList], allImages: [...allImages],
+        uniqueImages: Array.from(uniqueImages), selectedImages: Array.from(selectedImages),
+        cssImagesSet: Array.from(cssImagesSet), htmlImagesSet: Array.from(htmlImagesSet),
+        bothImagesSet: Array.from(bothImagesSet), externalImagesSet: Array.from(externalImagesSet),
+        iconImagesSet: Array.from(iconImagesSet), logoImagesSet: Array.from(logoImagesSet),
+        homepageImagesSet: Array.from(homepageImagesSet), stockImagesSet: Array.from(stockImagesSet),
+        imageSourceMap: Array.from(imageSourceMap.entries()),
+        similarGroups: Array.from(similarGroups.entries()).map(([id, urls]) => [id, Array.from(urls)]),
+        imageToGroup: Array.from(imageToGroup.entries()),
+        homepageUrl, totalOccurrencesCount, trashedCount
+    };
+    redoStack.push(cur);
+    let prev = undoStack.pop();
+    restoreState(prev, false);
+    closePopup();
+}
+
+function redo() {
+    let undoStack = currentMode === 'crawler' ? crawlerUndoStack : directUndoStack;
+    let redoStack = currentMode === 'crawler' ? crawlerRedoStack : directRedoStack;
+    
+    if(redoStack.length === 0) { showToast('Nothing to redo', 'error'); return; }
+    
+    let cur = {
+        detectedPages: [...detectedPages], detectedArticles: [...detectedArticles],
+        externalImagesList: [...externalImagesList], allImages: [...allImages],
+        uniqueImages: Array.from(uniqueImages), selectedImages: Array.from(selectedImages),
+        cssImagesSet: Array.from(cssImagesSet), htmlImagesSet: Array.from(htmlImagesSet),
+        bothImagesSet: Array.from(bothImagesSet), externalImagesSet: Array.from(externalImagesSet),
+        iconImagesSet: Array.from(iconImagesSet), logoImagesSet: Array.from(logoImagesSet),
+        homepageImagesSet: Array.from(homepageImagesSet), stockImagesSet: Array.from(stockImagesSet),
+        imageSourceMap: Array.from(imageSourceMap.entries()),
+        similarGroups: Array.from(similarGroups.entries()).map(([id, urls]) => [id, Array.from(urls)]),
+        imageToGroup: Array.from(imageToGroup.entries()),
+        homepageUrl, totalOccurrencesCount, trashedCount
+    };
+    undoStack.push(cur);
+    let nxt = redoStack.pop();
+    restoreState(nxt, true);
+    closePopup();
+}
+
+// KEYBOARD NAVIGATION - FIXED
+document.addEventListener('keydown', (e) => {
+    if(e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+    else if(e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+    
+    // Popup keyboard navigation
+    let pop = document.getElementById('popup');
+    if(pop && pop.style.display === 'flex') {
+        if(e.key === 'ArrowLeft') { e.preventDefault(); prevImage(); }
+        else if(e.key === 'ArrowRight') { e.preventDefault(); nextImage(); }
+        else if(e.key === 'Escape') { e.preventDefault(); closePopup(); }
+    }
+});
+
+function selectAllVisibleImages() {
+    const checkboxes = document.querySelectorAll('.image-card .checkbox');
+    if(checkboxes.length === 0) { showToast('No images', 'warning'); return; }
+    saveStateToUndo();
+    checkboxes.forEach(cb => {
+        const url = cb.getAttribute('data-url');
+        if(url && !selectedImages.has(url)) selectedImages.add(url);
+        cb.checked = true;
+    });
+    document.querySelectorAll('.image-card').forEach(card => {
+        if(card.querySelector('.checkbox')?.checked) card.classList.add('selected');
+    });
+    updateStats();
+    updateFilterVisibility();
+    showToast(`✅ ${selectedImages.size} selected`);
+}
+
+function deselectAllImages() {
+    saveStateToUndo();
+    selectedImages.clear();
+    displayImagesOptimized();
+    updateStats();
+    updateFilterVisibility();
+    showToast(`☐ Deselected all`);
+}
+
+function copySelectedImages() {
+    if(selectedImages.size === 0) { showToast('None selected', 'error'); return; }
+    const displayedUrls = currentDisplayedUrls;
+    const orderedSelected = displayedUrls.filter(url => selectedImages.has(url));
+    navigator.clipboard.writeText(orderedSelected.join('\n')).then(() => showToast(`✅ Copied ${orderedSelected.length} URLs`));
+}
+
+function selectHomepageOnlyImages() {
+    if(homepageImagesSet.size === 0) {
+        showToast('No homepage images', 'warning');
+        return;
+    }
+    saveStateToUndo();
+    let selectedCount = 0;
+    for(let url of homepageImagesSet) {
+        const sources = imageSourceMap.get(url) || [];
+        const isOnlyOnHomepage = sources.length === 1;
+        if(isOnlyOnHomepage && !selectedImages.has(url)) {
+            selectedImages.add(url);
+            selectedCount++;
+        }
+    }
+    updateStats();
+    displayImagesOptimized();
+    updateFilterVisibility();
+    showToast(`✅ ${selectedCount} homepage-only`);
+}
+
+function deleteSelectedImages() {
+    if(selectedImages.size === 0) { showToast('No images selected', 'error'); return; }
+    saveStateToUndo();
+    
+    let deletedUniqueCount = selectedImages.size;
+    let deletedOccurrences = 0;
+    
+    for(let url of selectedImages) {
+        let occurrencesForThisImage = imageSourceMap.get(url)?.length || 0;
+        deletedOccurrences += occurrencesForThisImage;
+        
+        uniqueImages.delete(url);
+        
+        let gid = imageToGroup.get(url);
+        if(gid !== undefined) {
+            let grp = similarGroups.get(gid);
+            if(grp) {
+                grp.delete(url);
+                if(grp.size <= 1) {
+                    similarGroups.delete(gid);
+                    for(let rem of grp) imageToGroup.delete(rem);
+                }
+            }
+            imageToGroup.delete(url);
+        }
+        
+        cssImagesSet.delete(url);
+        htmlImagesSet.delete(url);
+        bothImagesSet.delete(url);
+        externalImagesSet.delete(url);
+        iconImagesSet.delete(url);
+        logoImagesSet.delete(url);
+        homepageImagesSet.delete(url);
+        stockImagesSet.delete(url);
+        imageSourceMap.delete(url);
+    }
+    
+    // DO NOT change totalOccurrencesCount - keep original value
+    trashedCount += deletedUniqueCount;
+    
+    selectedImages.clear();
+    displayImagesOptimized();
+    updateStats();
+    updateFilterVisibility();
+    showToast(`🗑️ Deleted ${deletedUniqueCount} images`);
+}
+
+function selectAllSimilarKeepOne() {
+    if(similarGroups.size === 0) { showToast('No similar groups', 'error'); return; }
+    saveStateToUndo();
+    let searchTerm = document.getElementById('filterInput').value.toLowerCase();
+    let displayed = currentImageList;
+    if(searchTerm) displayed = currentImageList.filter(u => u.toLowerCase().includes(searchTerm) || u.split('/').pop().toLowerCase().includes(searchTerm));
+    
+    let groupsToSel = new Set();
+    for(let u of displayed) {
+        let g = imageToGroup.get(u);
+        if(g !== undefined) groupsToSel.add(g);
+    }
+    
+    let selCount = 0, total = 0;
+    for(let gid of groupsToSel) {
+        let grp = similarGroups.get(gid);
+        if(grp && grp.size > 1) {
+            total++;
+            let arr = Array.from(grp);
+            for(let i = 1; i < arr.length; i++) {
+                if(!selectedImages.has(arr[i])) {
+                    selectedImages.add(arr[i]);
+                    selCount++;
+                }
+            }
+        }
+    }
+    updateStats();
+    displayImagesOptimized();
+    updateFilterVisibility();
+    showToast(`✅ Selected ${selCount} similar images from ${total} groups`);
+}
+
+function deleteImage(url) {
+    saveStateToUndo();
+    
+    let occurrencesForThisImage = imageSourceMap.get(url)?.length || 0;
+    
+    uniqueImages.delete(url);
+    selectedImages.delete(url);
+    
+    let gid = imageToGroup.get(url);
+    if(gid !== undefined) {
+        let grp = similarGroups.get(gid);
+        if(grp) {
+            grp.delete(url);
+            if(grp.size <= 1) {
+                similarGroups.delete(gid);
+                for(let rem of grp) imageToGroup.delete(rem);
+            }
+        }
+        imageToGroup.delete(url);
+    }
+    
+    cssImagesSet.delete(url);
+    htmlImagesSet.delete(url);
+    bothImagesSet.delete(url);
+    externalImagesSet.delete(url);
+    iconImagesSet.delete(url);
+    logoImagesSet.delete(url);
+    homepageImagesSet.delete(url);
+    stockImagesSet.delete(url);
+    imageSourceMap.delete(url);
+    
+    // DO NOT change totalOccurrencesCount - keep original value
+    trashedCount += 1;
+    
+    displayImagesOptimized();
+    updateStats();
+    updateFilterVisibility();
+    showToast(`🗑️ Deleted 1 image`);
+}
+
+function copyImageUrl(url) {
+    navigator.clipboard.writeText(url).then(() => showToast('✅ URL copied!'));
+}
+
+function openTinEye(imageUrl) {
+    window.open(`https://tineye.com/search?url=${encodeURIComponent(imageUrl)}`, '_blank');
+}
+
+function filterByType(type) {
+    currentFilter = type;
+    document.querySelectorAll('.filter-badge').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.opacity = '0.6';
+    });
+    let map = {
+        all: '.filter-badge.all', html: '.filter-badge.html', css: '.filter-badge.css',
+        external: '.filter-badge.external', icons: '.filter-badge.icons', logos: '.filter-badge.logos',
+        homepage: '.filter-badge.homepage', similar: '.filter-badge.similar', stock: '.filter-badge.stock'
+    };
+    if(map[type]) {
+        let btn = document.querySelector(map[type]);
+        if(btn) {
+            btn.classList.add('active');
+            btn.style.opacity = '1';
+        }
+    }
+    displayImagesOptimized();
+}
+
+function toggleSortOrder() {
+    sortOrder = sortOrder === 'default' ? 'numbersLast' : 'default';
+    document.getElementById('sortBtn').innerHTML = sortOrder === 'default' ? '📁 Sort: Numbers Last' : '📁 Sort: Default';
+    displayImagesOptimized();
+}
+
+function extractNumber(fn) {
+    let m = fn.match(/(\d+)/);
+    return m ? parseInt(m[0]) : null;
+}
+
+function sortImages(imgs) {
+    if(sortOrder === 'numbersLast') {
+        return [...imgs].sort((a, b) => {
+            let na = a.split('/').pop().split('?')[0].toLowerCase();
+            let nb = b.split('/').pop().split('?')[0].toLowerCase();
+            let numa = extractNumber(na), numb = extractNumber(nb);
+            if(numa !== null && numb !== null) return numa - numb;
+            if(numa !== null) return 1;
+            if(numb !== null) return -1;
+            return na.localeCompare(nb);
+        });
+    }
+    return [...imgs];
+}
+
+function groupImagesForDisplay(images) {
+    if(currentFilter !== 'similar') return images.map(img => ({ type: 'image', url: img }));
+    let grouped = [], processed = new Set();
+    let sorted = Array.from(similarGroups.entries()).sort((a, b) => b[1].size - a[1].size);
+    for(let [gid, urls] of sorted) {
+        let arr = Array.from(urls);
+        let grpImgs = images.filter(img => arr.includes(img));
+        if(grpImgs.length > 1) {
+            grouped.push({ type: 'group-header', groupId: gid, count: grpImgs.length });
+            for(let img of grpImgs.sort()) {
+                grouped.push({ type: 'image', url: img });
+                processed.add(img);
+            }
+        }
+    }
+    for(let img of images) if(!processed.has(img)) grouped.push({ type: 'image', url: img });
+    return grouped;
+}
+
+function getPriorityTags(url) {
+    let tags = [];
+    if(homepageImagesSet.has(url)) tags.push('<span class="tag tag-homepage">🏠 Homepage</span>');
+    if(htmlImagesSet.has(url) && !bothImagesSet.has(url)) tags.push('<span class="tag tag-html">🖼️ HTML</span>');
+    if(cssImagesSet.has(url) && !bothImagesSet.has(url)) tags.push('<span class="tag tag-css">🎨 CSS</span>');
+    if(externalImagesSet.has(url)) tags.push('<span class="tag tag-external">🌐 External</span>');
+    if(iconImagesSet.has(url)) tags.push('<span class="tag tag-icon">🔘 Icon/UI</span>');
+    if(logoImagesSet.has(url)) tags.push('<span class="tag tag-logo">🏷️ Logo</span>');
+    if(stockImagesSet.has(url)) tags.push('<span class="tag tag-stock">🛒 Stock Image</span>');
+    if(bothImagesSet.has(url)) tags.push('<span class="tag tag-duplicate">🔄 Both</span>');
+    let gid = imageToGroup.get(url);
+    if(gid !== undefined) {
+        let sz = similarGroups.get(gid).size;
+        tags.push(`<span class="tag tag-similar">🔄 Similar (${sz})</span>`);
+    }
+    return tags;
+}
+
+// ============ POPUP FUNCTIONS ==========
+function updatePopupImageList() {
+    // Only include images that are NOT failed placeholders
+    let imgs = Array.from(document.querySelectorAll('.image-card img'))
+        .filter(img => !img.src.includes('data:image/svg+xml'))
+        .map(i => i.src);
+    currentPopupImages = imgs;
+    if(currentPopupImages.length === 0) closePopup();
+    else {
+        if(currentPopupIndex >= currentPopupImages.length) currentPopupIndex = currentPopupImages.length - 1;
+        if(currentPopupIndex < 0) currentPopupIndex = 0;
+    }
+}
+
+function openPopup(url) {
+    updatePopupImageList();
+    let idx = currentPopupImages.indexOf(url);
+    if(idx !== -1) currentPopupIndex = idx;
+    else if(currentPopupImages.length) currentPopupIndex = 0;
+    else return;
+    
+    const popupImg = document.getElementById('popupImage');
+    const popupCounter = document.getElementById('popupCounter');
+    const popupAltList = document.getElementById('popupAltList');
+    const popupAltCount = document.getElementById('popupAltCount');
+    
+    // Store the actual URL
+    popupImg.setAttribute('data-original-url', currentPopupImages[currentPopupIndex]);
+    
+    // Reset image size
+    popupImg.style.maxWidth = '100%';
+    popupImg.style.maxHeight = '60vh';
+    popupImg.style.width = 'auto';
+    popupImg.style.height = 'auto';
+    
+    // Display Alt Text Information
+    const currentUrl = currentPopupImages[currentPopupIndex];
+    const altData = imageAltMap.get(currentUrl);
+    console.log('Alt Data for', currentUrl, altData);
+    
+    if (altData && altData.size > 0) {
+        let altHtml = '';
+        let pageIndex = 1;
+        
+        for (let [pageUrl, altText] of altData) {
+            let displayUrl = pageUrl;
+            let safeAltText = altText.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+            
+            // Determine which icons to show
+            let headerIconsHtml = '';
+            let textIconsHtml = '';
+            const isHtml = htmlImagesSet.has(currentUrl);
+            const isCss = cssImagesSet.has(currentUrl);
+            
+            // Icons in header (for the page type)
+            if (isHtml) {
+                headerIconsHtml += '<span class="alt-icon-html">🖼️ HTML</span>';
+            }
+            if (isCss) {
+                headerIconsHtml += '<span class="alt-icon-css">🎨 CSS</span>';
+            }
+            
+            altHtml += `<div class="alt-item">
+                <div class="alt-item-header">
+                    <span class="alt-number">${pageIndex}.</span>
+                    <a href="${pageUrl}" target="_blank" class="alt-page-link" title="${pageUrl}">${displayUrl}</a>
+                    <div class="alt-icons">${headerIconsHtml}</div>
+                </div>
+                <div class="alt-text-wrapper">
+                    <div class="alt-text">📝 Alt: "${safeAltText || '(no alt text)'}"</div>
+                </div>
+            </div>`;
+            pageIndex++;
+        }
+        popupAltList.innerHTML = altHtml;
+        popupAltCount.textContent = `(${altData.size} page${altData.size !== 1 ? 's' : ''})`;
+    } else {
+        popupAltList.innerHTML = '<div class="alt-item" style="color: #999;">ℹ️ No alt text information available for this image</div>';
+        popupAltCount.textContent = '(0 pages)';
+    }
+    
+    // Clear previous image and show loading
+    popupImg.src = '';
+    popupImg.alt = 'Loading...';
+    
+    const testImg = new Image();
+    testImg.onload = () => {
+        if (testImg.width > window.innerWidth || testImg.height > window.innerHeight * 0.6) {
+            popupImg.style.maxHeight = '50vh';
+        }
+        popupImg.src = currentPopupImages[currentPopupIndex];
+        popupImg.alt = '';
+        popupCounter.textContent = `${currentPopupIndex+1} / ${currentPopupImages.length}`;
+        document.getElementById('popup').style.display = 'flex';
+    };
+    
+    testImg.onerror = () => {
+        popupImg.alt = 'Failed to load image';
+        popupImg.src = '';
+        popupCounter.textContent = `${currentPopupIndex+1} / ${currentPopupImages.length} (Failed)`;
+        document.getElementById('popup').style.display = 'flex';
+        showToast(`❌ Image failed to load`, 'error');
+    };
+    
+    testImg.src = currentPopupImages[currentPopupIndex];
+}
+
+function nextImage() {
+    if(!currentPopupImages.length) { closePopup(); return; }
+    currentPopupIndex = (currentPopupIndex + 1) % currentPopupImages.length;
+    
+    const popupImg = document.getElementById('popupImage');
+    const popupCounter = document.getElementById('popupCounter');
+    const popupAltList = document.getElementById('popupAltList');
+    const popupAltCount = document.getElementById('popupAltCount');
+    
+    const url = currentPopupImages[currentPopupIndex];
+    popupImg.setAttribute('data-original-url', url);
+    
+    // Update alt text display and icons
+    const altData = imageAltMap.get(url);
+    if (altData && altData.size > 0) {
+        let altHtml = '';
+        let pageIndex = 1;
+        
+        for (let [pageUrl, altText] of altData) {
+            let displayUrl = pageUrl;
+            let safeAltText = altText.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+            
+            // Determine which icons to show for THIS image
+            let headerIconsHtml = '';
+            const isHtml = htmlImagesSet.has(url);  // ← USE CURRENT url
+            const isCss = cssImagesSet.has(url);    // ← USE CURRENT url
+            
+            if (isHtml) {
+                headerIconsHtml += '<span class="alt-icon-html">🖼️ HTML</span>';
+            }
+            if (isCss) {
+                headerIconsHtml += '<span class="alt-icon-css">🎨 CSS</span>';
+            }
+            
+            altHtml += `<div class="alt-item">
+                <div class="alt-item-header">
+                    <span class="alt-number">${pageIndex}.</span>
+                    <a href="${pageUrl}" target="_blank" class="alt-page-link" title="${pageUrl}">${displayUrl}</a>
+                    <div class="alt-icons">${headerIconsHtml}</div>
+                </div>
+                <div class="alt-text-wrapper">
+                    <div class="alt-text">📝 Alt: "${safeAltText || '(no alt text)'}"</div>
+                </div>
+            </div>`;
+            pageIndex++;
+        }
+        popupAltList.innerHTML = altHtml;
+        popupAltCount.textContent = `(${altData.size} page${altData.size !== 1 ? 's' : ''})`;
+    } else {
+        popupAltList.innerHTML = '<div class="alt-item" style="color: #999;">ℹ️ No alt text information available for this image</div>';
+        popupAltCount.textContent = '(0 pages)';
+    }
+    
+    popupImg.src = '';
+    popupImg.alt = 'Loading...';
+    
+    const testImg = new Image();
+    testImg.onload = () => {
+        popupImg.src = url;
+        popupImg.alt = '';
+        popupCounter.textContent = `${currentPopupIndex+1} / ${currentPopupImages.length}`;
+    };
+    testImg.onerror = () => {
+        popupImg.alt = 'Failed to load image';
+        popupImg.src = '';
+        popupCounter.textContent = `${currentPopupIndex+1} / ${currentPopupImages.length} (Failed)`;
+        showToast(`❌ Image failed to load`, 'error');
+    };
+    testImg.src = url;
+}
+
+function prevImage() {
+    if(!currentPopupImages.length) { closePopup(); return; }
+    currentPopupIndex = (currentPopupIndex - 1 + currentPopupImages.length) % currentPopupImages.length;
+    
+    const popupImg = document.getElementById('popupImage');
+    const popupCounter = document.getElementById('popupCounter');
+    const popupAltList = document.getElementById('popupAltList');
+    const popupAltCount = document.getElementById('popupAltCount');
+    
+    const url = currentPopupImages[currentPopupIndex];
+    popupImg.setAttribute('data-original-url', url);
+    
+    // Update alt text display and icons
+    const altData = imageAltMap.get(url);
+    if (altData && altData.size > 0) {
+        let altHtml = '';
+        let pageIndex = 1;
+        
+        for (let [pageUrl, altText] of altData) {
+            let displayUrl = pageUrl;
+            let safeAltText = altText.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+            
+            // Determine which icons to show for THIS image
+            let headerIconsHtml = '';
+            const isHtml = htmlImagesSet.has(url);  // ← USE CURRENT url
+            const isCss = cssImagesSet.has(url);    // ← USE CURRENT url
+            
+            if (isHtml) {
+                headerIconsHtml += '<span class="alt-icon-html">🖼️ HTML</span>';
+            }
+            if (isCss) {
+                headerIconsHtml += '<span class="alt-icon-css">🎨 CSS</span>';
+            }
+            
+            altHtml += `<div class="alt-item">
+                <div class="alt-item-header">
+                    <span class="alt-number">${pageIndex}.</span>
+                    <a href="${pageUrl}" target="_blank" class="alt-page-link" title="${pageUrl}">${displayUrl}</a>
+                    <div class="alt-icons">${headerIconsHtml}</div>
+                </div>
+                <div class="alt-text-wrapper">
+                    <div class="alt-text">📝 Alt: "${safeAltText || '(no alt text)'}"</div>
+                </div>
+            </div>`;
+            pageIndex++;
+        }
+        popupAltList.innerHTML = altHtml;
+        popupAltCount.textContent = `(${altData.size} page${altData.size !== 1 ? 's' : ''})`;
+    } else {
+        popupAltList.innerHTML = '<div class="alt-item" style="color: #999;">ℹ️ No alt text information available for this image</div>';
+        popupAltCount.textContent = '(0 pages)';
+    }
+    
+    popupImg.src = '';
+    popupImg.alt = 'Loading...';
+    
+    const testImg = new Image();
+    testImg.onload = () => {
+        popupImg.src = url;
+        popupImg.alt = '';
+        popupCounter.textContent = `${currentPopupIndex+1} / ${currentPopupImages.length}`;
+    };
+    testImg.onerror = () => {
+        popupImg.alt = 'Failed to load image';
+        popupImg.src = '';
+        popupCounter.textContent = `${currentPopupIndex+1} / ${currentPopupImages.length} (Failed)`;
+        showToast(`❌ Image failed to load`, 'error');
+    };
+    testImg.src = url;
+}
+
+function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+    currentPopupImages = [];
+    currentPopupIndex = 0;
+}
+
+function copyCurrentPopupUrl() {
+    // Get the original URL, not the placeholder
+    let url = document.getElementById('popupImage').getAttribute('data-original-url');
+    if (!url) {
+        url = document.getElementById('popupImage').src;
+    }
+    if (url && !url.includes('data:image/svg+xml')) {
+        copyImageUrl(url);
+    } else {
+        showToast('❌ Cannot copy failed image URL', 'error');
+    }
+}
+
+function deleteCurrentPopupImage() {
+    let url = document.getElementById('popupImage').getAttribute('data-original-url');
+    if (!url) {
+        url = document.getElementById('popupImage').src;
+    }
+    if (url && !url.includes('data:image/svg+xml')) {
+        deleteImage(url);
+        setTimeout(() => {
+            updatePopupImageList();
+            if(currentPopupImages.length) {
+                if(currentPopupIndex >= currentPopupImages.length) currentPopupIndex = currentPopupImages.length - 1;
+                if(currentPopupIndex < 0) currentPopupIndex = 0;
+                if (currentPopupImages[currentPopupIndex]) {
+                    document.getElementById('popupImage').setAttribute('data-original-url', currentPopupImages[currentPopupIndex]);
+                    document.getElementById('popupImage').src = currentPopupImages[currentPopupIndex];
+                    document.getElementById('popupCounter').textContent = `${currentPopupIndex+1} / ${currentPopupImages.length}`;
+                }
+            } else closePopup();
+        }, 100);
+    } else {
+        showToast('❌ Cannot delete failed image', 'error');
+    }
+}
+
+// ============ DETAILS POPUP FUNCTIONS ==========
+function showImageDetails(url) {
+    let sources = imageSourceMap.get(url) || [];
+    let gid = imageToGroup.get(url);
+    let tags = [];
+    if(htmlImagesSet.has(url) && !bothImagesSet.has(url)) tags.push('🖼️ HTML');
+    if(cssImagesSet.has(url) && !bothImagesSet.has(url)) tags.push('🎨 CSS');
+    if(bothImagesSet.has(url)) tags.push('🔄 Both (HTML+CSS)');
+    if(externalImagesSet.has(url)) tags.push('🌐 External');
+    if(iconImagesSet.has(url)) tags.push('🔘 Icon/UI');
+    if(logoImagesSet.has(url)) tags.push('🏷️ Logo/Brand');
+    if(homepageImagesSet.has(url)) tags.push('🏠 Homepage');
+    if(stockImagesSet.has(url)) tags.push('🛒 Stock Image');
+    if(gid !== undefined) tags.push(`🔄 Similar (${similarGroups.get(gid).size} images)`);
+    
+    document.getElementById('detailsImage').src = url;
+    document.getElementById('detailsUrl').innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+    document.getElementById('detailsType').innerHTML = tags.join(' | ') || 'Standard Image';
+    document.getElementById('pagesCountSpan').textContent = sources.length;
+    
+    // PAGE NUMBERS IN DETAILS POPUP
+    let pagesDiv = document.getElementById('detailsPages');
+    pagesDiv.innerHTML = sources.map((s, idx) => `<div class="page-item-detail"><span class="page-number">${idx + 1}</span> <a href="${s}" target="_blank">${s}</a></div>`).join('');
+    document.getElementById('detailsPopup').style.display = 'flex';
+}
+
+function closeDetailsPopup() { document.getElementById('detailsPopup').style.display = 'none'; }
+
+function filterImages() { displayImagesOptimized(); }
+function clearSearch() { document.getElementById('filterInput').value = ''; filterImages(); showToast('🔍 Cleared'); }
+
+function updateFilterVisibility() {
+    let htmlCnt = Array.from(uniqueImages).filter(u => htmlImagesSet.has(u) && !bothImagesSet.has(u)).length;
+    let cssCnt = Array.from(uniqueImages).filter(u => cssImagesSet.has(u) && !bothImagesSet.has(u)).length;
+    let extCnt = externalImagesSet.size;
+    let iconCnt = Array.from(uniqueImages).filter(u => iconImagesSet.has(u)).length;
+    let logoCnt = Array.from(uniqueImages).filter(u => logoImagesSet.has(u)).length;
+    let homeCnt = homepageImagesSet.size;
+    let similarCnt = Array.from(uniqueImages).filter(u => imageToGroup.has(u)).length;
+    let stockCnt = stockImagesSet.size;
+    
+    let filters = [
+        { name: 'html', count: htmlCnt, label: '🖼️ HTML' },
+        { name: 'css', count: cssCnt, label: '🎨 CSS' },
+        { name: 'external', count: extCnt, label: '🌐 External' },
+        { name: 'icons', count: iconCnt, label: '🔘 Icons' },
+        { name: 'logos', count: logoCnt, label: '🏷️ Logos' },
+        { name: 'homepage', count: homeCnt, label: '🏠 Homepage' },
+        { name: 'similar', count: similarCnt, label: '🔄 Similar' },
+        { name: 'stock', count: stockCnt, label: '🛒 Stock' }
+    ];
+    
+    for(let f of filters) {
+        let btn = document.querySelector(`.filter-badge.${f.name}`);
+        if(btn) {
+            if(f.count === 0) {
+                btn.classList.add('hidden');
+            } else {
+                btn.classList.remove('hidden');
+                btn.innerHTML = `${f.label} (${f.count})`;
+            }
+            
+            let delBtn = btn.querySelector('.filter-delete');
+            if(!delBtn && f.count > 0) {
+                delBtn = document.createElement('button');
+                delBtn.className = 'filter-delete';
+                delBtn.innerHTML = '✕';
+                delBtn.title = `Delete all ${f.name} images`;
+                delBtn.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    deleteByFilter(f.name); 
+                };
+                btn.appendChild(delBtn);
+            }
+        }
+    }
+    
+    let allBtn = document.querySelector('.filter-badge.all');
+    if(allBtn) {
+        if(uniqueImages.size === 0) {
+            allBtn.classList.add('hidden');
+        } else {
+            allBtn.classList.remove('hidden');
+            allBtn.innerHTML = `📊 All (${uniqueImages.size})`;
+        }
+    }
+}
+
+function deleteByFilter(ftype) {
+    let toDel = [];
+    if(ftype === 'html') toDel = Array.from(uniqueImages).filter(u => htmlImagesSet.has(u) && !bothImagesSet.has(u));
+    else if(ftype === 'css') toDel = Array.from(uniqueImages).filter(u => cssImagesSet.has(u) && !bothImagesSet.has(u));
+    else if(ftype === 'external') toDel = Array.from(uniqueImages).filter(u => externalImagesSet.has(u));
+    else if(ftype === 'icons') toDel = Array.from(uniqueImages).filter(u => iconImagesSet.has(u));
+    else if(ftype === 'logos') toDel = Array.from(uniqueImages).filter(u => logoImagesSet.has(u));
+    else if(ftype === 'homepage') toDel = Array.from(uniqueImages).filter(u => homepageImagesSet.has(u));
+    else if(ftype === 'similar') toDel = Array.from(uniqueImages).filter(u => imageToGroup.has(u));
+    else if(ftype === 'stock') toDel = Array.from(uniqueImages).filter(u => stockImagesSet.has(u));
+    
+    if(!toDel.length) { showToast(`No ${ftype} images to delete`, 'warning'); return; }
+    
+    saveStateToUndo();
+    
+    let deletedUniqueCount = toDel.length;
+    let deletedOccurrences = 0;
+    
+    for(let url of toDel) {
+        let occurrencesForThisImage = imageSourceMap.get(url)?.length || 0;
+        deletedOccurrences += occurrencesForThisImage;
+        
+        uniqueImages.delete(url);
+        selectedImages.delete(url);
+        let gid = imageToGroup.get(url);
+        if(gid !== undefined) {
+            let grp = similarGroups.get(gid);
+            if(grp) {
+                grp.delete(url);
+                if(grp.size <= 1) {
+                    similarGroups.delete(gid);
+                    for(let rem of grp) imageToGroup.delete(rem);
+                }
+            }
+            imageToGroup.delete(url);
+        }
+        
+        cssImagesSet.delete(url);
+        htmlImagesSet.delete(url);
+        bothImagesSet.delete(url);
+        externalImagesSet.delete(url);
+        iconImagesSet.delete(url);
+        logoImagesSet.delete(url);
+        homepageImagesSet.delete(url);
+        stockImagesSet.delete(url);
+        imageSourceMap.delete(url);
+    }
+    
+    // DO NOT change totalOccurrencesCount - keep original value
+    trashedCount += deletedUniqueCount;
+    
+    displayImagesOptimized();
+    updateStats();
+    updateFilterVisibility();
+    
+    let order = ['all', 'html', 'css', 'external', 'icons', 'logos', 'homepage', 'similar', 'stock'];
+    let idx = order.indexOf(currentFilter);
+    for(let i = idx + 1; i < order.length; i++) {
+        let btn = document.querySelector(`.filter-badge.${order[i]}`);
+        if(btn && !btn.classList.contains('hidden')) {
+            filterByType(order[i]);
+            break;
+        }
+    }
+    showToast(`🗑️ Deleted ${deletedUniqueCount} ${ftype} unique images (${deletedOccurrences} occurrences removed, Total trashed: ${trashedCount})`);
+}
+
+function switchMode(mode) {
+    // Save current data before switching
+    if(currentMode === 'crawler') {
+        crawlerData = {
+            detectedPages: [...detectedPages], detectedArticles: [...detectedArticles],
+            externalImagesList: [...externalImagesList], allImages: [...allImages],
+            uniqueImages: new Set(uniqueImages), selectedImages: new Set(selectedImages),
+            cssImagesSet: new Set(cssImagesSet), htmlImagesSet: new Set(htmlImagesSet),
+            bothImagesSet: new Set(bothImagesSet), externalImagesSet: new Set(externalImagesSet),
+            iconImagesSet: new Set(iconImagesSet), logoImagesSet: new Set(logoImagesSet),
+            homepageImagesSet: new Set(homepageImagesSet), stockImagesSet: new Set(stockImagesSet),
+            imageSourceMap: new Map(imageSourceMap),
+            similarGroups: new Map(Array.from(similarGroups.entries()).map(([k, v]) => [k, new Set(v)])),
+            imageToGroup: new Map(imageToGroup),
+            homepageUrl, totalOccurrencesCount, trashedCount, duplicatesRemoved, originalTotalOccurrences
+        };
+    } else {
+        directData = {
+            detectedPages: [...detectedPages], detectedArticles: [...detectedArticles],
+            externalImagesList: [...externalImagesList], allImages: [...allImages],
+            uniqueImages: new Set(uniqueImages), selectedImages: new Set(selectedImages),
+            cssImagesSet: new Set(cssImagesSet), htmlImagesSet: new Set(htmlImagesSet),
+            bothImagesSet: new Set(bothImagesSet), externalImagesSet: new Set(externalImagesSet),
+            iconImagesSet: new Set(iconImagesSet), logoImagesSet: new Set(logoImagesSet),
+            homepageImagesSet: new Set(homepageImagesSet), stockImagesSet: new Set(stockImagesSet),
+            imageSourceMap: new Map(imageSourceMap),
+            similarGroups: new Map(Array.from(similarGroups.entries()).map(([k, v]) => [k, new Set(v)])),
+            imageToGroup: new Map(imageToGroup),
+            homepageUrl, totalOccurrencesCount, trashedCount, duplicatesRemoved, originalTotalOccurrences
+        };
+    }
+    
+    currentMode = mode;
+    let newData = (mode === 'crawler') ? crawlerData : directData;
+    
+    detectedPages = [...newData.detectedPages];
+    detectedArticles = [...newData.detectedArticles];
+    externalImagesList = [...newData.externalImagesList];
+    allImages = [...newData.allImages];
+    uniqueImages = new Set(newData.uniqueImages);
+    selectedImages = new Set(newData.selectedImages);
+    cssImagesSet = new Set(newData.cssImagesSet);
+    htmlImagesSet = new Set(newData.htmlImagesSet);
+    bothImagesSet = new Set(newData.bothImagesSet);
+    externalImagesSet = new Set(newData.externalImagesSet);
+    iconImagesSet = new Set(newData.iconImagesSet);
+    logoImagesSet = new Set(newData.logoImagesSet);
+    homepageImagesSet = new Set(newData.homepageImagesSet);
+    stockImagesSet = new Set(newData.stockImagesSet);
+    imageSourceMap = new Map(newData.imageSourceMap);
+    homepageUrl = newData.homepageUrl;
+    totalOccurrencesCount = newData.totalOccurrencesCount;
+    trashedCount = newData.trashedCount;
+    duplicatesRemoved = newData.duplicatesRemoved || 0;
+    originalTotalOccurrences = newData.originalTotalOccurrences || totalOccurrencesCount;
+    
+    similarGroups.clear();
+    imageToGroup.clear();
+    for(let [id, urls] of newData.similarGroups) {
+        similarGroups.set(id, new Set(urls));
+    }
+    for(let [url, id] of newData.imageToGroup) {
+        imageToGroup.set(url, id);
+    }
+    
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.mode-panel').forEach(panel => panel.classList.remove('active'));
+    
+    if(mode === 'crawler') {
+        document.querySelector('.mode-btn:first-child').classList.add('active');
+        document.getElementById('crawlerMode').classList.add('active');
+    } else {
+        document.querySelector('.mode-btn:last-child').classList.add('active');
+        document.getElementById('directMode').classList.add('active');
+        // If direct mode has no data, ensure stats show zeros
+        if (uniqueImages.size === 0) {
+            totalOccurrencesCount = 0;
+            originalTotalOccurrences = 0;
+            trashedCount = 0;
+            duplicatesRemoved = 0;
+        }
+    }
+    
+    updateStats();
+    displayDetectedPages();
+    displayDetectedArticles();
+    displayExternalImages();
+    displayImagesOptimized();
+    updateFilterVisibility();
+}
+
+function clearCrawlerData() {
+    saveStateToUndo();
+    
+    if(currentMode !== 'crawler') switchMode('crawler');
+    
+    // Reset ALL data structures
+    crawlerData = {
+        detectedPages: [], detectedArticles: [], externalImagesList: [],
+        allImages: [], uniqueImages: new Set(), selectedImages: new Set(),
+        cssImagesSet: new Set(), htmlImagesSet: new Set(), bothImagesSet: new Set(),
+        externalImagesSet: new Set(), iconImagesSet: new Set(), logoImagesSet: new Set(),
+        homepageImagesSet: new Set(), stockImagesSet: new Set(),
+        imageSourceMap: new Map(), similarGroups: new Map(), imageToGroup: new Map(),
+        imageAltMap: new Map(),
+        homepageUrl: '', totalOccurrencesCount: 0, trashedCount: 0, duplicatesRemoved: 0, originalTotalOccurrences: 0
+    };
+    
+    detectedPages = [];
+    detectedArticles = [];
+    externalImagesList = [];
+    allImages = [];
+    uniqueImages.clear();
+    selectedImages.clear();
+    cssImagesSet.clear();
+    htmlImagesSet.clear();
+    bothImagesSet.clear();
+    externalImagesSet.clear();
+    iconImagesSet.clear();
+    logoImagesSet.clear();
+    homepageImagesSet.clear();
+    stockImagesSet.clear();
+    imageSourceMap.clear();
+    similarGroups.clear();
+    imageToGroup.clear();
+    imageAltMap.clear();
+    homepageUrl = '';
+    totalOccurrencesCount = 0;
+    trashedCount = 0;
+    duplicatesRemoved = 0;
+    originalTotalOccurrences = 0;
+    
+    document.getElementById('consoleOutput').value = '';
+    updateStats();
+    displayDetectedPages();
+    displayDetectedArticles();
+    displayExternalImages();
+    displayImagesOptimized();
+    updateFilterVisibility();
+    showToast('✅ Cleared');
+}
+
+function clearDirectData() {
+    saveStateToUndo();
+    
+    if(currentMode !== 'direct') switchMode('direct');
+    directData = {
+        detectedPages: [], detectedArticles: [], externalImagesList: [],
+        allImages: [], uniqueImages: new Set(), selectedImages: new Set(),
+        cssImagesSet: new Set(), htmlImagesSet: new Set(), bothImagesSet: new Set(),
+        externalImagesSet: new Set(), iconImagesSet: new Set(), logoImagesSet: new Set(),
+        homepageImagesSet: new Set(), stockImagesSet: new Set(),
+        imageSourceMap: new Map(), similarGroups: new Map(), imageToGroup: new Map(),
+        homepageUrl: '', totalOccurrencesCount: 0, trashedCount: 0, duplicatesRemoved: 0, originalTotalOccurrences: 0
+    };
+    detectedPages = [];
+    detectedArticles = [];
+    externalImagesList = [];
+    allImages = [];
+    uniqueImages.clear();
+    selectedImages.clear();
+    cssImagesSet.clear();
+    htmlImagesSet.clear();
+    bothImagesSet.clear();
+    externalImagesSet.clear();
+    iconImagesSet.clear();
+    logoImagesSet.clear();
+    homepageImagesSet.clear();
+    stockImagesSet.clear();
+    imageSourceMap.clear();
+    similarGroups.clear();
+    imageToGroup.clear();
+    homepageUrl = '';
+    totalOccurrencesCount = 0;
+    trashedCount = 0;
+    duplicatesRemoved = 0;
+    originalTotalOccurrences = 0;
+    document.getElementById('urlsTextarea').value = '';
+    updateStats();
+    displayDetectedPages();
+    displayDetectedArticles();
+    displayExternalImages();
+    displayImagesOptimized();
+    updateFilterVisibility();
+    showToast('✅ Cleared');
+}
+
+function loadUrlsFromTextarea() {
+    if(currentMode !== 'direct') switchMode('direct');
+    const textarea = document.getElementById('urlsTextarea');
+    const urls = textarea.value.split(/\r?\n/).map(u => u.trim()).filter(u => u && (u.startsWith('http://') || u.startsWith('https://')));
+    if(urls.length === 0) { showToast('No URLs', 'warning'); return; }
+    
+    saveStateToUndo();
+    let addedCount = 0;
+    for(let url of urls) {
+        if(!uniqueImages.has(url)) {
+            uniqueImages.add(url);
+            allImages.push(url);
+            imageSourceMap.set(url, ['Manual Input']);
+            totalOccurrencesCount++;
+            addedCount++;
+            if(isIconImage(url)) iconImagesSet.add(url);
+            if(isLogoImage(url)) logoImagesSet.add(url);
+            if(isStockImage(url)) stockImagesSet.add(url);
+        }
+    }
+    groupSimilarImages(Array.from(uniqueImages));
+    updateStats();
+    displayImagesOptimized();
+    updateFilterVisibility();
+    showToast(`✅ Added ${addedCount}`);
+}
+
+function displayDetectedPages() {
+    let pageDiv = document.getElementById('pageList');
+    if(detectedPages.length > 0) {
+        // Show ALL pages, no slice limit
+        pageDiv.innerHTML = detectedPages.map((u,i) => `<div class="page-item"><a href="${u}" target="_blank">${u}</a><span class="page-count-badge">${i+1}</span></div>`).join('');
+    } else {
+        pageDiv.innerHTML = '<div style="padding: 10px; text-align: center; color: #999;">No pages found</div>';
+    }
+}
+
+function displayDetectedArticles() {
+    let artDiv = document.getElementById('articleList');
+    if(detectedArticles.length > 0) {
+        // Show ALL articles, no slice limit
+        artDiv.innerHTML = detectedArticles.map((u,i) => `<div class="article-item"><a href="${u}" target="_blank">${u}</a><span class="article-count-badge">${i+1}</span></div>`).join('');
+    } else {
+        artDiv.innerHTML = '<div style="padding: 10px; text-align: center; color: #999;">No articles found</div>';
+    }
+}
+
+function displayExternalImages() {
+    let extDiv = document.getElementById('externalList');
+    extDiv.innerHTML = '';
+    let sortedExt = Array.from(externalImagesSet).slice(0,30);
+    for(let url of sortedExt) {
+        let div = document.createElement('div');
+        div.className = 'external-item';
+        div.innerHTML = `<div class="external-item-content"><img class="external-thumb" src="${url}" onerror="this.style.display='none'"><a href="${url}" target="_blank">${url.substring(0,70)}${url.length>70?'...':''}</a></div>`;
+        div.querySelector('.external-thumb')?.addEventListener('click', (e) => { e.stopPropagation(); openPopup(url); });
+        extDiv.appendChild(div);
+    }
+}
+
+function showContentTab(tab) {
+    currentContentTab = tab;
+    document.getElementById('pagesListContainer').style.display = tab === 'pages' ? 'block' : 'none';
+    document.getElementById('articlesListContainer').style.display = tab === 'articles' ? 'block' : 'none';
+    let btns = document.querySelectorAll('.tab-btn');
+    btns.forEach(b => b.classList.remove('active'));
+    if(event?.target) event.target.classList.add('active');
+}
+
+function getDomainWithWww() {
+    try {
+        if(detectedPages.length > 0) {
+            let url = detectedPages[0];
+            if(!url.startsWith('http')) url = 'http://' + url;
+            return new URL(url).hostname;
+        }
+        if(homepageUrl) return new URL(homepageUrl).hostname;
+        return 'unknown.com';
+    } catch(e) { return 'unknown.com'; }
+}
+
+function getFormattedDateTimeCompact() {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `${month}-${day}-${year}~${hours}${minutes}${seconds}`;
+}
+
+function exportData() {
+    const domain = getDomainWithWww();
+    const dateTime = getFormattedDateTimeCompact();
+    const prefix = currentMode === 'crawler' ? 'EWC' : 'EDUs';
+    const filename = `${prefix}-${domain}-${dateTime}.txt`;
+    
+    const exportData = {
+        version: '24.0',
+        mode: currentMode,
+        timestamp: new Date().toISOString(),
+        detectedPages, detectedArticles, externalImagesList, homepageUrl,
+        allImages, uniqueImages: Array.from(uniqueImages),
+        cssImagesSet: Array.from(cssImagesSet), htmlImagesSet: Array.from(htmlImagesSet),
+        bothImagesSet: Array.from(bothImagesSet), externalImagesSet: Array.from(externalImagesSet),
+        iconImagesSet: Array.from(iconImagesSet), logoImagesSet: Array.from(logoImagesSet),
+        homepageImagesSet: Array.from(homepageImagesSet), stockImagesSet: Array.from(stockImagesSet),
+        imageSourceMap: Array.from(imageSourceMap.entries()),
+        similarGroups: Array.from(similarGroups.entries()).map(([id, urls]) => [id, Array.from(urls)]),
+        imageToGroup: Array.from(imageToGroup.entries()),
+        imageAltMap: Array.from(imageAltMap.entries()).map(([url, altMap]) => [url, Array.from(altMap.entries())]),
+        selectedImages: Array.from(selectedImages),
+        totalOccurrencesCount, trashedCount,
+        originalTotalOccurrences: originalTotalOccurrences
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`✅ Exported`);
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const content = e.target.result;
+            let data;
+            try {
+                data = JSON.parse(content);
+            } catch(jsonError) {
+                if(currentMode !== 'crawler') switchMode('crawler');
+                document.getElementById('consoleOutput').value = content;
+                parseConsoleOutputOptimized();
+                return;
+            }
+            
+            if(data.mode === 'direct' && currentMode !== 'direct') switchMode('direct');
+            else if(data.mode === 'crawler' && currentMode !== 'crawler') switchMode('crawler');
+            
+            detectedPages = data.detectedPages || [];
+            detectedArticles = data.detectedArticles || [];
+            externalImagesList = data.externalImagesList || [];
+            homepageUrl = data.homepageUrl || '';
+            allImages = data.allImages || [];
+            uniqueImages = new Set(data.uniqueImages || []);
+            cssImagesSet = new Set(data.cssImagesSet || []);
+            htmlImagesSet = new Set(data.htmlImagesSet || []);
+            bothImagesSet = new Set(data.bothImagesSet || []);
+            externalImagesSet = new Set(data.externalImagesSet || []);
+            iconImagesSet = new Set(data.iconImagesSet || []);
+            logoImagesSet = new Set(data.logoImagesSet || []);
+            homepageImagesSet = new Set(data.homepageImagesSet || []);
+            stockImagesSet = new Set(data.stockImagesSet || []);
+            imageSourceMap = new Map(data.imageSourceMap || []);
+            selectedImages = new Set(data.selectedImages || []);
+            totalOccurrencesCount = data.totalOccurrencesCount || 0;
+            trashedCount = data.trashedCount || 0;
+            originalTotalOccurrences = data.originalTotalOccurrences || totalOccurrencesCount;
+            
+            similarGroups.clear();
+            imageToGroup.clear();
+            if(data.similarGroups) {
+                for(let [id, urls] of data.similarGroups) {
+                    similarGroups.set(parseInt(id), new Set(urls));
+                }
+            }
+            if(data.imageToGroup) {
+                for(let [url, id] of data.imageToGroup) {
+                    imageToGroup.set(url, parseInt(id));
+                }
+            }
+
+            imageAltMap = new Map();
+            if(data.imageAltMap) {
+                for(let [url, altEntries] of data.imageAltMap) {
+                    imageAltMap.set(url, new Map(altEntries));
+                }
+            }
+            
+            updateStats();
+            displayDetectedPages();
+            displayDetectedArticles();
+            displayExternalImages();
+            displayImagesOptimized();
+            updateFilterVisibility();
+            showToast(`✅ Imported ${uniqueImages.size}`);
+        } catch(err) {
+            showToast('❌ Invalid file format', 'error');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// ============ DISPLAY IMAGES OPTIMIZED ==========
+function displayImagesOptimized() {
+    const container = document.getElementById('imageContainer');
+    container.innerHTML = '';
+    if(uniqueImages.size === 0) {
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><div>👋 No images to display</div></div>';
+        return;
+    }
+    
+    let filtered = [];
+    if(currentFilter === 'all') filtered = Array.from(uniqueImages);
+    else if(currentFilter === 'html') filtered = Array.from(uniqueImages).filter(u => htmlImagesSet.has(u) && !bothImagesSet.has(u));
+    else if(currentFilter === 'css') filtered = Array.from(uniqueImages).filter(u => cssImagesSet.has(u) && !bothImagesSet.has(u));
+    else if(currentFilter === 'external') filtered = Array.from(uniqueImages).filter(u => externalImagesSet.has(u));
+    else if(currentFilter === 'icons') filtered = Array.from(uniqueImages).filter(u => iconImagesSet.has(u));
+    else if(currentFilter === 'logos') filtered = Array.from(uniqueImages).filter(u => logoImagesSet.has(u));
+    else if(currentFilter === 'homepage') filtered = Array.from(uniqueImages).filter(u => homepageImagesSet.has(u));
+    else if(currentFilter === 'similar') filtered = Array.from(uniqueImages).filter(u => imageToGroup.has(u));
+    else if(currentFilter === 'stock') filtered = Array.from(uniqueImages).filter(u => stockImagesSet.has(u));
+    
+    if(currentFilter === 'similar' && filtered.length) {
+        let tmp = [], seen = new Set();
+        for(let u of filtered) {
+            let gid = imageToGroup.get(u);
+            if(gid !== undefined && !seen.has(gid)) {
+                seen.add(gid);
+                let grp = Array.from(similarGroups.get(gid));
+                tmp.push(...grp);
+            }
+        }
+        filtered = tmp;
+    }
+    
+    currentImageList = sortImages(filtered);
+    let search = document.getElementById('filterInput').value.toLowerCase();
+    let rawDisplay = currentImageList;
+    if(search) rawDisplay = currentImageList.filter(u => u.toLowerCase().includes(search) || u.split('/').pop().toLowerCase().includes(search));
+    
+    let grouped = groupImagesForDisplay(rawDisplay);
+    currentDisplayedUrls = grouped.filter(i => i.type === 'image').map(i => i.url);
+    
+    function createImageCard(url, idx) {
+        const tags = getPriorityTags(url);
+        const sources = imageSourceMap.get(url) || [];
+        const pc = sources.length;
+        const card = document.createElement('div');
+        card.className = 'image-card';
+        if(selectedImages.has(url)) card.classList.add('selected');
+        
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cursor = 'pointer';
+        img.onerror = () => {
+            // Keep the same dimensions - don't replace src, just show broken indicator
+            img.style.minHeight = '160px';
+            img.style.minWidth = '100%';
+            img.style.backgroundColor = '#f0f0f0';
+            img.style.display = 'flex';
+            img.style.alignItems = 'center';
+            img.style.justifyContent = 'center';
+            img.alt = 'Failed to load';
+            
+            // Add a broken image icon as text overlay using pseudo-element
+            img.style.position = 'relative';
+            
+            // Create a fallback div
+            const fallbackDiv = document.createElement('div');
+            fallbackDiv.style.position = 'absolute';
+            fallbackDiv.style.top = '0';
+            fallbackDiv.style.left = '0';
+            fallbackDiv.style.width = '100%';
+            fallbackDiv.style.height = '160px';
+            fallbackDiv.style.display = 'flex';
+            fallbackDiv.style.alignItems = 'center';
+            fallbackDiv.style.justifyContent = 'center';
+            fallbackDiv.style.backgroundColor = '#f0f0f0';
+            fallbackDiv.style.color = '#999';
+            fallbackDiv.style.fontSize = '12px';
+            fallbackDiv.innerHTML = '❌ Failed to Load<br><span style="font-size:10px">Click to retry</span>';
+            fallbackDiv.style.cursor = 'pointer';
+            fallbackDiv.onclick = (e) => {
+                e.stopPropagation();
+                // Retry loading
+                img.style.display = 'block';
+                fallbackDiv.remove();
+                img.src = url;
+            };
+            
+            img.parentNode.style.position = 'relative';
+            img.parentNode.appendChild(fallbackDiv);
+            img.style.opacity = '0';
+        };
+        img.onclick = (e) => { 
+            e.stopPropagation(); 
+            openPopup(url); 
+        };
+        
+        const fname = url.split('/').pop().split('?')[0];
+        const info = document.createElement('div');
+        info.className = 'image-info';
+        info.innerHTML = `<div class="image-filename">${fname.substring(0,40)}${fname.length > 40 ? '...' : ''}</div><div class="image-tags">${tags.join('')}</div><div class="image-pages-count">📄 Found on ${pc} page${pc !== 1 ? 's' : ''}</div><label class="image-checkbox"><input type="checkbox" class="checkbox" data-index="${idx}" data-url="${url}" ${selectedImages.has(url) ? 'checked' : ''}><span>Select this image</span></label>`;
+        
+        const btns = document.createElement('div');
+        btns.className = 'image-buttons';
+        
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'icon-btn btn-view';
+        viewBtn.innerHTML = '👁️';
+        viewBtn.title = 'View';
+        viewBtn.onclick = (e) => { e.stopPropagation(); openPopup(url); };
+        
+        const detailBtn = document.createElement('button');
+        detailBtn.className = 'icon-btn btn-details';
+        detailBtn.innerHTML = 'ℹ️';
+        detailBtn.title = 'Details';
+        detailBtn.onclick = (e) => { e.stopPropagation(); showImageDetails(url); };
+        
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'icon-btn btn-copy';
+        copyBtn.innerHTML = '📋';
+        copyBtn.title = 'Copy URL';
+        copyBtn.onclick = (e) => { e.stopPropagation(); copyImageUrl(url); };
+        
+        const delBtn = document.createElement('button');
+        delBtn.className = 'icon-btn btn-delete';
+        delBtn.innerHTML = '🗑️';
+        delBtn.title = 'Delete';
+        delBtn.onclick = (e) => { e.stopPropagation(); deleteImage(url); };
+        
+        const tineyeBtn = document.createElement('button');
+        tineyeBtn.className = 'icon-btn btn-tineye';
+        tineyeBtn.innerHTML = '🔍';
+        tineyeBtn.title = 'Search on TinEye';
+        tineyeBtn.onclick = (e) => { e.stopPropagation(); openTinEye(url); };
+        
+        btns.appendChild(viewBtn);
+        btns.appendChild(detailBtn);
+        btns.appendChild(copyBtn);
+        btns.appendChild(delBtn);
+        btns.appendChild(tineyeBtn);
+        
+        card.appendChild(img);
+        card.appendChild(info);
+        card.appendChild(btns);
+        
+        card.onclick = (e) => { 
+            if(e.target === card || e.target === img) {
+                openPopup(url);
+            }
+        };
+        
+        const chk = info.querySelector('.checkbox');
+        const labelSpan = info.querySelector('.image-checkbox span');
+        
+        const handleChange = (e, clickedIdx) => {
+            e.stopPropagation();
+            const isChecked = chk.checked;
+            if(e.shiftKey && lastCheckedIndex !== null && lastCheckedIndex !== clickedIdx) {
+                const start = Math.min(lastCheckedIndex, clickedIdx);
+                const end = Math.max(lastCheckedIndex, clickedIdx);
+                for(let i = start; i <= end; i++) {
+                    const imgUrl = currentDisplayedUrls[i];
+                    if(isChecked) {
+                        if(!selectedImages.has(imgUrl)) selectedImages.add(imgUrl);
+                    } else {
+                        if(selectedImages.has(imgUrl)) selectedImages.delete(imgUrl);
+                    }
+                }
+                updateStats();
+                displayImagesOptimized();
+                updateFilterVisibility();
+                showToast(`${isChecked ? 'Selected' : 'Deselected'} ${end - start + 1} images`);
+            } else {
+                if(isChecked) selectedImages.add(url);
+                else selectedImages.delete(url);
+                updateStats();
+                card.classList.toggle('selected', isChecked);
+                updateFilterVisibility();
+            }
+            lastCheckedIndex = clickedIdx;
+        };
+        
+        chk.addEventListener('change', (e) => {
+            let ci = parseInt(chk.getAttribute('data-index'));
+            handleChange(e, ci);
+        });
+        labelSpan.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            chk.checked = !chk.checked;
+            let ci = parseInt(chk.getAttribute('data-index'));
+            let fake = { shiftKey: e.shiftKey, stopPropagation: () => {} };
+            handleChange(fake, ci);
+        });
+        
+        return card;
+    }
+    
+    const BATCH_SIZE = 20;
+    let index = 0;
+    
+    function renderBatch() {
+        const fragment = document.createDocumentFragment();
+        let batchEnd = Math.min(index + BATCH_SIZE, grouped.length);
+        
+        for(let i = index; i < batchEnd; i++) {
+            const item = grouped[i];
+            if(item.type === 'group-header') {
+                const header = document.createElement('div');
+                header.className = 'group-separator';
+                header.innerHTML = `📁 Similar Images Group (${item.count} images)`;
+                fragment.appendChild(header);
+            } else {
+                fragment.appendChild(createImageCard(item.url, i));
+            }
+        }
+        
+        container.appendChild(fragment);
+        index = batchEnd;
+        if(index < grouped.length) requestAnimationFrame(renderBatch);
+    }
+    
+    requestAnimationFrame(renderBatch);
+}
+
+// ============ PARSE FUNCTION - IMPROVED VERSION ==========
+async function parseConsoleOutputOptimized() {
+    const parseBtn = document.getElementById('parseBtn');
+    parseBtn.classList.add('btn-loading');
+    parseBtn.disabled = true;
+    parseBtn.textContent = '⏳ Parsing...';
+    
+    const text = document.getElementById('consoleOutput').value;
+    const lines = text.split(/\r?\n/);
+    
+    // Reset ALL data
+    detectedPages = [];
+    detectedArticles = [];
+    externalImagesList = [];
+    allImages = [];
+    uniqueImages.clear();
+    selectedImages.clear();
+    cssImagesSet.clear();
+    htmlImagesSet.clear();
+    bothImagesSet.clear();
+    externalImagesSet.clear();
+    iconImagesSet.clear();
+    logoImagesSet.clear();
+    homepageImagesSet.clear();
+    stockImagesSet.clear();
+    imageSourceMap.clear();
+    similarGroups.clear();
+    imageToGroup.clear();
+    homepageUrl = '';
+    totalOccurrencesCount = 0;
+    trashedCount = 0;
+    
+    // Extract console summary numbers
+    let consoleTotalOccurrences = null;
+    let consoleUniqueImages = null;
+    let consolePagesScanned = 0;
+    let consoleArticlesScanned = 0;
+    
+    for(let line of lines) {
+        let totalMatch = line.match(/📊 Total occurrences:\s*(\d+)/i);
+        if(totalMatch) consoleTotalOccurrences = parseInt(totalMatch[1]);
+        let uniqueMatch = line.match(/🖼️ Total unique images:\s*(\d+)/i);
+        if(uniqueMatch) consoleUniqueImages = parseInt(uniqueMatch[1]);
+        
+        // FIXED: Extract pages and articles from crawler summary
+        let pagesMatch = line.match(/📄 Pages scanned:\s*(\d+)/i);
+        if(pagesMatch) consolePagesScanned = parseInt(pagesMatch[1]);
+        
+        let articlesMatch = line.match(/📝 Articles scanned:\s*(\d+)/i);
+        if(articlesMatch) consoleArticlesScanned = parseInt(articlesMatch[1]);
+    }
+    
+    // ============ PAGE DETECTION - FIXED ============
+    let pageSet = new Set();
+    let articleSet = new Set();
+
+    // FIRST: Find all article URLs from image lines that have (article) marker
+    for(let line of lines) {
+        if(line.includes('(article)') && line.includes('[SOURCE]')) {
+            let sourceMatch = line.match(/\[SOURCE\]\s*(https?:\/\/[^\s]+)/i);
+            if(sourceMatch) {
+                let articleUrl = sourceMatch[1];
+                if(!articleUrl.startsWith('http')) articleUrl = 'https://' + articleUrl;
+                articleSet.add(articleUrl);
+                console.log(`📝 Article found from marker: ${articleUrl}`);
+            }
+        }
+    }
+
+    // SECOND: Get all crawled URLs from Crawling lines
+    for(let line of lines) {
+        if(line.includes('Crawling:') && (line.includes('📄') || line.includes('📝'))) {
+            let urlMatch = line.match(/Crawling:\s*([^\s]+)/i);
+            if(urlMatch) {
+                let pUrl = urlMatch[1];
+                if(!pUrl.startsWith('http')) pUrl = 'https://' + pUrl;
+                
+                // If this URL is already in articleSet, skip adding to pages
+                if(!articleSet.has(pUrl)) {
+                    pageSet.add(pUrl);
+                }
+            }
+        }
+    }
+
+    detectedPages = Array.from(pageSet);
+    detectedArticles = Array.from(articleSet);
+
+    console.log(`✅ Pages: ${detectedPages.length}, Articles: ${detectedArticles.length}, Total: ${detectedPages.length + detectedArticles.length}`);
+
+    if(!homepageUrl && detectedPages.length) {
+        try { 
+            let firstUrl = detectedPages[0];
+            let uo = new URL(firstUrl);
+            homepageUrl = uo.origin + '/';
+        } catch(e) {}
+    }
+    
+    console.log(`📄 Detected ${detectedPages.length} pages, ${detectedArticles.length} articles`);
+    
+    const homeUrlHttps = homepageUrl.replace('http://', 'https://');
+    const homeUrlHttp = homepageUrl.replace('https://', 'http://');
+    const homeOriginHttps = homeUrlHttps.replace(/\/$/, '');
+    const homeOriginHttp = homeUrlHttp.replace(/\/$/, '');
+    
+    let baseDomain = homepageUrl ? getDomain(homepageUrl) : '';
+    
+    // ============ IMAGE PARSING ============
+    let imgPattern = /(https?:\/\/[^\s<>"'\)\]\[]+\.(?:jpg|jpeg|png|gif|webp|bmp|svg|ico|avif|heic)(?:\?[^\s<>"'\)\]\[]*)?)/gi;
+    let srcPattern = /\[SOURCE\]\s*(https?:\/\/[^\s<>"'\)\]]+)/i;
+    let urlPattern = /(https?:\/\/[^\s<>"'\)\]]+)/gi;
+    
+    let imageData = new Map();
+    let totalImageLines = 0;
+    
+    for(let line of lines) {
+        if(!line.includes('🖼️') && !line.includes('🎨') && !line.includes('http')) continue;
+        
+        let srcMatch = line.match(srcPattern);
+        let srcUrl = null;
+        
+        if(srcMatch) {
+            srcUrl = srcMatch[1];
+            if(!srcUrl.startsWith('http')) {
+                srcUrl = 'https://' + srcUrl;
+            }
+        } else {
+            let allUrls = line.match(urlPattern);
+            if(allUrls && allUrls.length > 0) {
+                srcUrl = allUrls[0];
+                if(!srcUrl.startsWith('http')) {
+                    srcUrl = 'https://' + srcUrl;
+                }
+            }
+        }
+        
+        if(!srcUrl) continue;
+        
+        let imgMatches = line.matchAll(imgPattern);
+        let foundInLine = false;
+        
+        for(let imgMatch of imgMatches) {
+            let imgUrl = imgMatch[0];
+            imgUrl = imgUrl.replace(/[.,;:!?)$]+$/, '');
+            imgUrl = decodeURIComponent(imgUrl);
+            
+            let altMatch = line.match(/alt\s*=\s*["']([^"']*)["']/i);
+            let altText = altMatch ? altMatch[1] : '(no alt text)';
+            
+            foundInLine = true;
+            totalImageLines++;
+            
+            if(!imageData.has(imgUrl)) {
+                imageData.set(imgUrl, { 
+                    sources: new Set(), 
+                    isHtml: false, 
+                    isCss: false, 
+                    occurrences: 0,
+                    altTexts: new Map()
+                });
+            }
+            let data = imageData.get(imgUrl);
+            data.sources.add(srcUrl);
+            data.occurrences++;
+            
+            if (!data.altTexts.has(srcUrl)) {
+                data.altTexts.set(srcUrl, altText);
+            }
+            
+            if(line.includes('🎨') || line.includes('[CSS]')) {
+                data.isCss = true;
+            }
+            if(line.includes('🖼️') || line.includes('[HTML]') || (!line.includes('[CSS]') && !line.includes('🎨'))) {
+                data.isHtml = true;
+            }
+        }
+    }
+    
+    console.log(`📊 Found ${imageData.size} unique images from ${totalImageLines} image lines`);
+    
+    // Process image data
+    for(let [url, data] of imageData) {
+        let cleanUrl = url.split('?')[0];
+        
+        uniqueImages.add(cleanUrl);
+        allImages.push(cleanUrl);
+        let sourcesArray = Array.from(data.sources);
+        imageSourceMap.set(cleanUrl, sourcesArray);
+        imageAltMap.set(cleanUrl, data.altTexts);
+        totalOccurrencesCount += data.occurrences;
+        
+        if (baseDomain && !isSameDomain(cleanUrl, homepageUrl) && isValidImageUrl(cleanUrl)) {
+            externalImagesSet.add(cleanUrl);
+            externalImagesList.push(cleanUrl);
+        }
+        
+        if(data.isHtml && data.isCss) {
+            bothImagesSet.add(cleanUrl);
+            htmlImagesSet.add(cleanUrl);
+            cssImagesSet.add(cleanUrl);
+        } else if(data.isHtml) {
+            htmlImagesSet.add(cleanUrl);
+        } else if(data.isCss) {
+            cssImagesSet.add(cleanUrl);
+        }
+        
+        let isHomepageImage = false;
+        for(let src of data.sources) {
+            try {
+                const srcParsed = new URL(src);
+                const srcNormalized = src.replace(/\/$/, '');
+                
+                const matchesHomepage = (
+                    src === homeUrlHttps ||
+                    src === homeUrlHttps.replace(/\/$/, '') ||
+                    src === homeUrlHttp ||
+                    src === homeUrlHttp.replace(/\/$/, '') ||
+                    srcNormalized === homeOriginHttps ||
+                    srcNormalized === homeOriginHttp ||
+                    (srcParsed.origin === homeOriginHttps && (srcParsed.pathname === '/' || srcParsed.pathname === '')) ||
+                    (srcParsed.origin === homeOriginHttp && (srcParsed.pathname === '/' || srcParsed.pathname === ''))
+                );
+                
+                if(matchesHomepage) {
+                    isHomepageImage = true;
+                    break;
+                }
+            } catch(e) {}
+        }
+        
+        if(isHomepageImage) {
+            homepageImagesSet.add(cleanUrl);
+        }
+        
+        if(isIconImage(cleanUrl)) iconImagesSet.add(cleanUrl);
+        if(isLogoImage(cleanUrl)) logoImagesSet.add(cleanUrl);
+        if(isStockImage(cleanUrl)) stockImagesSet.add(cleanUrl);
+    }
+    
+    duplicatesRemoved = totalOccurrencesCount - uniqueImages.size;
+    originalTotalOccurrences = totalOccurrencesCount;
+    
+    groupSimilarImages(Array.from(uniqueImages));
+    
+    // Save to crawler data store
+    crawlerData = {
+        detectedPages: [...detectedPages], detectedArticles: [...detectedArticles],
+        externalImagesList: [...externalImagesList], allImages: [...allImages],
+        uniqueImages: new Set(uniqueImages), selectedImages: new Set(selectedImages),
+        cssImagesSet: new Set(cssImagesSet), htmlImagesSet: new Set(htmlImagesSet),
+        bothImagesSet: new Set(bothImagesSet), externalImagesSet: new Set(externalImagesSet),
+        iconImagesSet: new Set(iconImagesSet), logoImagesSet: new Set(logoImagesSet),
+        homepageImagesSet: new Set(homepageImagesSet), stockImagesSet: new Set(stockImagesSet),
+        imageSourceMap: new Map(imageSourceMap),
+        similarGroups: new Map(Array.from(similarGroups.entries()).map(([k, v]) => [k, new Set(v)])),
+        imageToGroup: new Map(imageToGroup),
+        homepageUrl, totalOccurrencesCount, trashedCount: 0, duplicatesRemoved, originalTotalOccurrences
+    };
+    
+    if(currentMode !== 'crawler') switchMode('crawler');
+    
+    updateStats();
+    displayDetectedPages();
+    displayDetectedArticles();
+    displayExternalImages();
+    await displayImagesOptimized();
+    updateFilterVisibility();
+    
+    showToast(`✅ Parsed: ${totalOccurrencesCount} occurrences, ${uniqueImages.size} unique images`, 'success');
+    
+    parseBtn.classList.remove('btn-loading');
+    parseBtn.disabled = false;
+    parseBtn.textContent = '🔍 Parse Output';
+}
+
+// ============ CRAWLER CODE GENERATION ==========
+function getCrawlerCode() {
+    const includeCss = document.getElementById('includeCssToggle').checked;
+    const batchSize = document.getElementById('batchSize').value;
+    
+    return `(async () => {
+  console.log('🔍 Scanning current page for sitemap links...');
+  const currentOrigin = window.location.origin;
+  
+  const BATCH_SIZE = ${batchSize};
+  const BREATH_DELAY = 500;
+  
+  const sitemapSelectors = [
+    '.sitemap li a', '.sitemap-page li a', '#sitemap li a',
+    '.page-sitemap li a', '.post-sitemap li a', 'ul.sitemap a',
+    '.page_item a', '.page-item a', '.pagenav a',
+    '.menu-item a', '.nav-menu a', '.main-navigation a',
+    '.entry-content li a', '.content ul li a', '.page-content li a',
+    '.wp-block-page-list a', '.wp-block-sitemap-page a',
+    'a[href*="/page/"]', 'a[href*="/p/"]'
+  ];
+  
+  let sitemapLinks = [];
+  for (const selector of sitemapSelectors) {
+    const links = Array.from(document.querySelectorAll(selector)).map(a => a.href);
+    const internalLinks = links.filter(link => 
+      link.startsWith(currentOrigin) && 
+      !link.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i) &&
+      !link.includes('#') &&
+      !link.includes('/wp-content/') &&
+      !link.includes('/wp-includes/')
+    );
+    if (internalLinks.length > 0) {
+      sitemapLinks = internalLinks;
+      console.log(\`   ✅ Found \${internalLinks.length} links using selector: "\${selector}"\`);
+      break;
+    }
+  }
+  
+  if (sitemapLinks.length === 0) {
+    console.log('   ⚠️ No sitemap links found. Using all internal links...');
+    const allLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
+    sitemapLinks = [...new Set(allLinks.filter(link => 
+      link.startsWith(currentOrigin) && 
+      !link.match(/\\.(jpg|jpeg|png|gif|webp|css|js)$/i) &&
+      !link.includes('#') &&
+      !link.includes('/wp-content/')
+    ))];
+    console.log(\`   ✅ Found \${sitemapLinks.length} internal links as fallback\`);
+  }
+
+  const homepageUrl = currentOrigin + '/';
+  if (!sitemapLinks.includes(homepageUrl)) {
+    sitemapLinks.unshift(homepageUrl);
+    console.log(\`   ➕ Manually added homepage: \${homepageUrl}\`);
+  }
+
+  console.log('🔍 Auto-detecting blog page...');
+  const blogUrls = new Set();
+  const articleUrls = new Set();
+  const blogKeywords = ['blog', 'news', 'articles', 'posts', 'category'];
+  const allPageLinks = Array.from(document.querySelectorAll('a[href]')).map(a => a.href);
+  
+  for (const link of allPageLinks) {
+    if (!link.startsWith(currentOrigin)) continue;
+    const lowerLink = link.toLowerCase();
+    for (const keyword of blogKeywords) {
+      if (lowerLink.includes(keyword) && !lowerLink.match(/\\/page\\/\\d+/) && !lowerLink.match(/\\.(jpg|png|gif|webp)$/)) {
+        blogUrls.add(link);
+        console.log(\`   ✅ Found blog page: \${link}\`);
+        break;
+      }
+    }
+  }
+
+  console.log('🔍 Finding individual articles...');
+  for (const blogUrl of blogUrls) {
+    try {
+        const response = await fetch(blogUrl);
+        const html = await response.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        // Find pagination links on this blog page
+        const paginationLinks = findPaginationLinks(doc, currentOrigin);
+        for (const pageLink of paginationLinks) {
+            if (!blogUrls.has(pageLink)) {
+                blogUrls.add(pageLink);
+                console.log(\`   📄 Found pagination: \${pageLink}\`);
+            }
+        }
+
+        // Improved article selectors - more comprehensive
+        const articleSelectors = [
+            'article a',
+            '.post a',
+            '.blog-post a',
+            '.entry-title a',
+            'h2 a',
+            'h3 a',
+            '.read-more a',
+            '.more-link',
+            'a[rel="bookmark"]',
+            '.post-title a',
+            '.entry-header a',
+            'h1.entry-title a',
+            '.blog-list a',
+            '.recent-posts a',
+            '.post-item a',
+            '.blog-item a',
+            '.entry-link a',
+            'a[href*="/blog/"]',
+            'a[href*="/post/"]',
+            'a[href*="/article/"]'
+        ];
+        
+        articleSelectors.forEach(selector => {
+        doc.querySelectorAll(selector).forEach(el => {
+            let href = el.href;
+            if (href && href.startsWith(currentOrigin) && 
+                !href.match(/\\/page\\/\\d+/) && 
+                !href.match(/\\/category\\//) &&
+                !href.match(/\\/tag\\//) &&
+                !href.match(/\\/author\\//) &&
+                !href.includes('#') &&
+                !href.match(/\\.(jpg|jpeg|png|gif|webp|css|js)$/i)) {
+            if (!articleUrls.has(href)) {
+                articleUrls.add(href);
+                console.log(\`      📝 (article) \${href}\`);
+            }
+            }
+        });
+        });
+        
+        // Also look for WordPress style post links
+        doc.querySelectorAll('a[href*="?p="]').forEach(el => {
+        let href = el.href;
+        if (href && href.startsWith(currentOrigin)) {
+            if (!articleUrls.has(href)) {
+            articleUrls.add(href);
+            console.log(\`      📝 (article) \${href}\`);
+            }
+        }
+        });
+        
+    } catch(e) {
+        console.log(\`      ⚠️ Could not fetch blog page: \${blogUrl}\`);
+    }
+  }
+
+  let pageUrls = [...sitemapLinks];
+  let finalPages = pageUrls.filter(url => !articleUrls.has(url));
+  let finalArticles = Array.from(articleUrls);
+  
+  let allPagesToCrawl = [...finalPages, ...finalArticles];
+  allPagesToCrawl = [...new Set(allPagesToCrawl)];
+  allPagesToCrawl = allPagesToCrawl.filter(url => !url.match(/\\.(jpg|jpeg|png|gif|webp|svg|css|js|json|xml|txt|pdf|zip)$/i));
+  
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(\`📊 CRAWL SUMMARY:\`);
+  console.log(\`   📄 Pages: \${finalPages.length}\`);
+  console.log(\`   📝 Articles/Blog posts: \${finalArticles.length}\`);
+  console.log(\`   📚 TOTAL pages to crawl: \${allPagesToCrawl.length}\`);
+  console.log(\`   ⚡ Batch size: \${BATCH_SIZE} pages at a time\`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  if (allPagesToCrawl.length === 0) {
+    console.log('❌ No pages found to crawl.');
+    return;
+  }
+
+  let accumulatedOutput = [];
+  let htmlUnique = new Set();
+  let cssUnique = new Set();
+  let totalOccurrences = 0;
+  let duplicateCount = 0;
+  let pagesScanned = 0;
+  let articlesScanned = 0;
+  const baseDomain = new URL(window.location.origin).hostname.replace(/^www\\./, '');
+  
+  console.log('▶️ Starting image extraction...');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  function findPaginationLinks(doc, currentOrigin) {
+      const paginationLinks = new Set();
+      
+      const paginationSelectors = [
+          '.pagination a',
+          '.pages a',
+          '.page-numbers a',
+          '.nav-links a',
+          '.paging-nav a',
+          'a[rel="next"]',
+          'a.next',
+          '.next a',
+          '.older-posts a',
+          '.pager a',
+          '.pagination-nav a',
+          '.post-nav a',
+          '.page-links a',
+          'a[href*="/page/"]',
+          'a[href*="?page="]',
+          'a[href*="&page="]',
+          'a[href*="paged="]'
+      ];
+      
+      paginationSelectors.forEach(selector => {
+          doc.querySelectorAll(selector).forEach(el => {
+              let href = el.href;
+              if (href && href.startsWith(currentOrigin) && 
+                  !href.includes('#') &&
+                  !href.match(/\.(jpg|jpeg|png|gif|webp|css|js)$/i)) {
+                  paginationLinks.add(href);
+              }
+          });
+      });
+      
+      return Array.from(paginationLinks);
+  }
+
+  function extractCSSBackgroundImages(doc, baseUrl) {
+    const images = [];
+    const elements = doc.querySelectorAll('*');
+    elements.forEach(el => {
+      const inlineStyle = el.getAttribute('style');
+      if (inlineStyle) {
+        const bgMatches = inlineStyle.match(/background(?:-image)?:\\s*url\\(['"]?([^'")]+)['"]?\\)/gi);
+        if (bgMatches) {
+          bgMatches.forEach(match => {
+            const urlMatch = match.match(/url\\(['"]?([^'")]+)['"]?\\)/i);
+            if (urlMatch && urlMatch[1]) {
+              try {
+                const absoluteUrl = new URL(urlMatch[1], baseUrl).href;
+                images.push(absoluteUrl);
+              } catch(e) {}
+            }
+          });
+        }
+      }
+    });
+    return images;
+}
+  
+  for (let batchStart = 0; batchStart < allPagesToCrawl.length; batchStart += BATCH_SIZE) {
+    const batchEnd = Math.min(batchStart + BATCH_SIZE, allPagesToCrawl.length);
+    const batch = allPagesToCrawl.slice(batchStart, batchEnd);
+    
+    await Promise.all(batch.map(async (pageUrl, idx) => {
+      const currentIdx = batchStart + idx + 1;
+      const shortName = pageUrl.split('/').slice(-2).join('/') || pageUrl;
+      const isArticle = finalArticles.includes(pageUrl);
+      if (isArticle) { articlesScanned++; } else { pagesScanned++; }
+      
+      const percent = Math.round((currentIdx / allPagesToCrawl.length) * 100);
+      const barLength = Math.floor(percent / 5);
+      const bar = '█'.repeat(barLength) + '░'.repeat(20 - barLength);
+      console.log(\`📄 [\${currentIdx}/\${allPagesToCrawl.length}] \${bar} \${percent}% - Crawling: \${shortName}\`);
+      accumulatedOutput.push(\`📄 [\${currentIdx}/\${allPagesToCrawl.length}] \${bar} \${percent}% - Crawling: \${shortName}\`);
+      
+      try {
+        const res = await fetch(pageUrl);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        const imgImages = Array.from(doc.querySelectorAll('img'))
+          .map(img => {
+            const src = img.getAttribute('src');
+            const alt = img.getAttribute('alt') || '';
+            if (!src) return null;
+            try {
+              const absoluteUrl = new URL(src, pageUrl).href;
+              return { url: absoluteUrl, alt: alt };
+            } catch(e) { return null; }
+          })
+          .filter(Boolean);
+
+        const cssImages = ${includeCss ? 'extractCSSBackgroundImages(doc, pageUrl)' : '[]'};
+
+        for(let img of imgImages) { 
+            totalOccurrences++; 
+            let isExternal = false;
+            try { 
+                let imgDomain = new URL(img.url).hostname.replace(/^www\\./, ''); 
+                if(!imgDomain.includes(baseDomain)) isExternal = true; 
+            } catch(e){}
+            let externalTag = isExternal ? ' (External)' : '';
+            let articleTag = isArticle ? ' (article)' : '';
+            let altAttr = '';
+            if (img.alt) {
+                let escapedAlt = img.alt.replace(/"/g, '&quot;');
+                altAttr = ' alt=\\"' + escapedAlt + '\\"';
+            }
+            let logLine = '';
+            if(!htmlUnique.has(img.url)){ 
+                htmlUnique.add(img.url); 
+                logLine = \`🖼️ [HTML]\${externalTag}\${articleTag}\${altAttr} \${img.url} [SOURCE] \${pageUrl}\`;
+                console.log(logLine);
+            } else { 
+                duplicateCount++;
+                logLine = \`🖼️ [HTML]\${externalTag} (duplicate)\${articleTag}\${altAttr} \${img.url} [SOURCE] \${pageUrl}\`;
+                console.log(logLine);
+            }
+            accumulatedOutput.push(logLine);
+        }
+        
+        ${includeCss ? `
+        for(let css of cssImages){ 
+            totalOccurrences++; 
+            let isExternal = false;
+            try { 
+                let cssDomain = new URL(css).hostname.replace(/^www\\./, ''); 
+                if(!cssDomain.includes(baseDomain)) isExternal = true; 
+            } catch(e){}
+            let externalTag = isExternal ? ' (External)' : '';
+            let articleTag = isArticle ? ' (article)' : '';
+            let logLine = '';
+            if(!cssUnique.has(css)){ 
+                cssUnique.add(css); 
+                logLine = \`🎨 [CSS]\${externalTag}\${articleTag} \${css} [SOURCE] \${pageUrl}\`;
+                console.log(logLine);
+            } else { 
+                duplicateCount++;
+                logLine = \`🎨 [CSS]\${externalTag} (duplicate)\${articleTag} \${css} [SOURCE] \${pageUrl}\`;
+                console.log(logLine);
+            }
+            accumulatedOutput.push(logLine);
+        }
+        ` : ''}
+        
+        const completeMsg = \`   ✅ Page \${currentIdx} complete! Found \${imgImages.length + ${includeCss ? 'cssImages.length' : '0'}} images\`;
+        console.log(completeMsg);
+        accumulatedOutput.push(completeMsg);
+        console.log('');
+        accumulatedOutput.push('');
+
+      } catch (e) {
+        const errorMsg = \`   ⚠️ Failed: \${shortName} - \${e.message}\`;
+        console.warn(errorMsg);
+        accumulatedOutput.push(errorMsg);
+        console.log('');
+        accumulatedOutput.push('');
+      }
+    }));
+    
+    if (batchEnd < allPagesToCrawl.length) {
+      await new Promise(r => setTimeout(r, BREATH_DELAY));
+    }
+  }
+
+  const both = new Set([...htmlUnique].filter(x => cssUnique.has(x)));
+  const htmlOnly = htmlUnique.size - both.size;
+  const cssOnly = cssUnique.size - both.size;
+  
+  let externalCount = 0;
+  let allUnique = new Set([...htmlUnique, ...cssUnique]);
+  for(let u of allUnique) {
+    try { 
+      let urlDomain = new URL(u).hostname.replace(/^www\\./,''); 
+      if(!urlDomain.includes(baseDomain)) externalCount++; 
+    } catch(e){}
+  }
+  
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🎉 CRAWL COMPLETE! 🎉');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📊 FINAL SUMMARY:');
+  console.log(\`   📄 Pages scanned: \${pagesScanned}\`);
+  console.log(\`   📝 Articles scanned: \${articlesScanned}\`);
+  console.log(\`   📚 TOTAL pages scanned: \${pagesScanned + articlesScanned}\`);
+  console.log(\`   🖼️ HTML only: \${htmlOnly}\`);
+  console.log(\`   🎨 CSS only: \${cssOnly}\`);
+  console.log(\`   🌀 Both: \${both.size}\`);
+  console.log(\`   🌍 External: \${externalCount}\`);
+  console.log(\`   📝 Duplicate lines: \${duplicateCount}\`);
+  console.log(\`   🖼️ Total unique images: \${htmlOnly + cssOnly + both.size}\`);
+  console.log(\`   📊 Total occurrences: \${totalOccurrences}\`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  const domain = new URL(window.location.origin).hostname;
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const filename = \`CRS-\${domain}-\${month}-\${day}-\${year}~\${hours}\${minutes}\${seconds}.txt\`;
+  
+  const summaryOutput = \`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 CRAWL COMPLETE! 🎉
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 FINAL SUMMARY:
+   📄 Pages scanned: \${pagesScanned}
+   📝 Articles scanned: \${articlesScanned}
+   📄 Total pages scanned: \${pagesScanned + articlesScanned}
+   🖼️ HTML only: \${htmlOnly}
+   🎨 CSS only: \${cssOnly}
+   🌀 Both: \${both.size}
+   🌍 External: \${externalCount}
+   📝 Duplicate lines: \${duplicateCount}
+   🖼️ Total unique images: \${htmlOnly + cssOnly + both.size}
+   📊 Total occurrences: \${totalOccurrences}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 FULL OUTPUT (copy this entire file into the tool):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\${accumulatedOutput.join('\\n')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\`;
+
+  const blob = new Blob([summaryOutput], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  console.log(\`📁 Results saved to file: \${filename}\`);
+  window.s = function() {
+      const blob2 = new Blob([summaryOutput], {type: 'text/plain'});
+      const url2 = URL.createObjectURL(blob2);
+      const a2 = document.createElement('a');
+      a2.href = url2;
+      a2.download = filename;
+      document.body.appendChild(a2);
+      a2.click();
+      document.body.removeChild(a2);
+      URL.revokeObjectURL(url2);
+      console.log('✅ Results re-saved!');
+  };
+  console.log('💡 TIP: Type "s()" in console to download again');
+})();`;
+}
+
+function updateCrawlerCode() {
+    document.getElementById('crawlerCode').textContent = getCrawlerCode();
+}
+
+function copyCrawlerCode() {
+    navigator.clipboard.writeText(document.getElementById('crawlerCode').textContent).then(() => showToast('✅ Crawler code copied!'));
+}
+
+// Initialize popup button handlers
+setTimeout(() => {
+    let cp = document.getElementById('popupCopyBtn');
+    let dl = document.getElementById('popupDeleteBtn');
+    let te = document.getElementById('popupTinEyeBtn');
+    if(cp) cp.onclick = copyCurrentPopupUrl;
+    if(dl) dl.onclick = deleteCurrentPopupImage;
+    if(te) te.onclick = () => openTinEye(document.getElementById('popupImage').getAttribute('data-original-url') || document.getElementById('popupImage').src);
+    updateFilterVisibility();
+}, 100);
+
+// Initialize crawler code
+updateCrawlerCode();
+</script>
+</body>
+</html>
