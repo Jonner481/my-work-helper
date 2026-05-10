@@ -131,7 +131,7 @@
         .controls-grid {display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:12px; margin:15px 0;}
         .control-card {background:#f8f9fa; padding:12px; border-radius:10px; display:flex; align-items:center; gap:10px; border:1px solid #e0e0e0;}
         .control-icon {font-size:24px; min-width:40px; text-align:center;}
-        .filter-list {display:flex; flex-wrap:wrap; gap:8px; margin:10px 0;}
+        .filter-list {display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; justify-content: space-between;}
         .filter-item {background:#f0f0f0; padding:5px 12px; border-radius:20px; font-size:12px;}
         .filter-badge-example {background:#6c757d; color:white; padding:2px 8px; border-radius:15px; margin-right:8px; font-size:11px;}
         .stats-grid {display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px; margin:15px 0;}
@@ -171,6 +171,17 @@
         .sidebar.collapsed .sidebar-toggle {left:0; border-radius:0 12px 12px 0;}
         .sidebar:not(.collapsed) .sidebar-toggle span {display:inline-block; transition:transform 0.3s ease;}
         .sidebar.collapsed .sidebar-toggle span {display:inline-block; transition:transform 0.3s ease;}
+
+        .file-input-label {background:linear-gradient(135deg, #28a745 0%, #20c997 100%); position:relative; overflow:hidden; transition:all 0.3s ease;}
+        .file-input-label:hover {background:linear-gradient(135deg, #20c997 0%, #28a745 100%); transform:scale(1.02);}
+
+        @keyframes gentlePulse {
+        0% {box-shadow:0 0 0 0 rgba(40, 167, 69, 0.4);}
+        70% {box-shadow:0 0 0 10px rgba(40, 167, 69, 0);}
+        100% {box-shadow:0 0 0 0 rgba(40, 167, 69, 0);}
+        }
+
+        .file-input-label {animation:gentlePulse 2s ease infinite;}
         
 
         .section {background:#f8f9fa; border-radius:12px; padding:12px; margin-bottom:15px;}
@@ -700,69 +711,43 @@
                         <li>Press <kbd>F12</kbd> to open Developer Console</li>
                         <li>In the tool, copy the entire "Single Page Mode" code (click "Copy Code")</li>
                         <li><strong>Paste the code into the console</strong> and press <kbd>Enter</kbd></li>
-                        <li>The script will extract:
-                            <ul>
-                                <li>All HTML <code>&lt;img&gt;</code> tags with their alt text</li>
-                                <li>CSS background images (if toggle is ON)</li>
-                                <li>Visibility status (hidden vs visible images)</li>
-                            </ul>
-                        </li>
+                        <li>The script will extract all images from the page</li>
                         <li>A <strong>.txt file will automatically download</strong> to your computer</li>
-                        <li><strong>Open the downloaded file</strong> and copy ALL its contents</li>
-                        <li><strong>Paste the entire content</strong> into the "Console Output" textarea in the tool</li>
-                        <li>Click <strong>"Parse Output"</strong> to display all images in the gallery</li>
-                        <li>Use filters, sorting, and selection tools to organize your collection</li>
-                        <li><strong>Export your collection</strong> using the "Export Data" button to save your work</li>
+                        <li><strong>METHOD 1 (EASIEST):</strong> Click the <strong>"Import TXT"</strong> button and select the downloaded file directly</li>
+                        <li><strong>METHOD 2 (Manual):</strong> Open the file, copy all contents, paste into textarea, click "Parse Output"</li>
+                        <li>Your images will appear in the gallery automatically!</li>
                     </ol>
                 </div>
                 <div class="tip-box">
-                    <strong>💡 Tips:</strong>
-                    <ul>
-                        <li>Toggle "Extract CSS Background Images" OFF for faster extraction if you only need &lt;img&gt; tags</li>
-                        <li>The script shows a progress indicator for CSS scanning (can take 10-30 seconds on complex pages)</li>
-                        <li>Type <code>s()</code> in the console to re-download the .txt file if you lose it</li>
-                    </ul>
+                    <strong>💡 IMPORTANT:</strong> You don't need to copy-paste! Just use the <strong>"Import TXT"</strong> button to load the downloaded file directly.
                 </div>
             </div>
-            
+
             <!-- ========== 3. WEBSITE CRAWLER MODE ========== -->
             <div class="manual-section" id="crawler">
                 <h3>🤖 3. Website Crawler Mode</h3>
                 <div class="step-box">
                     <div class="step-title">Complete Guide:</div>
                     <ol>
-                        <li>Go to the website's <strong>sitemap page</strong> (e.g., <code>example.com/sitemap</code> or <code>example.com/sitemap.xml</code>)</li>
+                        <li>Go to the website's <strong>sitemap page</strong> (e.g., <code>example.com/sitemap</code>)</li>
                         <li>Press <kbd>F12</kbd> to open Developer Console</li>
-                        <li>In the tool, configure your crawl settings:
+                        <li>Configure crawl settings 
                             <ul>
                                 <li><strong>Batch Size:</strong> 1 (slowest/safest), 2 (balanced), or 3 (fastest/uses more RAM)</li>
                                 <li><strong>Deep Scan:</strong> ON to follow links up to 2 levels deep (finds more pages)</li>
                                 <li><strong>Extract CSS:</strong> ON to include background images</li>
                             </ul>
                         </li>
-                        <li>Copy the entire "Website Crawler" code (click "Copy Code")</li>
-                        <li><strong>Paste into console</strong> and press <kbd>Enter</kbd></li>
-                        <li>The crawler will run and show progress in the console:
-                            <ul>
-                                <li>Progress bar showing completion percentage</li>
-                                <li>Current page being scanned</li>
-                                <li>Images found per page</li>
-                            </ul>
-                        </li>
+                        <li>Copy the "Website Crawler" code and paste into console, press <kbd>Enter</kbd></li>
+                        <li>The crawler will run and show progress in the console</li>
                         <li>When complete, a <strong>.txt file will automatically download</strong></li>
-                        <li><strong>Open the downloaded file</strong> and copy ALL its contents</li>
-                        <li><strong>Paste into the "Console Output" textarea</strong> in the tool</li>
-                        <li>Click <strong>"Parse Output"</strong> to see all crawled images</li>
-                        <li>The gallery will show:
-                            <ul>
-                                <li>All images from all crawled pages</li>
-                                <li>Which page each image came from</li>
-                                <li>Alt text for each occurrence</li>
-                                <li>Article vs regular page markers</li>
-                            </ul>
-                        </li>
-                        <li><strong>Export your collection</strong> using "Export Data" to save the complete crawl results</li>
+                        <li><strong>METHOD 1 (EASIEST):</strong> Click the <strong>"Import TXT"</strong> button and select the downloaded file directly</li>
+                        <li><strong>METHOD 2 (Manual):</strong> Open file, copy contents, paste into textarea, click "Parse Output"</li>
+                        <li>Your crawled images will appear in the gallery!</li>
                     </ol>
+                </div>
+                <div class="warning-box">
+                    <strong>⚠️ Quick Tip:</strong> Use the <strong>📂 Import TXT</strong> button - it's much faster than copy-pasting! The tool automatically detects the file format.
                 </div>
                 <div class="warning-box">
                     <strong>⚠️ Important Notes:</strong>
@@ -857,26 +842,72 @@
             <!-- ========== 7. IMPORT/EXPORT DATA ========== -->
             <div class="manual-section" id="import-export">
                 <h3>💾 7. Import/Export Data</h3>
-                <div class="step-box">
-                    <div class="step-title">Export Data:</div>
+                
+                <!-- Import Section - EASIEST METHOD -->
+                <div class="step-box" style="border-left-color: #28a745;">
+                    <div class="step-title">📥 EASIEST WAY - Import TXT File Directly</div>
                     <ol>
-                        <li>Click the <strong>"Export Data (TXT)"</strong> button</li>
-                        <li>A .txt file will download with filename format: <code>[MODE]-[DOMAIN]-[DATE].txt</code></li>
-                        <li>The file contains all image data including metadata, sources, and alt text</li>
-                        <li>You can later import this file to restore your collection</li>
+                        <li>After running Single Page or Crawler script, a .txt file downloads automatically</li>
+                        <li><strong>Instead of copy-pasting</strong>, simply click the <strong>"📂 Import TXT"</strong> button in the Gallery Controls section</li>
+                        <li>Select the downloaded .txt file from your computer</li>
+                        <li>The tool will automatically:
+                            <ul>
+                                <li>Read the file contents</li>
+                                <li>Parse all images and metadata</li>
+                                <li>Display everything in the gallery</li>
+                                <li>No manual copy-paste needed!</li>
+                            </ul>
+                        </li>
+                    </ol>
+                    <div class="tip-box" style="margin-top: 10px;">
+                        <strong>✅ This works for:</strong>
+                        <ul>
+                            <li>Single Page Mode exports (CSP-*.txt files)</li>
+                            <li>Website Crawler exports (CWC-*.txt files)</li>
+                            <li>Previously exported collections (any .txt or .json file)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Traditional Method -->
+                <div class="step-box">
+                    <div class="step-title">📋 Traditional Method (Copy-Paste)</div>
+                    <ol>
+                        <li>Open the downloaded .txt file with any text editor</li>
+                        <li>Press <kbd>Ctrl+A</kbd> to select all, then <kbd>Ctrl+C</kbd> to copy</li>
+                        <li>Paste into the textarea in the respective mode tab</li>
+                        <li>Click <strong>"Parse Output"</strong> to display images</li>
                     </ol>
                 </div>
+                
+                <!-- Export Section -->
                 <div class="step-box">
-                    <div class="step-title">Import Data:</div>
+                    <div class="step-title">📤 Export Data (Save your collection)</div>
                     <ol>
-                        <li>Click the <strong>"Import TXT"</strong> label button</li>
-                        <li>Select a previously exported .txt or .json file</li>
-                        <li>The tool automatically detects the file format and mode</li>
-                        <li>Your collection will be restored with all images and metadata</li>
+                        <li>Click the <strong>"Export Data (TXT)"</strong> button at the bottom of the sidebar</li>
+                        <li>A .txt file will automatically download with filename format: <code>[MODE]-[DOMAIN]-[DATE].txt</code></li>
+                        <li>The file contains ALL your collected data including:
+                            <ul>
+                                <li>All image URLs with their sources (which pages they came from)</li>
+                                <li>Alt text for each image occurrence</li>
+                                <li>Image categories (HTML, CSS, external, icons, logos, stock)</li>
+                                <li>Similar image groups</li>
+                                <li>Your current selections and trashed items</li>
+                            </ul>
+                        </li>
+                        <li>To restore later, simply click <strong>"Import TXT"</strong> and select the file</li>
                     </ol>
                 </div>
+                
                 <div class="tip-box">
-                    <strong>💡 Tip:</strong> Import/Export works across different modes. You can export from Crawler mode and import to Direct URLs mode!
+                    <strong>💡 Pro Tips for Import/Export:</strong>
+                    <ul>
+                        <li><strong>No more copy-paste!</strong> Just use the Import TXT button for downloaded files</li>
+                        <li>Export regularly to save your work progress - especially after cleaning up duplicates</li>
+                        <li>You can export from Crawler mode and import to Direct URLs mode</li>
+                        <li>Imported data is <strong>added to existing data</strong>, not replaced (use "Clear Data" first if you want a fresh start)</li>
+                        <li>The Import TXT button accepts both .txt and .json files</li>
+                    </ul>
                 </div>
             </div>
             
