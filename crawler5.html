@@ -2854,6 +2854,7 @@ function loadUrlsFromTextarea() {
     saveStateToUndo();
     let addedCount = 0;
     failedImagesSet.clear(); 
+    notifiedFailedImages.clear();
     for(let url of urls) {
         if(!uniqueImages.has(url)) {
             uniqueImages.add(url);
@@ -3095,6 +3096,9 @@ function importData(event) {
                 }
             }
             
+            failedImagesSet.clear();
+            notifiedFailedImages.clear();
+
             updateStats();
             displayDetectedPages();
             displayDetectedArticles();
@@ -3381,50 +3385,86 @@ function displayImagesOptimized() {
         function loadImage() {
             img.src = url;
         }
-        
-img.onerror = () => {
-    if (retryCount < maxRetries) {
-        retryCount++;
-        setTimeout(loadImage, 500);
-    } else {
-        // Add to failed set if not already there
-        if (!failedImagesSet.has(url)) {
-            failedImagesSet.add(url);
+
+        function forceResortFailedImages() {
+            if (sortOrder === 'failedFirst' || sortOrder === 'default' || sortOrder === 'stockLast') {
+                displayImagesOptimized();
+            }
         }
-        
-        img.style.display = 'none';
-        const fallbackDiv = document.createElement('div');
-        fallbackDiv.style.width = '100%';
-        fallbackDiv.style.height = '100%';
-        fallbackDiv.style.display = 'flex';
-        fallbackDiv.style.alignItems = 'center';
-        fallbackDiv.style.justifyContent = 'center';
-        fallbackDiv.style.backgroundColor = '#f0f0f0';
-        fallbackDiv.style.color = '#999';
-        fallbackDiv.style.fontSize = '12px';
-        fallbackDiv.innerHTML = '❌ Failed to Load';
-        fallbackDiv.style.cursor = 'pointer';
-        fallbackDiv.onclick = (e) => {
-            e.stopPropagation();
-            openPopup(url);
+
+        img.onerror = () => {
+            if (retryCount < maxRetries) {
+                retryCount++;
+                setTimeout(loadImage, 500);
+            } else {
+                // ONLY add to failed set if the image still exists in collection
+                if (uniqueImages.has(url) && !failedImagesSet.has(url)) {
+                    failedImagesSet.add(url);
+                    
+                    forceResortFailedImages();
+                    // Update the failed count display
+                    const failedCountEl = document.getElementById('failedCount');
+                    if (failedCountEl) failedCountEl.textContent = failedImagesSet.size;
+                    
+                    // Show toast only once per image
+                    if (!notifiedFailedImages.has(url)) {
+                        notifiedFailedImages.add(url);
+                        showToast(`⚠️ Failed to load: ${url.split('/').pop()}`, 'warning');
+                    }
+                }
+                
+                img.style.display = 'none';
+                const fallbackDiv = document.createElement('div');
+                fallbackDiv.className = 'failed-fallback';
+                fallbackDiv.style.width = '100%';
+                fallbackDiv.style.height = '100%';
+                fallbackDiv.style.display = 'flex';
+                fallbackDiv.style.alignItems = 'center';
+                fallbackDiv.style.justifyContent = 'center';
+                fallbackDiv.style.backgroundColor = '#f0f0f0';
+                fallbackDiv.style.color = '#999';
+                fallbackDiv.style.fontSize = '12px';
+                fallbackDiv.innerHTML = '❌ Failed to Load';
+                fallbackDiv.style.cursor = 'pointer';
+                fallbackDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    openPopup(url);
+                };
+                imgContainer.appendChild(fallbackDiv);
+                
+                updateStats();
+            }
         };
-        imgContainer.appendChild(fallbackDiv);
-        
-        // Update the failed count display
-        const failedCountEl = document.getElementById('failedCount');
-        if (failedCountEl) failedCountEl.textContent = failedImagesSet.size;
-        
-        // ========== ONLY SHOW TOAST ONCE PER IMAGE ==========
-        if (!notifiedFailedImages.has(url)) {
-            notifiedFailedImages.add(url);
-            showToast(`⚠️ Failed to load: ${url.split('/').pop()}`, 'warning');
-        }
-        // ========== END CHANGE ==========
-        
-        // Update stats to trigger highlight
-        updateStats();
-    }
-};
+
+        img.onload = () => {
+            // If this image was previously marked as failed, remove it
+            if (failedImagesSet.has(url)) {
+                failedImagesSet.delete(url);
+                notifiedFailedImages.delete(url);
+                
+                forceResortFailedImages();
+                // Update the failed count display
+                const failedCountEl = document.getElementById('failedCount');
+                if (failedCountEl) failedCountEl.textContent = failedImagesSet.size;
+                
+                // Remove any fallback div if present
+                const existingFallback = imgContainer.querySelector('div:not(img)');
+                if (existingFallback) existingFallback.remove();
+                
+                // Show the image
+                img.style.display = 'block';
+                return;
+            }
+            
+            // Normal successful load
+            img.style.display = 'block';
+            updateStats();
+        };
+
+        img.onclick = (e) => { 
+            e.stopPropagation(); 
+            openPopup(url); 
+        };
         
         img.onclick = (e) => { 
             e.stopPropagation(); 
@@ -3560,6 +3600,23 @@ img.onerror = () => {
     }
     
     renderBatch();
+}
+
+function forceResortFailedImages() {
+    // Only resort if we're in a mode that shows failed images first
+    if (sortOrder === 'failedFirst' || sortOrder === 'default' || sortOrder === 'stockLast') {
+        // Get current scroll position
+        const container = document.getElementById('imageContainer');
+        const scrollPosition = container.scrollTop;
+        
+        // Re-render
+        displayImagesOptimized();
+        
+        // Restore scroll position
+        setTimeout(() => {
+            container.scrollTop = scrollPosition;
+        }, 10);
+    }
 }
 
 // ============ SINGLE PAGE PARSER ==========
