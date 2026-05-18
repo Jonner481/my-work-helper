@@ -140,10 +140,16 @@
         .shortcuts-grid {display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:10px;}
         .shortcut-item {background:#f8f9fa; padding:8px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;}
         .shortcut-key {background:#333; color:#ffd700; padding:3px 10px; border-radius:5px; font-family:monospace; font-size:12px;}
-        .toc-grid {display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px; margin:10px 0;}
+
+        .toc-grid { column-count: 2; column-gap: 20px; margin: 10px 0; }
+        .toc-link { break-inside: avoid; margin-bottom: 8px; display: block; }
+        @media (max-width: 600px) { .toc-grid { column-count: 1; } }
+
         .toc-link {color:#667eea; text-decoration:none; padding:5px 10px; display:block; background:#f8f9fa; border-radius:6px; transition:all 0.2s;}
         .toc-link:hover, .toc-link[href*='#']:hover {background:#667eea20; transform:translateX(5px);}
         .toc-link[href="#crawler"], .toc-link[href="#single-page"], .toc-link[href="#direct-urls"] { background: #ffff95; }
+        .toc-column { display: flex; flex-direction: column; gap: 8px; }
+
         .faq-item {margin:15px 0; border-bottom:1px solid #e0e0e0; padding-bottom:10px;}
         .faq-question {font-weight:bold; color:#333; margin-bottom:8px;}
         .faq-answer {color:#666; font-size:13px; line-height:1.5;}
@@ -657,17 +663,23 @@
             <div class="manual-section">
                 <h3>📑 Table of Contents</h3>
                 <div class="toc-grid">
-                    <a href="#getting-started" class="toc-link">1. Getting Started</a>
-                    <a href="#single-page" class="toc-link">2. Single Page Mode</a>
-                    <a href="#crawler" class="toc-link">3. Website Crawler Mode</a>
-                    <a href="#direct-urls" class="toc-link">4. Direct URLs Mode</a>
-                    <a href="#gallery-controls" class="toc-link">5. Gallery Controls</a>
-                    <a href="#filters" class="toc-link">6. Filters & Sorting</a>
-                    <a href="#import-export" class="toc-link">7. Import/Export Data</a>
-                    <a href="#statistics" class="toc-link">8. Statistics Explained</a>
-                    <a href="#keyboard" class="toc-link">9. Keyboard Shortcuts</a>
-                    <a href="#tips" class="toc-link">10. Pro Tips</a>
-                    <a href="#troubleshooting" class="toc-link">11. Troubleshooting</a>
+                    <!-- Left Column -->
+                    <div class="toc-column">
+                        <a href="#getting-started" class="toc-link">1. Getting Started</a>
+                        <a href="#single-page" class="toc-link">2. Single Page Mode</a>
+                        <a href="#crawler" class="toc-link">3. Website Crawler Mode</a>
+                        <a href="#direct-urls" class="toc-link">4. Direct URLs Mode</a>
+                        <a href="#gallery-controls" class="toc-link">5. Gallery Controls</a>
+                        <a href="#filters" class="toc-link">6. Filters & Sorting</a>
+                    </div>
+                    <!-- Right Column -->
+                    <div class="toc-column">
+                        <a href="#import-export" class="toc-link">7. Import/Export Data</a>
+                        <a href="#statistics" class="toc-link">8. Statistics Explained</a>
+                        <a href="#keyboard" class="toc-link">9. Keyboard Shortcuts</a>
+                        <a href="#tips" class="toc-link">10. Pro Tips</a>
+                        <a href="#troubleshooting" class="toc-link">11. Troubleshooting</a>
+                    </div>
                 </div>
             </div>
             
@@ -950,8 +962,8 @@
                     <div class="shortcut-item"><span>Close Popup</span><span class="shortcut-key">Esc</span></div>
                     <div class="shortcut-item"><span>Undo Action</span><span class="shortcut-key">Ctrl+Z</span></div>
                     <div class="shortcut-item"><span>Redo Action</span><span class="shortcut-key">Ctrl+Y</span></div>
+                    <div class="shortcut-item"><span>Delete Selected Images</span><span class="shortcut-key">Delete</span></div>
                     <div class="shortcut-item"><span>Open User Manual</span><span class="shortcut-key">?</span></div>
-                    <!-- <div class="shortcut-item"><span>Shift+Click</span><span class="shortcut-key">Select Multiple</span></div> -->
                 </div>
             </div>
             
@@ -968,6 +980,7 @@
                     <li><strong>Export your collection regularly</strong> to save your work progress</li>
                     <li><strong>Use Deep Scan</strong> for complete website crawling (finds pages linked from sitemap)</li>
                     <li><strong>Toggle CSS extraction OFF</strong> for faster crawling if you only need HTML images</li>
+                    <li><strong>Press <kbd>Delete</kbd> key</strong> to quickly delete all selected images at once</li>
                 </ul>
             </div>
             
@@ -1004,6 +1017,7 @@
         </div>
     </div>
 </div>
+
 
 <script>
 // ============ SEPARATE DATA STORES FOR EACH MODE ==========
@@ -1658,9 +1672,18 @@ function redo() {
 document.addEventListener('keydown', (e) => {
     if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     
+    // Undo/Redo
     if(e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
     else if(e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
     
+    // DELETE key - delete selected images
+    else if(e.key === 'Delete' && selectedImages.size > 0) {
+        e.preventDefault();
+        deleteSelectedImages();
+        showToast(`🗑️ Deleted ${selectedImages.size} selected images`, 'warning');
+    }
+    
+    // Popup navigation
     let pop = document.getElementById('popup');
     if(pop && pop.style.display === 'flex') {
         if(e.key === 'ArrowLeft') { e.preventDefault(); prevImage(); }
@@ -1780,6 +1803,7 @@ function deleteSelectedImages() {
     updateStats();
     updateFilterVisibility();
     showToast(`🗑️ Deleted ${deletedUniqueCount} images`);
+    checkAndHideTooltip();
 }
 
 function selectAllSimilarKeepOne() {
@@ -1856,6 +1880,7 @@ function deleteImage(url) {
     updateStats();
     updateFilterVisibility();
     showToast(`🗑️ Deleted 1 image`);
+    checkAndHideTooltip();
 }
 
 function copyImageUrl(url) {
@@ -2742,6 +2767,7 @@ function clearSinglePageData() {
     displayImagesOptimized();
     updateFilterVisibility();
     showToast('✅ Cleared');
+    checkAndHideTooltip();
 }
 
 function clearCrawlerData() {
@@ -2794,6 +2820,7 @@ function clearCrawlerData() {
     displayImagesOptimized();
     updateFilterVisibility();
     showToast('✅ Cleared');
+    checkAndHideTooltip();
 }
 
 function clearDirectData() {
@@ -2843,6 +2870,7 @@ function clearDirectData() {
     displayImagesOptimized();
     updateFilterVisibility();
     showToast('✅ Cleared');
+    checkAndHideTooltip();
 }
 
 function loadUrlsFromTextarea() {
@@ -3188,6 +3216,7 @@ function displayImagesOptimized() {
         });
 
         card.addEventListener('mouseleave', () => {
+            if (tipTimeout) clearTimeout(tipTimeout);
             tipTimeout = setTimeout(() => {
                 customTip.style.opacity = '0';
                 isTipActive = false;
@@ -3600,6 +3629,46 @@ function displayImagesOptimized() {
     }
     
     renderBatch();
+    checkAndHideTooltip();
+}
+
+function checkAndHideTooltip() {
+    const imageContainer = document.getElementById('imageContainer');
+    const hasImages = imageContainer && imageContainer.querySelectorAll('.image-card').length > 0;
+    
+    if (!hasImages) {
+        // No images - smoothly fade out the tooltip
+        if (customTip) {
+            // Clear any pending timeout
+            if (tipTimeout) {
+                clearTimeout(tipTimeout);
+                tipTimeout = null;
+            }
+            
+            // Add transition for smooth fade
+            customTip.style.transition = 'opacity 0.3s ease-out';
+            customTip.style.opacity = '0';
+            isTipActive = false;
+            
+            // After fade completes, hide it completely
+            setTimeout(() => {
+                if (customTip.style.opacity === '0') {
+                    customTip.style.display = 'none';
+                }
+            }, 300);
+        }
+    } else {
+        // Images exist - show tooltip (it will become visible on hover)
+        if (customTip) {
+            customTip.style.display = 'block';
+            // Small delay before allowing hover to show it again
+            setTimeout(() => {
+                if (customTip.style.display === 'block') {
+                    customTip.style.transition = 'opacity 0.15s ease';
+                }
+            }, 100);
+        }
+    }
 }
 
 function forceResortFailedImages() {
@@ -3804,6 +3873,7 @@ async function parseSinglePageOutput() {
     updateFilterVisibility();
     
     showToast(`✅ Parsed: ${totalOccurrencesCount} occurrences, ${uniqueImages.size} unique images`, 'success');
+    checkAndHideTooltip();
 }
 
 // ============ SINGLE PAGE CRAWLER CODE ==========
@@ -4362,6 +4432,7 @@ async function parseConsoleOutputOptimized() {
     parseBtn.classList.remove('btn-loading');
     parseBtn.disabled = false;
     parseBtn.textContent = '🔍 Parse Output';
+    checkAndHideTooltip();
 }
 
 // ============ ENHANCED CRAWLER CODE (same as before, keeping the working version) ==========
@@ -5052,5 +5123,6 @@ setTimeout(() => {
 updateSinglePageCode();
 updateCrawlerCode();
 </script>
+
 </body>
 </html>
