@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Link Text vs URL Slug Comparator v5</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+            padding: 20px;
+        }
+        
+        /* ===== THEMES ===== */
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface-2: #1c2333;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #667eea;
+            --accent-rgb: 102, 126, 234;
+            --shadow: 0 8px 24px rgba(0,0,0,0.45);
+            --input-bg: #252d3f;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --highlight-bg: rgba(40, 167, 69, 0.15);
+            --parent-bg: rgba(102, 126, 234, 0.12);
+            --child-bg: rgba(255, 193, 7, 0.08);
+            --stat-hover: rgba(102, 126, 234, 0.15);
+            --duplicate-bg: rgba(220, 53, 69, 0.15);
+            --toast-bg: #1a1a2e;
+            --merge-bg: #86efac40;
+            --merge-icon-bg: #22c55e;
+            --merge-icon-color: white;
+            --status-merged-bg: rgba(40, 167, 69, 0.15);
+            --nob-color: #fef08a;
+            --nob-bg: #854d0e30;
+        }
+        /* Light theme */
+        body.light {
+            --bg: #f0f2f5;
+            --surface: #ffffff;
+            --surface-2: #f8f9fa;
+            --border: #e0e0e0;
+            --text: #333333;
+            --text-muted: #666666;
+            --input-bg: #ffffff;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --highlight-bg: rgba(40, 167, 69, 0.12);
+            --parent-bg: rgba(102, 126, 234, 0.10);
+            --child-bg: rgba(255, 193, 7, 0.06);
+            --stat-hover: rgba(102, 126, 234, 0.10);
+            --duplicate-bg: rgba(220, 53, 69, 0.12);
+            --toast-bg: #f8f9fa;
+            --merge-bg: #86efac60;
+            --merge-icon-bg: #22c55e;
+            --merge-icon-color: white;
+            --status-merged-bg: rgba(40, 167, 69, 0.12);
+            --nob-color: #b45309;
+            --nob-bg: #fef08a;
+        }
+        
+        /* ===== LAYOUT ===== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--accent), #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-controls { display: flex; gap: 10px; align-items: center; }
+        .theme-btn {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .theme-btn:hover { transform: scale(1.05); background: var(--surface); }
+        
+        /* ===== INPUT SECTION ===== */
+        .input-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .input-section label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .input-section textarea {
+            width: 100%;
+            height: 250px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text);
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        .input-section textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+        .btn-warning { background: var(--warning); color: #333; }
+        
+        /* ===== STATS ===== */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--surface);
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            background: var(--stat-hover);
+        }
+        .stat-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent);
+            background: rgba(var(--accent-rgb), 0.15);
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .stat-card.match-exact .stat-number { color: var(--success); }
+        .stat-card.match-partial .stat-number { color: var(--warning); }
+        .stat-card.match-none .stat-number { color: var(--danger); }
+        .stat-card.match-exact.active { border-color: var(--success); box-shadow: 0 0 0 2px var(--success); }
+        .stat-card.match-partial.active { border-color: var(--warning); box-shadow: 0 0 0 2px var(--warning); }
+        .stat-card.match-none.active { border-color: var(--danger); box-shadow: 0 0 0 2px var(--danger); }
+        .stat-card.duplicate-stat .stat-number { color: #9b59b6; }
+        .stat-card.duplicate-stat.active { border-color: #9b59b6; box-shadow: 0 0 0 2px #9b59b6; }
+        
+        /* ===== RESULTS TABLE ===== */
+        .results-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+        .results-section h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .legend {
+            font-size: 13px;
+            font-weight: normal;
+            color: var(--text-muted);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .legend.hidden { display: none; }
+        .legend span { display: inline-flex; align-items: center; gap: 4px; }
+        .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+        .dot-exact { background: var(--success); }
+        .dot-partial { background: var(--warning); }
+        .dot-none { background: var(--danger); }
+        .dot-duplicate { background: #9b59b6; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        th {
+            background: var(--surface-2);
+            font-weight: 600;
+            color: var(--text-muted);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        th:hover { background: var(--surface); }
+        th .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            font-size: 11px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        th:hover .sort-icon { opacity: 1; }
+        th.sorted-asc .sort-icon { opacity: 1; color: var(--accent); }
+        th.sorted-desc .sort-icon { opacity: 1; color: var(--accent); }
+    
+
+        /* Row highlighting for stats - consistent background colors only */
+tr.highlight-row td { background: rgba(var(--accent-rgb), 0.12) !important; }
+tr.highlight-exact td { background: rgba(40, 167, 69, 0.25) !important; } /* Brighter green */
+tr.highlight-partial td { background: rgba(255, 193, 7, 0.25) !important; }
+tr.highlight-none td { background: rgba(220, 53, 69, 0.25) !important; }
+tr.highlight-parent td { background: rgba(102, 126, 234, 0.25) !important; }
+tr.highlight-child td { background: rgba(255, 193, 7, 0.25) !important; }
+tr.highlight-duplicate td { background: rgba(155, 89, 182, 0.25) !important; }
+
+/* Merged match - default dim blue */
+tr.merged-match td { 
+    background: rgba(102, 126, 234, 0.08) !important; 
+}
+tr.merged-match:hover td { 
+    background: rgba(102, 126, 234, 0.15) !important; 
+}
+
+/* When merged match is also highlighted as exact - GREEN takes priority */
+tr.merged-match.highlight-exact td {
+    background: rgba(40, 167, 69, 0.25) !important;
+}
+tr.merged-match.highlight-exact:hover td {
+    background: rgba(40, 167, 69, 0.35) !important;
+}
+/* Dim red highlight for spelling errors */
+tr.highlight-spelling td {
+    background: rgba(220, 53, 69, 0.12) !important;
+}
+tr.highlight-spelling:hover td {
+    background: rgba(220, 53, 69, 0.20) !important;
+}
+/* When spelling error on a merged match - red takes priority */
+tr.merged-match.highlight-spelling td {
+    background: rgba(220, 53, 69, 0.12) !important;
+}
+tr.merged-match.highlight-spelling:hover td {
+    background: rgba(220, 53, 69, 0.20) !important;
+}
+/* When a row has both spelling highlight and exact match highlight */
+tr.highlight-spelling.highlight-exact td {
+    background: rgba(40, 167, 69, 0.25) !important;
+}
+tr.highlight-spelling.highlight-exact:hover td {
+    background: rgba(40, 167, 69, 0.35) !important;
+}
+
+/* When a row has both spelling highlight and merged match */
+tr.highlight-spelling.merged-match td {
+    background: rgba(220, 53, 69, 0.12) !important;
+}
+tr.highlight-spelling.merged-match:hover td {
+    background: rgba(220, 53, 69, 0.20) !important;
+}
+
+        /* Combined highlight for duplicate children */
+        tr.highlight-duplicate.highlight-child td {
+            background: rgba(155, 89, 182, 0.25) !important;
+        }
+
+        tr.row-duplicate td:first-child { border-left: 3px solid #9b59b6 !important; }
+        .duplicate-badge { display: inline-block; background: #9b59b6; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-left: 4px; cursor: help; }
+        
+        /* Match status colors */
+        .match-exact-row td:first-child { border-left: 3px solid var(--success); }
+        .match-partial-row td:first-child { border-left: 3px solid var(--warning); }
+        .match-none-row td:first-child { border-left: 3px solid var(--danger); }
+        
+        .match-yes { color: var(--success); font-weight: bold; }
+        .match-no { color: var(--danger); font-weight: bold; }
+        .match-partial { color: var(--warning); font-weight: bold; }
+        /* Green checkbox-like icon for merged matches */
+        .merge-icon {
+            display: inline-block;
+            background: var(--merge-icon-bg);
+            color: var(--merge-icon-color);
+            font-size: 11px;
+            padding: 0 4px;
+            border-radius: 4px;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            margin-right: 2px;
+        }
+
+        .match-merged { 
+            color: var(--success); 
+            font-weight: bold; 
+        }
+        /* NOB part styling - uses CSS variables for both themes */
+        .nob-part {
+            color: var(--nob-color);
+            background: var(--nob-bg);
+            padding: 1px 2px;
+            border-radius: 4px;
+        }
+        .text-link {
+            color: var(--accent);
+            text-decoration: none;
+            word-break: break-all;
+            cursor: pointer;
+        }
+        .text-link:hover { text-decoration: underline; }
+        .text-link.trashed {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        /* Misspelled text style - ONLY wavy red underline, NO color change */
+        .misspelled {
+            text-decoration: underline wavy #ef4444 !important;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+/* ===== TOOLTIP ===== */
+.custom-tip {
+    position: fixed;
+    background: rgba(20, 20, 35, 0.95);
+    color: #ffd700;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: monospace;
+    pointer-events: none;
+    z-index: 99999;
+    border: 1px solid #ffd700;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(4px);
+    max-width: 500px;
+    word-break: break-all;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    white-space: normal;
+}
+
+/* Triangle pointer - follows mouse */
+.custom-tip .tip-triangle {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 8px 8px 0 8px;
+    border-color: rgba(20, 20, 35, 0.95) transparent transparent transparent;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: left 0.08s ease;
+}
+
+/* Triangle border to match the tooltip border */
+.custom-tip .tip-triangle-border {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 9px 9px 0 9px;
+    border-color: #ffd700 transparent transparent transparent;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: left 0.08s ease;
+    z-index: -1;
+}
+
+.custom-tip .tip-label {
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.custom-tip .tip-value {
+    color: #e2e8f0;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+.custom-tip .tip-divider {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    margin: 4px 0;
+}
+
+.custom-tip .tip-title {
+    color: #facc15;
+    font-weight: 600;
+}
+
+        /* ===== TOAST ===== */
+        .toast-msg {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--surface);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            z-index: 10000;
+            font-size: 14px;
+            max-width: 400px;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 700px) {
+            .header { flex-direction: column; align-items: flex-start; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            th, td { font-size: 11px; padding: 6px 8px; }
+            .input-section textarea { height: 180px; }
+            .legend { font-size: 11px; gap: 10px; }
+        }
+        @media (max-width: 500px) {
+            .stats { grid-template-columns: 1fr 1fr; }
+            .button-group .btn { flex: 1; min-width: 80px; font-size: 11px; padding: 8px 12px; }
+        }
+        
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--surface-2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <h1>🔗 Link Text vs URL Slug Comparator v5</h1>
+        <div class="header-controls">
+            <button class="theme-btn" id="themeToggle" title="Toggle Theme">🌙</button>
+        </div>
+    </div>
+    
+    <!-- ===== INPUT ===== -->
+    <div class="input-section">
+        <label for="linkInput">📝 Paste your &lt;a&gt; tags below (one per line or full HTML):</label>
+        <textarea id="linkInput" placeholder='<a href="https://example.com/about-us">About Us</a>&#10;<a href="https://example.com/more-about-us">More About Us</a>&#10;<a href="https://example.com/contact">Contact</a>'></textarea>
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="compareLinks()">🔍 Compare Links</button>
+            <button class="btn btn-warning" onclick="removeDuplicates()">🗑️ Remove Duplicates</button>
+            <button class="btn btn-secondary" onclick="clearAll()">🗑️ Clear</button>
+        </div>
+        <div style="margin-top:8px; font-size:11px; color:var(--text-muted);">
+            💡 Duplicate detection: Links with the same URL will be marked as duplicates.
+        </div>
+    </div>
+    
+    <!-- ===== STATS ===== -->
+    <div class="stats" id="statsContainer">
+        <div class="stat-card active" data-filter="all" onclick="highlightByStat('all')">
+            <div class="stat-number" id="totalLinks">0</div>
+            <div class="stat-label">📄 Total Links</div>
+        </div>
+        <div class="stat-card match-exact" data-filter="exact" onclick="highlightByStat('exact')">
+            <div class="stat-number" id="exactMatches">0</div>
+            <div class="stat-label">✅ Exact Matches</div>
+        </div>
+        <div class="stat-card match-partial" data-filter="partial" onclick="highlightByStat('partial')">
+            <div class="stat-number" id="partialMatches">0</div>
+            <div class="stat-label">🔄 Partial Matches</div>
+        </div>
+        <div class="stat-card match-none" data-filter="none" onclick="highlightByStat('none')">
+            <div class="stat-number" id="noMatches">0</div>
+            <div class="stat-label">❌ No Match</div>
+        </div>
+        <div class="stat-card" data-filter="parent" onclick="highlightByStat('parent')">
+            <div class="stat-number" id="parentCount">0</div>
+            <div class="stat-label">📂 Parent Pages</div>
+        </div>
+        <div class="stat-card" data-filter="child" onclick="highlightByStat('child')">
+            <div class="stat-number" id="childCount">0</div>
+            <div class="stat-label">📄 Child Pages</div>
+        </div>
+        <div class="stat-card duplicate-stat" data-filter="duplicate" onclick="highlightByStat('duplicate')">
+            <div class="stat-number" id="duplicateCount">0</div>
+            <div class="stat-label">🔁 Duplicates</div>
+        </div>
+    </div>
+    
+    <!-- ===== RESULTS ===== -->
+    <div class="results-section">
+        <h2>
+            <span>📊 Comparison Results</span>
+            <span class="legend hidden" id="legendContainer">
+                <span><span class="dot dot-exact"></span> Exact</span>
+                <span><span class="dot dot-partial"></span> Partial</span>
+                <span><span class="dot dot-none"></span> No Match</span>
+                <span><span class="dot dot-duplicate"></span> Duplicate</span>
+                <span style="color:var(--text-muted);">|</span>
+                <span style="color:var(--text-muted);">📂 Parent → 📄 Child</span>
+                <span style="color:var(--text-muted);">|</span>
+                <span style="color:var(--accent);">⬇️ Click headers to sort</span>
+                <span style="color:var(--text-muted);">|</span>
+                <span style="color:var(--text-muted);">📊 Click stats to highlight</span>
+            </span>
+        </h2>
+        <div id="resultsContainer">
+            <div class="no-results">👋 Paste your links above and click "Compare Links"</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOOLTIP ===== -->
+<div class="custom-tip" id="customTip">
+    <div class="tip-triangle-border" id="tipTriangleBorder"></div>
+    <div class="tip-triangle" id="tipTriangle"></div>
+</div>
+
+<script>
+// ============================================================
+//  THEME TOGGLE
+// ============================================================
+(function() {
+    const themeBtn = document.getElementById('themeToggle');
+    const saved = localStorage.getItem('comparatorTheme');
+    if (saved === 'light') document.body.classList.add('light');
+    function setTheme(t) {
+        document.body.classList.toggle('light', t === 'light');
+        localStorage.setItem('comparatorTheme', t);
+        themeBtn.textContent = t === 'light' ? '☀️' : '🌙';
+    }
+    setTheme(saved || 'dark');
+    themeBtn.addEventListener('click', () => {
+        const isLight = document.body.classList.contains('light');
+        setTheme(isLight ? 'dark' : 'light');
+    });
+})();
+
+// ============================================================
+//  TOOLTIP - Triangle follows mouse on all sides
+// ============================================================
+const tip = document.getElementById('customTip');
+const tipTriangle = document.getElementById('tipTriangle');
+const tipTriangleBorder = document.getElementById('tipTriangleBorder');
+let tipTimer = null;
+let isTipVisible = false;
+let currentTipText = '';
+let tipHideTimeout = null;
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function showTip(e, text) {
+    currentTipText = String(text || '');
+    if (tipHideTimeout) {
+        clearTimeout(tipHideTimeout);
+        tipHideTimeout = null;
+    }
+    
+    const safeText = currentTipText.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+    tip.innerHTML = safeText;
+    tip.appendChild(tipTriangleBorder);
+    tip.appendChild(tipTriangle);
+    
+    tip.style.opacity = '1';
+    isTipVisible = true;
+    positionTip(e);
+}
+
+function positionTip(e) {
+    if (!isTipVisible) return;
+    
+    const triangleSize = 8;
+    const tipWidth = tip.offsetWidth || 200;
+    const tipHeight = tip.offsetHeight || 60;
+    
+    const bottomDistance = 30;
+    const topDistance = 20;
+    const sideDistance = 20;
+    
+    const spaceRight = window.innerWidth - e.clientX;
+    const spaceLeft = e.clientX;
+    const spaceBottom = window.innerHeight - e.clientY;
+    const spaceTop = e.clientY;
+    
+    let left, top;
+    let trianglePosition = 'bottom';
+    let triangleX = 0;
+    let triangleY = 0;
+    
+    // Check if screen is wide enough for side placement
+    const minSideSpace = tipWidth + sideDistance + triangleSize + 20;
+    const hasSideSpace = (spaceRight > minSideSpace || spaceLeft > minSideSpace);
+    
+    // Priority 1: Bottom (30px distance)
+    if (spaceBottom > tipHeight + bottomDistance + triangleSize) {
+        top = e.clientY + bottomDistance + triangleSize;
+        trianglePosition = 'top';
+        triangleY = -triangleSize;
+    }
+    // Priority 2: Right (20px distance)
+    else if (spaceRight > tipWidth + sideDistance + triangleSize && hasSideSpace) {
+        left = e.clientX + sideDistance + triangleSize;
+        top = e.clientY - tipHeight / 2;
+        trianglePosition = 'left';
+        // triangleX will be set in the side placement section
+    }
+    // Priority 3: Left (20px distance)
+    else if (spaceLeft > tipWidth + sideDistance + triangleSize && hasSideSpace) {
+        left = e.clientX - tipWidth - sideDistance - triangleSize;
+        top = e.clientY - tipHeight / 2;
+        trianglePosition = 'right';
+        // triangleX will be set in the side placement section
+    }
+    // Priority 4: Top (20px distance)
+    else if (spaceTop > tipHeight + topDistance + triangleSize) {
+        top = e.clientY - tipHeight - topDistance - triangleSize;
+        trianglePosition = 'bottom';
+        triangleY = tipHeight;
+    }
+    // Fallback
+    else {
+        top = Math.max(10, e.clientY - tipHeight - 10);
+        trianglePosition = 'bottom';
+        triangleY = tipHeight;
+    }
+    
+    // Calculate horizontal position for top/bottom placement
+    if (trianglePosition === 'top' || trianglePosition === 'bottom') {
+        left = e.clientX - tipWidth / 2;
+        triangleX = tipWidth / 2;
+        
+        if (left < 10) {
+            left = 10;
+            triangleX = e.clientX - left;
+        } else if (left + tipWidth > window.innerWidth - 10) {
+            left = window.innerWidth - tipWidth - 10;
+            triangleX = e.clientX - left;
+        }
+        triangleX = Math.max(12, Math.min(triangleX, tipWidth - 12));
+        triangleY = (trianglePosition === 'bottom') ? tipHeight : -triangleSize;
+    }
+    
+    // For left/right placement - triangle follows mouse vertically on the side
+    if (trianglePosition === 'left' || trianglePosition === 'right') {
+        // Clamp tooltip vertically
+        if (top < 10) {
+            top = 10;
+        } else if (top + tipHeight > window.innerHeight - 10) {
+            top = window.innerHeight - tipHeight - 10;
+        }
+        
+        // Triangle Y: follows the mouse vertically on the side of the tooltip
+        triangleY = e.clientY - top;
+        triangleY = Math.max(12, Math.min(triangleY, tipHeight - 12));
+        
+        // Triangle X: at the edge of the tooltip
+        if (trianglePosition === 'right') {
+            triangleX = tipWidth;  // At right edge
+        } else {
+            triangleX = -triangleSize;  // At left edge
+        }
+    }
+    
+    // Keep tooltip in viewport for top/bottom
+    if (trianglePosition === 'top' || trianglePosition === 'bottom') {
+        if (top + tipHeight > window.innerHeight - 10) {
+            top = window.innerHeight - tipHeight - 10;
+            triangleY = (trianglePosition === 'bottom') ? tipHeight : -triangleSize;
+        }
+        if (top < 10) {
+            top = 10;
+            triangleY = (trianglePosition === 'top') ? -triangleSize : tipHeight;
+        }
+    }
+    
+    // Apply positions
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    
+    // Update triangle
+    updateTriangle(trianglePosition, triangleX, triangleY, triangleSize);
+}
+
+function updateTriangle(position, x, y, size) {
+    const tri = tipTriangle;
+    const triBorder = tipTriangleBorder;
+    
+    // Reset styles
+    tri.style.cssText = '';
+    triBorder.style.cssText = '';
+    tri.style.position = 'absolute';
+    triBorder.style.position = 'absolute';
+    tri.style.width = '0';
+    tri.style.height = '0';
+    triBorder.style.width = '0';
+    triBorder.style.height = '0';
+    
+    switch(position) {
+        case 'bottom':
+            tri.style.borderStyle = 'solid';
+            tri.style.borderWidth = size + 'px ' + size + 'px 0 ' + size + 'px';
+            tri.style.borderColor = 'rgba(20, 20, 35, 0.95) transparent transparent transparent';
+            tri.style.bottom = '-' + size + 'px';
+            tri.style.left = x + 'px';
+            tri.style.top = 'auto';
+            
+            triBorder.style.borderStyle = 'solid';
+            triBorder.style.borderWidth = (size + 1) + 'px ' + (size + 1) + 'px 0 ' + (size + 1) + 'px';
+            triBorder.style.borderColor = '#ffd700 transparent transparent transparent';
+            triBorder.style.bottom = '-' + (size + 1) + 'px';
+            triBorder.style.left = x + 'px';
+            triBorder.style.top = 'auto';
+            break;
+            
+        case 'top':
+            tri.style.borderStyle = 'solid';
+            tri.style.borderWidth = '0 ' + size + 'px ' + size + 'px ' + size + 'px';
+            tri.style.borderColor = 'transparent transparent rgba(20, 20, 35, 0.95) transparent';
+            tri.style.top = '-' + size + 'px';
+            tri.style.left = x + 'px';
+            tri.style.bottom = 'auto';
+            
+            triBorder.style.borderStyle = 'solid';
+            triBorder.style.borderWidth = '0 ' + (size + 1) + 'px ' + (size + 1) + 'px ' + (size + 1) + 'px';
+            triBorder.style.borderColor = 'transparent transparent #ffd700 transparent';
+            triBorder.style.top = '-' + (size + 1) + 'px';
+            triBorder.style.left = x + 'px';
+            triBorder.style.bottom = 'auto';
+            break;
+            
+        case 'left':
+            // Triangle on LEFT side of tooltip (points left toward the mouse)
+            tri.style.borderStyle = 'solid';
+            tri.style.borderWidth = size + 'px ' + size + 'px ' + size + 'px 0';
+            tri.style.borderColor = 'transparent rgba(20, 20, 35, 0.95) transparent transparent';
+            tri.style.left = '-' + size + 'px';
+            tri.style.top = y + 'px';  // y is the vertical position
+            tri.style.right = 'auto';
+            tri.style.bottom = 'auto';
+            
+            triBorder.style.borderStyle = 'solid';
+            triBorder.style.borderWidth = (size + 1) + 'px ' + (size + 1) + 'px ' + (size + 1) + 'px 0';
+            triBorder.style.borderColor = 'transparent #ffd700 transparent transparent';
+            triBorder.style.left = '-' + (size + 1) + 'px';
+            triBorder.style.top = y + 'px';
+            triBorder.style.right = 'auto';
+            triBorder.style.bottom = 'auto';
+            break;
+            
+        case 'right':
+            // Triangle on RIGHT side of tooltip (points right toward the mouse)
+            tri.style.borderStyle = 'solid';
+            tri.style.borderWidth = size + 'px 0 ' + size + 'px ' + size + 'px';
+            tri.style.borderColor = 'transparent transparent transparent rgba(20, 20, 35, 0.95)';
+            tri.style.right = '-' + size + 'px';
+            tri.style.top = y + 'px';  // y is the vertical position
+            tri.style.left = 'auto';
+            tri.style.bottom = 'auto';
+            
+            triBorder.style.borderStyle = 'solid';
+            triBorder.style.borderWidth = (size + 1) + 'px 0 ' + (size + 1) + 'px ' + (size + 1) + 'px';
+            triBorder.style.borderColor = 'transparent transparent transparent #ffd700';
+            triBorder.style.right = '-' + (size + 1) + 'px';
+            triBorder.style.top = y + 'px';
+            triBorder.style.left = 'auto';
+            triBorder.style.bottom = 'auto';
+            break;
+    }
+}
+
+function hideTip() {
+    isTipVisible = false;
+    if (tipHideTimeout) clearTimeout(tipHideTimeout);
+    tipHideTimeout = setTimeout(() => {
+        tip.style.opacity = '0';
+    }, 150);
+}
+
+function hideTip() {
+    isTipVisible = false;
+    if (tipHideTimeout) clearTimeout(tipHideTimeout);
+    tipHideTimeout = setTimeout(() => {
+        tip.style.opacity = '0';
+    }, 150);
+}
+
+// ============================================================
+//  SORTING STATE & HIGHLIGHT
+// ============================================================
+let sortColumn = null;
+let sortDirection = 'asc';
+let currentResults = [];
+let activeHighlight = 'all';
+let trashedUrls = new Set();
+let detectedNOB = '';
+
+// ============================================================
+//  CORE COMPARISON ENGINE
+// ============================================================
+
+function textToSlug(text) {
+    if (!text) return '';
+    return text
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/\//g, '-or-')
+        .replace(/[,.]/g, '')
+        .replace(/\([^)]*\)/g, '')
+        .replace(/['"]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+}
+
+function getPathParts(url) {
+    try {
+        const u = new URL(url);
+        let path = u.pathname.replace(/\/$/, '');
+        if (!path || path === '/') return [];
+        return path.split('/').filter(p => p.length > 0);
+    } catch {
+        return [];
+    }
+}
+
+function getSlugFromUrl(url) {
+    const parts = getPathParts(url);
+    let slug = parts.length > 0 ? parts[parts.length - 1] : '';
+    slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (!slug) {
+        slug = '/';
+    }
+    return slug;
+}
+
+function levenshteinDistance(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b[i - 1] === a[j - 1]) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+function hasSpellingError(text, slug) {
+    if (!text || !slug) return { title: false, slug: false };
+    const textSlug = textToSlug(text);
+    let cleanSlug = slug.toLowerCase().replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const nobPrefix = detectedNOB || '';
+    let extensionToCheck = cleanSlug;
+    if (nobPrefix) {
+        const nobPattern = nobPrefix.replace(/-$/, '') + '-';
+        if (cleanSlug.startsWith(nobPattern)) {
+            extensionToCheck = cleanSlug.substring(nobPattern.length);
+        }
+    }
+    if (!extensionToCheck || extensionToCheck === '') {
+        extensionToCheck = cleanSlug;
+    }
+    let titleMisspelled = false;
+    const textWords = textSlug.split('-');
+    for (const word of textWords) {
+        if (word.length > 2 && isWordMisspelled(word)) {
+            titleMisspelled = true;
+            break;
+        }
+    }
+    let slugMisspelled = false;
+    const slugWords = extensionToCheck.split('-');
+    for (const word of slugWords) {
+        if (word.length > 2 && isWordMisspelled(word)) {
+            slugMisspelled = true;
+            break;
+        }
+    }
+    return { title: titleMisspelled, slug: slugMisspelled };
+}
+
+function isWordMisspelled(word) {
+    if (!word || word.length < 3) return false;
+    const commonDoubles = ['ll', 'ee', 'oo', 'tt', 'ss', 'rr', 'pp', 'mm', 'nn', 'ff'];
+    const doubleMatch = word.match(/([a-z])\1/i);
+    if (doubleMatch) {
+        const doubleLetter = doubleMatch[1] + doubleMatch[1];
+        if (!commonDoubles.includes(doubleLetter.toLowerCase())) {
+            return true;
+        }
+    }
+    if (/ss$/.test(word) && word.length > 2) {
+        const withoutSs = word.replace(/ss$/, 's');
+        if (isLikelyEnglishWord(withoutSs) && withoutSs.length > 1) {
+            return true;
+        }
+    }
+    if (!/[aeiouy]/i.test(word)) return true;
+    if (/[bcdfghjklmnpqrstvwxyz]{4,}/i.test(word)) return true;
+    if (/(.)\1{3,}/i.test(word)) return true;
+    return false;
+}
+
+function isLikelyEnglishWord(word) {
+    if (!word || word.length < 2) return true;
+    if (!/[aeiouy]/i.test(word)) return false;
+    const consonants = (word.match(/[bcdfghjklmnpqrstvwxyz]/gi) || []).length;
+    const vowels = (word.match(/[aeiouy]/gi) || []).length;
+    if (consonants > vowels * 2 + 1) return false;
+    if (/[bcdfghjklmnpqrstvwxyz]{4,}/i.test(word)) return false;
+    return true;
+}
+
+function detectNOB(links) {
+    const slugs = [];
+    for (const link of links) {
+        const slug = getSlugFromUrl(link.href);
+        if (slug === '/') continue;
+        const normalizedSlug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
+        if (normalizedSlug && normalizedSlug.includes('-') && normalizedSlug.length > 3) {
+            slugs.push(normalizedSlug);
+        }
+    }
+    if (slugs.length < 2) return null;
+    const prefixCount = {};
+    for (const slug of slugs) {
+        const parts = slug.split('-');
+        for (let i = parts.length - 1; i >= 1; i--) {
+            const prefix = parts.slice(0, i).join('-') + '-';
+            if (prefix.length < 4) continue;
+            prefixCount[prefix] = (prefixCount[prefix] || 0) + 1;
+        }
+    }
+    let bestPrefix = '';
+    let bestCount = 0;
+    for (const [prefix, count] of Object.entries(prefixCount)) {
+        if (count > bestCount || (count === bestCount && prefix.length > bestPrefix.length)) {
+            bestPrefix = prefix;
+            bestCount = count;
+        }
+    }
+    if (bestCount < 2) return null;
+    return bestPrefix;
+}
+
+function compareLinks() {
+    const input = document.getElementById('linkInput').value;
+    if (!input.trim()) {
+        document.getElementById('resultsContainer').innerHTML = 
+            '<div class="no-results">⚠️ Please paste some links first.</div>';
+        document.getElementById('legendContainer').classList.add('hidden');
+        return;
+    }
+    document.getElementById('legendContainer').classList.remove('hidden');
+    trashedUrls.clear();
+    const linkRegex = /<a\s+(?:[^>]*?\s+)?href\s*=\s*["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
+    const links = [];
+    let match;
+    const urlCountMap = new Map();
+    const textCountMap = new Map();
+    const tempLinks = [];
+    let found = false;
+    while ((match = linkRegex.exec(input)) !== null) {
+        found = true;
+        const href = match[1].trim();
+        const text = match[2].trim().replace(/\s+/g, ' ');
+        const urlKey = href.toLowerCase().trim();
+        const textKey = text.toLowerCase().trim();
+        urlCountMap.set(urlKey, (urlCountMap.get(urlKey) || 0) + 1);
+        textCountMap.set(textKey, (textCountMap.get(textKey) || 0) + 1);
+        tempLinks.push({ href, text, urlKey, textKey });
+    }
+    if (!found) {
+        const lines = input.split(/\r?\n/).filter(line => line.trim());
+        for (const line of lines) {
+            const hrefMatch = line.match(/href\s*=\s*["']([^"']*)["']/i);
+            const textMatch = line.match(/>([^<]*)<\/a>/i);
+            if (hrefMatch) {
+                const href = hrefMatch[1].trim();
+                const text = textMatch ? textMatch[1].trim() : '(no text)';
+                const urlKey = href.toLowerCase().trim();
+                const textKey = text.toLowerCase().trim();
+                urlCountMap.set(urlKey, (urlCountMap.get(urlKey) || 0) + 1);
+                textCountMap.set(textKey, (textCountMap.get(textKey) || 0) + 1);
+                tempLinks.push({ href, text, urlKey, textKey });
+            }
+        }
+    }
+    if (tempLinks.length === 0) {
+        document.getElementById('resultsContainer').innerHTML = 
+            '<div class="no-results">❌ No valid &lt;a&gt; tags found. Make sure href="..." exists.</div>';
+        return;
+    }
+    for (const temp of tempLinks) {
+        const isUrlDuplicate = urlCountMap.get(temp.urlKey) > 1;
+        const isTextDuplicate = textCountMap.get(temp.textKey) > 1;
+        const isDuplicate = isUrlDuplicate || isTextDuplicate;
+        links.push({
+            href: temp.href,
+            text: temp.text,
+            isDuplicate: isDuplicate,
+            isUrlDuplicate: isUrlDuplicate,
+            isTextDuplicate: isTextDuplicate,
+            urlKey: temp.urlKey,
+            textKey: temp.textKey
+        });
+    }
+    const nobPrefix = detectNOB(links);
+    detectedNOB = nobPrefix || '';
+    let nobDisplay = nobPrefix ? nobPrefix.replace(/-$/, '') : null;
+    const results = links.map(link => {
+        let slug = getSlugFromUrl(link.href);
+        if (!slug) {
+            slug = '/';
+        }
+        const pathParts = getPathParts(link.href);
+        const status = compareTextToSlug(link.text, slug);
+        const spellingCheck = hasSpellingError(link.text, slug);
+        const hasSpellingIssue = spellingCheck.title || spellingCheck.slug;
+        const titleMisspelled = spellingCheck.title;
+        const slugMisspelled = spellingCheck.slug;
+        const isMergedMatch = checkMergedMatch(link.text, slug);
+        const textSlug = textToSlug(link.text);
+        const cleanSlug = slug.toLowerCase().replace(/-+/g, '-').replace(/^-|-$/g, '');
+        const hasNOB = nobPrefix ? slug.startsWith(nobPrefix) : false;
+        let nobPart = null;
+        let extensionPart = null;
+        if (hasNOB && nobPrefix) {
+            nobPart = nobPrefix.replace(/-$/, '');
+            extensionPart = slug.slice(nobPrefix.length);
+        }
+        let hasParent = false;
+        if (pathParts.length > 1) {
+            const parentPathFull = pathParts.slice(0, -1).join('/');
+            for (const other of links) {
+                const otherParts = getPathParts(other.href);
+                if (otherParts.length === pathParts.length - 1) {
+                    const otherPath = otherParts.join('/');
+                    if (otherPath === parentPathFull) {
+                        hasParent = true;
+                        break;
+                    }
+                }
+            }
+        }
+        let hasChildren = false;
+        let childCount = 0;
+        for (const other of links) {
+            const otherParts = getPathParts(other.href);
+            if (otherParts.length > pathParts.length) {
+                const otherPath = otherParts.slice(0, pathParts.length).join('/');
+                if (otherPath === pathParts.join('/')) {
+                    hasChildren = true;
+                    childCount++;
+                }
+            }
+        }
+        return {
+            ...link,
+            slug,
+            pathParts,
+            hasParent,
+            hasChildren,
+            childCount,
+            status,
+            textSlug,
+            cleanSlug,
+            depth: pathParts.length,
+            isTrashed: false,
+            hasNOB,
+            nobPart,
+            extensionPart,
+            hasSpellingIssue,
+            titleMisspelled,
+            slugMisspelled,
+            isMergedMatch
+        };
+    });
+    currentResults = results;
+    activeHighlight = 'all';
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+    document.querySelector('.stat-card[data-filter="all"]')?.classList.add('active');
+    if (nobDisplay) {
+        console.log(`🏷️ NOB (Nature of Business) detected: "${nobDisplay}"`);
+    }
+    displayResults(currentResults);
+}
+
+function compareTextToSlug(text, slug) {
+    if (!text || !slug) return 'none';
+    const textSlug = textToSlug(text);
+    const cleanSlug = slug.toLowerCase().replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (!textSlug || !cleanSlug) return 'none';
+    if (textSlug === cleanSlug) return 'exact';
+    const nobPrefix = detectedNOB || '';
+    let textSlugWithoutNob = textSlug;
+    let cleanSlugWithoutNob = cleanSlug;
+    if (nobPrefix) {
+        const nobPattern = nobPrefix.replace(/-$/, '') + '-';
+        if (cleanSlug.startsWith(nobPattern)) {
+            cleanSlugWithoutNob = cleanSlug.substring(nobPattern.length);
+        }
+        if (textSlug.startsWith(nobPattern)) {
+            textSlugWithoutNob = textSlug.substring(nobPattern.length);
+        }
+    }
+    if (textSlug === cleanSlugWithoutNob || 
+        textSlugWithoutNob === cleanSlug ||
+        textSlugWithoutNob === cleanSlugWithoutNob) {
+        return 'exact';
+    }
+    if (textSlugWithoutNob && cleanSlugWithoutNob) {
+        if (textSlugWithoutNob.includes(cleanSlugWithoutNob) || 
+            cleanSlugWithoutNob.includes(textSlugWithoutNob)) {
+            const minLen = Math.min(textSlugWithoutNob.length, cleanSlugWithoutNob.length);
+            if (minLen >= 3) {
+                return 'exact';
+            }
+        }
+    }
+    if (textSlug.includes(cleanSlug) || cleanSlug.includes(textSlug) ||
+        textSlug.includes(cleanSlugWithoutNob) || cleanSlugWithoutNob.includes(textSlug)) {
+        if (textSlug.length > 3 && cleanSlug.length > 3) {
+            return 'partial';
+        }
+    }
+    const textWords = textSlug.split('-');
+    const slugWords = cleanSlug.split('-');
+    let matchCount = 0;
+    for (const tw of textWords) {
+        if (tw.length < 2) continue;
+        if (slugWords.some(sw => sw.includes(tw) || tw.includes(sw))) {
+            matchCount++;
+        }
+    }
+    const ratio = textWords.length > 0 ? matchCount / textWords.length : 0;
+    if (ratio >= 0.5) return 'partial';
+    return 'none';
+}
+
+function checkMergedMatch(text, slug) {
+    if (!text || !slug) return false;
+    const textSlug = textToSlug(text);
+    const cleanSlug = slug.toLowerCase().replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const nobPrefix = detectedNOB || '';
+    let textSlugWithoutNob = textSlug;
+    let cleanSlugWithoutNob = cleanSlug;
+    if (nobPrefix) {
+        const nobPattern = nobPrefix.replace(/-$/, '') + '-';
+        if (cleanSlug.startsWith(nobPattern)) {
+            cleanSlugWithoutNob = cleanSlug.substring(nobPattern.length);
+        }
+        if (textSlug.startsWith(nobPattern)) {
+            textSlugWithoutNob = textSlug.substring(nobPattern.length);
+        }
+    }
+    if (textSlugWithoutNob === cleanSlugWithoutNob) return false;
+    if (textSlugWithoutNob && cleanSlugWithoutNob) {
+        if (textSlugWithoutNob.includes(cleanSlugWithoutNob) || 
+            cleanSlugWithoutNob.includes(textSlugWithoutNob)) {
+            const minLen = Math.min(textSlugWithoutNob.length, cleanSlugWithoutNob.length);
+            if (minLen >= 3) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function removeDuplicates() {
+    if (currentResults.length === 0) {
+        showToast('Please compare links first.');
+        return;
+    }
+    const urlMap = new Map();
+    const textMap = new Map();
+    const duplicateUrls = new Set();
+    const duplicateTexts = new Set();
+    for (const r of currentResults) {
+        const urlKey = r.href.toLowerCase().trim();
+        const textKey = r.text.toLowerCase().trim();
+        if (urlMap.has(urlKey)) {
+            duplicateUrls.add(r.href);
+            const firstResult = urlMap.get(urlKey);
+            if (firstResult && !duplicateUrls.has(firstResult.href)) {
+                duplicateUrls.add(firstResult.href);
+            }
+        } else {
+            urlMap.set(urlKey, r);
+        }
+        if (textMap.has(textKey)) {
+            duplicateTexts.add(r.text);
+            const firstResult = textMap.get(textKey);
+            if (firstResult && !duplicateTexts.has(firstResult.text)) {
+                duplicateTexts.add(firstResult.text);
+            }
+        } else {
+            textMap.set(textKey, r);
+        }
+    }
+    if (duplicateUrls.size === 0 && duplicateTexts.size === 0) {
+        showToast('✅ No duplicate links found! All URLs and texts are unique.');
+        return;
+    }
+    let trashedCount = 0;
+    for (const r of currentResults) {
+        const isUrlDup = duplicateUrls.has(r.href);
+        const isTextDup = duplicateTexts.has(r.text);
+        if (isUrlDup || isTextDup) {
+            if (!r.isTrashed) {
+                r.isTrashed = true;
+                trashedUrls.add(r.href);
+                trashedCount++;
+            }
+        } else {
+            r.isTrashed = false;
+        }
+    }
+    displayResults(currentResults);
+    updateStats();
+    showToast(`🗑️ Found ${duplicateUrls.size + duplicateTexts.size} duplicate entries. ${trashedCount} link(s) marked as trashed.`);
+}
+
+function updateStats() {
+    const total = currentResults.length;
+    const urlCount = new Map();
+    const textCount = new Map();
+    for (const r of currentResults) {
+        const key = r.href.toLowerCase().trim();
+        urlCount.set(key, (urlCount.get(key) || 0) + 1);
+        const textKey = r.text.toLowerCase().trim();
+        textCount.set(textKey, (textCount.get(textKey) || 0) + 1);
+    }
+    let totalDuplicates = 0;
+    for (const r of currentResults) {
+        const isUrlDup = urlCount.get(r.href.toLowerCase().trim()) > 1;
+        const isTextDup = textCount.get(r.text.toLowerCase().trim()) > 1;
+        if (isUrlDup || isTextDup) {
+            totalDuplicates++;
+        }
+    }
+    // Include both exact and merged in the exact count
+    const exact = currentResults.filter(r => (r.status === 'exact') && !r.isTrashed).length;
+    const partial = currentResults.filter(r => r.status === 'partial' && !r.isTrashed).length;
+    const none = currentResults.filter(r => r.status === 'none' && !r.isTrashed).length;
+    const parents = currentResults.filter(r => r.hasChildren && !r.isTrashed).length;
+    const children = currentResults.filter(r => r.hasParent && !r.isTrashed).length;
+    document.getElementById('totalLinks').textContent = total;
+    document.getElementById('exactMatches').textContent = exact;
+    document.getElementById('partialMatches').textContent = partial;
+    document.getElementById('noMatches').textContent = none;
+    document.getElementById('parentCount').textContent = parents;
+    document.getElementById('childCount').textContent = children;
+    document.getElementById('duplicateCount').textContent = totalDuplicates;
+}
+
+function showToast(msg) {
+    const existing = document.querySelector('.toast-msg');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast-msg';
+    toast.style.animation = 'slideIn 0.3s ease';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function highlightByStat(type) {
+    // If clicking the same stat card that's already active, deactivate it
+    if (activeHighlight === type) {
+        activeHighlight = 'all';
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+        document.querySelector('.stat-card[data-filter="all"]')?.classList.add('active');
+        const rows = document.querySelectorAll('#resultsContainer tbody tr');
+        rows.forEach(row => {
+            // Remove stat highlight classes but KEEP spelling highlight
+            row.classList.remove('highlight-row', 'highlight-exact', 'highlight-partial', 'highlight-none', 'highlight-parent', 'highlight-child', 'highlight-duplicate');
+        });
+        return;
+    }
+    
+    activeHighlight = type;
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+    const targetCard = document.querySelector(`.stat-card[data-filter="${type}"]`);
+    if (targetCard) targetCard.classList.add('active');
+    const rows = document.querySelectorAll('#resultsContainer tbody tr');
+    rows.forEach(row => {
+        // First remove ONLY stat highlight classes (keep spelling)
+        row.classList.remove('highlight-exact', 'highlight-partial', 'highlight-none', 'highlight-parent', 'highlight-child', 'highlight-duplicate', 'highlight-row');
+        
+        // Always keep spelling highlight if present
+        if (row.classList.contains('highlight-spelling')) {
+            // Do nothing - keep it
+        }
+        
+        if (type === 'all') return;
+        const statusCell = row.querySelector('td:nth-child(4)');
+        const depthCell = row.querySelector('td:nth-child(5)');
+        const firstCell = row.querySelector('td:first-child');
+        const linkTextCell = row.querySelector('td:nth-child(2)');
+        let isMatch = false;
+        let highlightClass = '';
+        if (type === 'exact' && statusCell && statusCell.textContent.includes('Exact')) {
+            isMatch = true;
+            highlightClass = 'highlight-exact';
+        } else if (type === 'partial' && statusCell && statusCell.textContent.includes('Partial')) {
+            isMatch = true;
+            highlightClass = 'highlight-partial';
+        } else if (type === 'none' && statusCell && statusCell.textContent.includes('No Match')) {
+            isMatch = true;
+            highlightClass = 'highlight-none';
+        } else if (type === 'parent' && depthCell && depthCell.textContent.includes('📂 Parent')) {
+            isMatch = true;
+            highlightClass = 'highlight-parent';
+        } else if (type === 'child' && depthCell && depthCell.textContent.includes('📄 Child')) {
+            isMatch = true;
+            highlightClass = 'highlight-child';
+        } else if (type === 'duplicate') {
+            if (linkTextCell && linkTextCell.innerHTML.includes('duplicate-badge')) {
+                isMatch = true;
+                highlightClass = 'highlight-duplicate';
+            }
+            if (firstCell && firstCell.textContent.includes('🔁')) {
+                isMatch = true;
+                highlightClass = 'highlight-duplicate';
+            }
+        }
+        if (isMatch && highlightClass) {
+            row.classList.add(highlightClass);
+        }
+    });
+}
+
+function displayResults(results, sortCol = sortColumn, sortDir = sortDirection) {
+    if (!sortCol) {
+        sortCol = 'slug';
+        sortDir = 'asc';
+        sortColumn = 'slug';
+        sortDirection = 'asc';
+    }
+    let sortedResults = [...results];
+    sortedResults.sort((a, b) => {
+        let valA, valB;
+        switch(sortCol) {
+            case 'index': valA = a.index || 0; valB = b.index || 0; break;
+            case 'text': valA = a.text.toLowerCase(); valB = b.text.toLowerCase(); break;
+            case 'slug': valA = a.slug.toLowerCase(); valB = b.slug.toLowerCase(); break;
+            case 'status': 
+                const order = { exact: 0, partial: 1, none: 2 };
+                valA = order[a.status] || 0;
+                valB = order[b.status] || 0;
+                break;
+            case 'depth': valA = a.depth; valB = b.depth; break;
+            default: valA = a.text; valB = b.text;
+        }
+        if (typeof valA === 'string') {
+            return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return sortDir === 'asc' ? valA - valB : valB - valA;
+    });
+    updateStats();
+    let html = `<table>
+        <thead>
+            <tr>
+                <th data-sort="index" onclick="sortTable('index')"># <span class="sort-icon">${sortCol === 'index' ? (sortDir === 'asc' ? '▲' : '▼') : '▽'}</span></th>
+                <th data-sort="text" onclick="sortTable('text')">🔗 Link Text <span class="sort-icon">${sortCol === 'text' ? (sortDir === 'asc' ? '▲' : '▼') : '▽'}</span></th>
+                <th data-sort="slug" onclick="sortTable('slug')"> 📎 URL Slug <span class="sort-icon">${sortCol === 'slug' ? (sortDir === 'asc' ? '▲' : '▼') : '▽'}</span> </th>
+                <th data-sort="status" onclick="sortTable('status')">📊 Status <span class="sort-icon">${sortCol === 'status' ? (sortDir === 'asc' ? '▲' : '▼') : '▽'}</span></th>
+                <th data-sort="depth" onclick="sortTable('depth')">📂 Depth <span class="sort-icon">${sortCol === 'depth' ? (sortDir === 'asc' ? '▲' : '▼') : '▽'}</span></th>
+            </tr>
+        </thead>
+        <tbody>`;
+    let index = 0;
+    for (const r of sortedResults) {
+        index++;
+        r.index = index;
+        const isTrashed = r.isTrashed || false;
+        const trashedClass = isTrashed ? 'row-duplicate' : '';
+        let statusLabel, statusClass;
+        if (isTrashed) {
+            statusLabel = '🗑️ Trashed';
+            statusClass = 'match-no';
+        } else if (r.status === 'exact' && r.isMergedMatch) {
+            statusLabel = '<span class="merge-icon">🔗</span> Exact Match';
+            statusClass = 'match-merged';
+        } else if (r.status === 'exact') {
+            statusLabel = '✅ Exact Match';
+            statusClass = 'match-yes';
+        } else if (r.status === 'partial') {
+            statusLabel = '🔄 Partial Match';
+            statusClass = 'match-partial';
+        } else {
+            statusLabel = '❌ No Match';
+            statusClass = 'match-no';
+        }
+
+        // Row classes WITHOUT automatic highlighting
+        let rowClass = '';
+        if (isTrashed) {
+            rowClass = 'row-duplicate';
+        } else if (r.hasSpellingIssue) {
+            rowClass = 'highlight-spelling';
+        } else if (r.isMergedMatch) {
+            rowClass = 'merged-match';
+        } else if (r.hasChildren && r.hasParent) {
+            rowClass = 'row-parent-child';
+        } else if (r.hasChildren) {
+            rowClass = 'row-parent';
+        } else if (r.hasParent) {
+            rowClass = 'row-child';
+        }
+
+        // If there's an active stat highlight, add that class too
+        if (activeHighlight !== 'all' && activeHighlight !== 'spelling') {
+            // Check if this row matches the active stat
+            let matchesStat = false;
+            const statusCell = document.querySelector(`#resultsContainer tbody tr:last-child td:nth-child(4)`); // Placeholder - we need a better way
+            // Actually, we need to check the status in the data, not in the DOM
+        }
+
+        let depthInfo = `${r.depth}`;
+        if (r.depth > 1) {
+            depthInfo += ` <span style="font-size:10px; color:var(--text-muted);">(${r.pathParts.join(' → ')})</span>`;
+        }
+        let pcInfo = '';
+        if (isTrashed) {
+            pcInfo = `<span style="color:#9b59b6;">🗑️ Trashed (Duplicate)</span>`;
+        } else if (r.hasChildren && r.hasParent) {
+            pcInfo = `<span style="color:var(--success);">📂 Parent & Child (${r.childCount} children)</span>`;
+        } else if (r.hasChildren) {
+            pcInfo = `<span style="color:var(--accent);">📂 Parent (${r.childCount} children)</span>`;
+        } else if (r.hasParent) {
+            pcInfo = `<span style="color:var(--warning);">📄 Child</span>`;
+        } else {
+            pcInfo = `<span style="color:var(--text-muted);">📄 Leaf</span>`;
+        }
+        const displayText = r.text.length > 50 ? r.text.substring(0, 47) + '...' : r.text;
+        const displaySlug = r.slug.length > 50 ? r.slug.substring(0, 47) + '...' : r.slug;
+        let specialWarning = '';
+        if (/[()'"]/.test(r.text)) {
+            specialWarning = ' ⚠️';
+        }
+        const isUrlDuplicate = r.isUrlDuplicate || false;
+        const isTextDuplicate = r.isTextDuplicate || false;
+        let duplicateBadge = '';
+        if (isUrlDuplicate && isTextDuplicate) {
+            duplicateBadge = '<span class="duplicate-badge" title="URL & Text Duplicate">🔁</span>';
+        } else if (isUrlDuplicate) {
+            duplicateBadge = '<span class="duplicate-badge" title="Duplicate URL">🔁</span>';
+        } else if (isTextDuplicate) {
+            duplicateBadge = '<span class="duplicate-badge" title="Duplicate Text">📝</span>';
+        }
+        const indexDisplay = isTrashed ? `🔁 ${index}` : `${index}`;
+        const combinedClass = [rowClass, trashedClass].filter(Boolean).join(' ');
+        const textClass = isTrashed ? 'text-link trashed' : 'text-link';
+        html += `<tr class="${combinedClass}">
+            <td style="color:var(--text-muted); font-size:11px;">${indexDisplay}</td>
+            <td>
+                <a href="${r.href}" target="_blank" class="${textClass}" 
+                onmouseenter="showTip(event, '${r.text.replace(/'/g, "\\'")}')" 
+                onmousemove="positionTip(event)"
+                onmouseleave="hideTip()">
+                    ${r.titleMisspelled ? `<span class="misspelled">${displayText}${specialWarning}</span>` : `${displayText}${specialWarning}`}
+                </a>
+                ${duplicateBadge}
+                ${r.textSlug ? `<div style="font-size:9px; color:var(--text-muted); margin-top:2px;">→ ${r.textSlug}</div>` : ''}
+            </td>
+            <td>
+                <a href="${r.href}" target="_blank" class="${textClass}" 
+                onmouseenter="showTip(event, '${r.href.replace(/'/g, "\\'")}')" 
+                onmousemove="positionTip(event)"
+                onmouseleave="hideTip()">
+                    ${r.hasNOB && r.nobPart ? 
+                        `<span class="nob-part">${r.nobPart}</span>-${r.slugMisspelled ? `<span class="misspelled">${r.extensionPart || ''}</span>` : r.extensionPart || ''}` 
+                        : 
+                        `${r.slugMisspelled ? `<span class="misspelled">${displaySlug}</span>` : displaySlug}`
+                    }
+                </a>
+                ${r.cleanSlug ? `<div style="font-size:9px; color:var(--text-muted); margin-top:2px;">→ ${r.cleanSlug}</div>` : ''}
+            </td>
+            <td class="${statusClass}">${statusLabel}</td>
+            <td style="font-size:12px; color:var(--text-muted);">
+                ${depthInfo}
+                <div style="margin-top:4px;">${pcInfo}</div>
+            </td>
+        </tr>`;
+    }
+    html += `</tbody></table>`;
+    document.getElementById('resultsContainer').innerHTML = html;
+    // At the end of displayResults() function, after setting innerHTML
+    // Restore the active stat highlight if there is one
+    if (activeHighlight !== 'all') {
+        setTimeout(() => {
+            const rows = document.querySelectorAll('#resultsContainer tbody tr');
+            rows.forEach(row => {
+                // Check if this row matches the active stat type
+                const statusCell = row.querySelector('td:nth-child(4)');
+                const depthCell = row.querySelector('td:nth-child(5)');
+                const firstCell = row.querySelector('td:first-child');
+                const linkTextCell = row.querySelector('td:nth-child(2)');
+                
+                let shouldHighlight = false;
+                let highlightClass = '';
+                
+                if (activeHighlight === 'exact' && statusCell && statusCell.textContent.includes('Exact')) {
+                    shouldHighlight = true;
+                    highlightClass = 'highlight-exact';
+                } else if (activeHighlight === 'partial' && statusCell && statusCell.textContent.includes('Partial')) {
+                    shouldHighlight = true;
+                    highlightClass = 'highlight-partial';
+                } else if (activeHighlight === 'none' && statusCell && statusCell.textContent.includes('No Match')) {
+                    shouldHighlight = true;
+                    highlightClass = 'highlight-none';
+                } else if (activeHighlight === 'parent' && depthCell && depthCell.textContent.includes('📂 Parent')) {
+                    shouldHighlight = true;
+                    highlightClass = 'highlight-parent';
+                } else if (activeHighlight === 'child' && depthCell && depthCell.textContent.includes('📄 Child')) {
+                    shouldHighlight = true;
+                    highlightClass = 'highlight-child';
+                } else if (activeHighlight === 'duplicate') {
+                    if (linkTextCell && linkTextCell.innerHTML.includes('duplicate-badge')) {
+                        shouldHighlight = true;
+                        highlightClass = 'highlight-duplicate';
+                    }
+                    if (firstCell && firstCell.textContent.includes('🔁')) {
+                        shouldHighlight = true;
+                        highlightClass = 'highlight-duplicate';
+                    }
+                }
+                
+                if (shouldHighlight && highlightClass) {
+                    row.classList.add(highlightClass);
+                }
+            });
+        }, 50);
+    }
+}
+
+function sortTable(column) {
+    if (sortColumn === column) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn = column;
+        sortDirection = 'asc';
+    }
+    displayResults(currentResults, sortColumn, sortDirection);
+}
+
+function clearAll() {
+    document.getElementById('linkInput').value = '';
+    document.getElementById('resultsContainer').innerHTML = 
+        '<div class="no-results">👋 Paste your links above and click "Compare Links"</div>';
+    document.getElementById('legendContainer').classList.add('hidden');
+    document.getElementById('totalLinks').textContent = '0';
+    document.getElementById('exactMatches').textContent = '0';
+    document.getElementById('partialMatches').textContent = '0';
+    document.getElementById('noMatches').textContent = '0';
+    document.getElementById('parentCount').textContent = '0';
+    document.getElementById('childCount').textContent = '0';
+    document.getElementById('duplicateCount').textContent = '0';
+    currentResults = [];
+    sortColumn = null;
+    sortDirection = 'asc';
+    activeHighlight = 'all';
+    trashedUrls.clear();
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+    document.querySelector('.stat-card[data-filter="all"]')?.classList.add('active');
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active && active.id === 'linkInput') {
+            e.preventDefault();
+            compareLinks();
+        }
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active && active.id === 'linkInput') {
+            e.preventDefault();
+            clearAll();
+        }
+    }
+});
+
+const sampleData = `<a href="https://www.amyhealthcaremd.com/amy-health-care-services-inc-do-not-sell-or-share-my-personal-information">AMY HEALTH CARE SERVICES INC. – Do Not Sell or Share My Personal Information</a>
+<a href="https://www.amyhealthcaremd.com/home-health-care-services">Care Services</a>
+<a href="https://www.amyhealthcaremd.com/home-health-care-careers">Careers</a>
+<a href="https://www.amyhealthcaremd.com/">Home</a>
+<a href="https://www.amyhealthcaremd.com/home-health-care-lets-connect">Let's Connect</a>
+<a href="https://www.amyhealthcaremd.com/home-health-care-meet-our-caregivers">Meet Our Caregivers</a>
+<a href="https://www.amyhealthcaremd.com/home-health-care-our-story">Our Story</a>
+<a href="https://www.amyhealthcaremd.com/privacy-notice">Privacy Notice</a>
+<a href="https://www.amyhealthcaremd.com/home-health-care-schedule-an-assessment">Schedule an Assessment</a>
+<a href="https://www.amyhealthcaremd.com/home-health-care-schedule-care">Schedule Care</a>
+<a href="https://www.amyhealthcaremd.com/home-health-care-send-your-referrals">Send Your Referrals</a>
+<a href="https://www.amyhealthcaremd.com/sitemaap">Sitemaap</a>`;
+
+document.getElementById('linkInput').value = sampleData;
+
+console.log('🔗 Link Comparator v5 loaded!');
+console.log('📝 Features: NOB detection, sortable columns, parent/child hierarchy');
+console.log('🗑️ Click "Remove Duplicates" to trash duplicate links');
+console.log('📊 Click stat cards to highlight matching rows');
+console.log('⌨️ Ctrl+Enter to compare, Ctrl+Shift+Enter to clear');
+</script>
+</body>
+</html>
