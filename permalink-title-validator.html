@@ -1694,28 +1694,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
-        const active = document.activeElement;
-        if (active && active.id === 'linkInput') {
-            e.preventDefault();
-            clearAll();
-        }
-    }
-});
-
-const sampleData = `<a href="https://www.amyhealthcaremd.com/amy-health-care-services-inc-do-not-sell-or-share-my-personal-information">AMY HEALTH CARE SERVICES INC. – Do Not Sell or Share My Personal Information</a>
-<a href="https://www.amyhealthcaremd.com/home-health-care-services">Care Services</a>
-<a href="https://www.amyhealthcaremd.com/home-health-care-careers">Careers</a>
-<a href="https://www.amyhealthcaremd.com/">Home</a>
-<a href="https://www.amyhealthcaremd.com/home-health-care-lets-connect">Let's Connect</a>
-<a href="https://www.amyhealthcaremd.com/home-health-care-meet-our-caregivers">Meet Our Caregivers</a>
-<a href="https://www.amyhealthcaremd.com/home-health-care-our-story">Our Story</a>
-<a href="https://www.amyhealthcaremd.com/privacy-notice">Privacy Notice</a>
-<a href="https://www.amyhealthcaremd.com/home-health-care-schedule-an-assessment">Schedule an Assessment</a>
-<a href="https://www.amyhealthcaremd.com/home-health-care-schedule-care">Schedule Care</a>
-<a href="https://www.amyhealthcaremd.com/home-health-care-send-your-referrals">Send Your Referrals</a>
-<a href="https://www.amyhealthcaremd.com/sitemaap">Sitemaap</a>`;
 
 document.getElementById('linkInput').value = sampleData;
 
