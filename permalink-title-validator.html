@@ -444,6 +444,7 @@ tr.highlight-spelling.merged-match:hover td {
     transform: translateX(-50%);
     transition: left 0.08s ease;
     z-index: -1;
+    display: block;
 }
 
 .custom-tip .tip-label {
@@ -657,6 +658,10 @@ function showTip(e, text) {
         return m;
     });
     tip.innerHTML = safeText;
+    // The triangles are already in the DOM, just make sure they're visible
+    tipTriangle.style.display = 'block';
+    tipTriangleBorder.style.display = 'block';
+    // Append them to the tip (they will be moved to the end)
     tip.appendChild(tipTriangleBorder);
     tip.appendChild(tipTriangle);
     
@@ -683,7 +688,7 @@ function positionTip(e) {
     
     let left, top;
     let trianglePosition = 'bottom';
-    let triangleX = 0;
+    let triangleX = 10;
     let triangleY = 0;
     
     // Check if screen is wide enough for side placement
@@ -701,14 +706,12 @@ function positionTip(e) {
         left = e.clientX + sideDistance + triangleSize;
         top = e.clientY - tipHeight / 2;
         trianglePosition = 'left';
-        // triangleX will be set in the side placement section
     }
     // Priority 3: Left (20px distance)
     else if (spaceLeft > tipWidth + sideDistance + triangleSize && hasSideSpace) {
         left = e.clientX - tipWidth - sideDistance - triangleSize;
         top = e.clientY - tipHeight / 2;
         trianglePosition = 'right';
-        // triangleX will be set in the side placement section
     }
     // Priority 4: Top (20px distance)
     else if (spaceTop > tipHeight + topDistance + triangleSize) {
@@ -748,15 +751,19 @@ function positionTip(e) {
             top = window.innerHeight - tipHeight - 10;
         }
         
-        // Triangle Y: follows the mouse vertically on the side of the tooltip
-        triangleY = e.clientY - top;
-        triangleY = Math.max(12, Math.min(triangleY, tipHeight - 12));
+        // Calculate where the mouse is relative to the tooltip
+        let mouseYRelative = e.clientY - top;
         
-        // Triangle X: at the edge of the tooltip
+        // Clamp the triangle to stay within the tooltip box edges
+        // The triangle STOPS at the top and bottom corners - never goes outside
+        const padding = 12; // Keep triangle inside the box with some padding
+        triangleY = Math.max(padding, Math.min(mouseYRelative, tipHeight - padding));
+        
+        // Triangle X: position on the side
         if (trianglePosition === 'right') {
-            triangleX = tipWidth;  // At right edge
+            triangleX = tipWidth - 2;  // Right edge (just inside)
         } else {
-            triangleX = -triangleSize;  // At left edge
+            triangleX = -2;  // Left edge (just inside)
         }
     }
     
@@ -780,13 +787,20 @@ function positionTip(e) {
     updateTriangle(trianglePosition, triangleX, triangleY, triangleSize);
 }
 
+// ==================
 function updateTriangle(position, x, y, size) {
     const tri = tipTriangle;
     const triBorder = tipTriangleBorder;
     
-    // Reset styles
+    // Reset styles - but keep display
     tri.style.cssText = '';
     triBorder.style.cssText = '';
+    
+    // Make sure they're visible
+    tri.style.display = 'block';
+    triBorder.style.display = 'block';
+    
+    // Position them absolutely
     tri.style.position = 'absolute';
     triBorder.style.position = 'absolute';
     tri.style.width = '0';
@@ -794,14 +808,17 @@ function updateTriangle(position, x, y, size) {
     triBorder.style.width = '0';
     triBorder.style.height = '0';
     
+    // Set the triangle based on position
     switch(position) {
         case 'bottom':
+            // Triangle at bottom, pointing down
             tri.style.borderStyle = 'solid';
             tri.style.borderWidth = size + 'px ' + size + 'px 0 ' + size + 'px';
             tri.style.borderColor = 'rgba(20, 20, 35, 0.95) transparent transparent transparent';
             tri.style.bottom = '-' + size + 'px';
             tri.style.left = x + 'px';
             tri.style.top = 'auto';
+            tri.style.right = 'auto';
             
             triBorder.style.borderStyle = 'solid';
             triBorder.style.borderWidth = (size + 1) + 'px ' + (size + 1) + 'px 0 ' + (size + 1) + 'px';
@@ -809,15 +826,18 @@ function updateTriangle(position, x, y, size) {
             triBorder.style.bottom = '-' + (size + 1) + 'px';
             triBorder.style.left = x + 'px';
             triBorder.style.top = 'auto';
+            triBorder.style.right = 'auto';
             break;
             
         case 'top':
+            // Triangle at top, pointing up
             tri.style.borderStyle = 'solid';
             tri.style.borderWidth = '0 ' + size + 'px ' + size + 'px ' + size + 'px';
             tri.style.borderColor = 'transparent transparent rgba(20, 20, 35, 0.95) transparent';
             tri.style.top = '-' + size + 'px';
             tri.style.left = x + 'px';
             tri.style.bottom = 'auto';
+            tri.style.right = 'auto';
             
             triBorder.style.borderStyle = 'solid';
             triBorder.style.borderWidth = '0 ' + (size + 1) + 'px ' + (size + 1) + 'px ' + (size + 1) + 'px';
@@ -825,34 +845,37 @@ function updateTriangle(position, x, y, size) {
             triBorder.style.top = '-' + (size + 1) + 'px';
             triBorder.style.left = x + 'px';
             triBorder.style.bottom = 'auto';
+            triBorder.style.right = 'auto';
             break;
             
         case 'left':
-            // Triangle on LEFT side of tooltip (points left toward the mouse)
+            // Triangle on LEFT side (tooltip is on the RIGHT of mouse)
+            // Triangle points LEFT, inside the box
             tri.style.borderStyle = 'solid';
             tri.style.borderWidth = size + 'px ' + size + 'px ' + size + 'px 0';
             tri.style.borderColor = 'transparent rgba(20, 20, 35, 0.95) transparent transparent';
-            tri.style.left = '-' + size + 'px';
-            tri.style.top = y + 'px';  // y is the vertical position
+            tri.style.left = '-1px';
+            tri.style.top = y + 'px';
             tri.style.right = 'auto';
             tri.style.bottom = 'auto';
             
             triBorder.style.borderStyle = 'solid';
             triBorder.style.borderWidth = (size + 1) + 'px ' + (size + 1) + 'px ' + (size + 1) + 'px 0';
             triBorder.style.borderColor = 'transparent #ffd700 transparent transparent';
-            triBorder.style.left = '-' + (size + 1) + 'px';
+            triBorder.style.left = '-2px';
             triBorder.style.top = y + 'px';
             triBorder.style.right = 'auto';
             triBorder.style.bottom = 'auto';
             break;
             
         case 'right':
-            // Triangle on RIGHT side of tooltip (points right toward the mouse)
+            // Triangle on RIGHT side (tooltip is on the LEFT of mouse)
+            // Triangle points RIGHT, outside the box
             tri.style.borderStyle = 'solid';
             tri.style.borderWidth = size + 'px 0 ' + size + 'px ' + size + 'px';
             tri.style.borderColor = 'transparent transparent transparent rgba(20, 20, 35, 0.95)';
             tri.style.right = '-' + size + 'px';
-            tri.style.top = y + 'px';  // y is the vertical position
+            tri.style.top = y + 'px';
             tri.style.left = 'auto';
             tri.style.bottom = 'auto';
             
@@ -1694,6 +1717,15 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active && active.id === 'linkInput') {
+            e.preventDefault();
+            clearAll();
+        }
+    }
+});
 
 document.getElementById('linkInput').value = sampleData;
 
