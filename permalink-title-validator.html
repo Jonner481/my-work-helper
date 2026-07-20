@@ -754,10 +754,18 @@ function positionTip(e) {
         // Calculate where the mouse is relative to the tooltip
         let mouseYRelative = e.clientY - top;
         
-        // Clamp the triangle to stay within the tooltip box edges
+        // Center the triangle vertically on the mouse position
+        // The triangle's center follows the mouse, but stops at the box edges
+        const triangleSize = 8;
+        const halfTriangle = triangleSize / 2;
+        
+        // Clamp the triangle center to stay within the tooltip box edges
         // The triangle STOPS at the top and bottom corners - never goes outside
-        const padding = 12; // Keep triangle inside the box with some padding
-        triangleY = Math.max(padding, Math.min(mouseYRelative, tipHeight - padding));
+        const padding = 10; // Keep triangle inside the box with some padding
+        let centerY = Math.max(padding + halfTriangle, Math.min(mouseYRelative, tipHeight - padding - halfTriangle));
+        
+        // The triangle top position = center - halfTriangle
+        triangleY = centerY - halfTriangle;
         
         // Triangle X: position on the side
         if (trianglePosition === 'right') {
@@ -765,8 +773,7 @@ function positionTip(e) {
         } else {
             triangleX = -2;  // Left edge (just inside)
         }
-    }
-    
+    }    
     // Keep tooltip in viewport for top/bottom
     if (trianglePosition === 'top' || trianglePosition === 'bottom') {
         if (top + tipHeight > window.innerHeight - 10) {
@@ -854,16 +861,16 @@ function updateTriangle(position, x, y, size) {
             tri.style.borderStyle = 'solid';
             tri.style.borderWidth = size + 'px ' + size + 'px ' + size + 'px 0';
             tri.style.borderColor = 'transparent rgba(20, 20, 35, 0.95) transparent transparent';
-            tri.style.left = '-1px';
-            tri.style.top = y + 'px';
+            tri.style.left = '-4px';
+            tri.style.top = (y - 4) + 'px';
             tri.style.right = 'auto';
             tri.style.bottom = 'auto';
             
             triBorder.style.borderStyle = 'solid';
             triBorder.style.borderWidth = (size + 1) + 'px ' + (size + 1) + 'px ' + (size + 1) + 'px 0';
             triBorder.style.borderColor = 'transparent #ffd700 transparent transparent';
-            triBorder.style.left = '-2px';
-            triBorder.style.top = y + 'px';
+            triBorder.style.left = '-5px';
+            triBorder.style.top = (y - 5) + 'px';
             triBorder.style.right = 'auto';
             triBorder.style.bottom = 'auto';
             break;
@@ -874,16 +881,16 @@ function updateTriangle(position, x, y, size) {
             tri.style.borderStyle = 'solid';
             tri.style.borderWidth = size + 'px 0 ' + size + 'px ' + size + 'px';
             tri.style.borderColor = 'transparent transparent transparent rgba(20, 20, 35, 0.95)';
-            tri.style.right = '-' + size + 'px';
-            tri.style.top = y + 'px';
+            tri.style.right = '-' + (size + 3) + 'px';
+            tri.style.top = (y - 3) + 'px';
             tri.style.left = 'auto';
             tri.style.bottom = 'auto';
             
             triBorder.style.borderStyle = 'solid';
             triBorder.style.borderWidth = (size + 1) + 'px 0 ' + (size + 1) + 'px ' + (size + 1) + 'px';
             triBorder.style.borderColor = 'transparent transparent transparent #ffd700';
-            triBorder.style.right = '-' + (size + 1) + 'px';
-            triBorder.style.top = y + 'px';
+            triBorder.style.right = '-' + (size + 4) + 'px';
+            triBorder.style.top = (y - 4) + 'px';
             triBorder.style.left = 'auto';
             triBorder.style.bottom = 'auto';
             break;
