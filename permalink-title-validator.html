@@ -657,13 +657,19 @@ function showTip(e, text) {
         if (m === '>') return '&gt;';
         return m;
     });
-    tip.innerHTML = safeText;
-    // The triangles are already in the DOM, just make sure they're visible
+    
+    // Keep triangles in place by not using innerHTML
+    // Instead, update only the text content
+    const textNode = tip.childNodes[0];
+    if (textNode) {
+        textNode.textContent = safeText;
+    } else {
+        tip.innerHTML = safeText;
+    }
+    
+    // Make sure triangles are visible and in correct position
     tipTriangle.style.display = 'block';
     tipTriangleBorder.style.display = 'block';
-    // Append them to the tip (they will be moved to the end)
-    tip.appendChild(tipTriangleBorder);
-    tip.appendChild(tipTriangle);
     
     tip.style.opacity = '1';
     isTipVisible = true;
@@ -789,9 +795,11 @@ function positionTip(e) {
     // Apply positions
     tip.style.left = left + 'px';
     tip.style.top = top + 'px';
-    
-    // Update triangle
-    updateTriangle(trianglePosition, triangleX, triangleY, triangleSize);
+
+    // Update triangle with smooth animation
+    requestAnimationFrame(() => {
+        updateTriangle(trianglePosition, triangleX, triangleY, triangleSize);
+    });
 }
 
 // ==================
